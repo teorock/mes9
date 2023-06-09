@@ -33,26 +33,41 @@ namespace mes.Models.Services.Infrastructures
             File.Copy(destFile, bckName, true);
         }
 
-        public string PermissionTimeSpan(string startTime, string endTime)
+        public string PermissionTimeSpan(string startTime, string endTime, string tipologia)
         {
+            //if tipologia= ferie, non calcola le ore
+            string result="";
+            decimal minutes=0;
+            string comment="";
 
             TimeSpan duration = DateTime.Parse(endTime).Subtract(DateTime.Parse(startTime));
 
-            decimal giorni = Math.Round(Convert.ToDecimal(duration.TotalDays), 0) ;
-            
-            string result ="";
-            //string days= (giorni ==0) ? "" : $"{giorni} giorni e ";
-            string days= "g";
-            string hours ="";
+            decimal giorni = Math.Round(Convert.ToDecimal(duration.TotalDays), 0);            
 
-            if (giorni==0)
+            if(tipologia=="ferie" | tipologia=="malattia")
+                return $"{giorni+1}g";
+            
+            decimal ore = Math.Round(Convert.ToDecimal(duration.TotalHours), 0);
+
+            if(duration.Minutes > 0 & duration.Minutes <=29) minutes = 30;
+            if(duration.Minutes > 31 & duration.Minutes <= 59)
             {
-                //if(duration.Minutes == 0) hours = $"{duration.Hours}h";
-                if(duration.Minutes <= 30) hours = $"{duration.Hours}h";
-                if(duration.Minutes >= 30) hours = $"{duration.Hours + 1}h [{duration.Hours}h{duration.Minutes}m]";
+                minutes = 0;
+                ore +=1;
             }
 
-            result = days + hours;
+            comment = $"[{duration.Hours}h{duration.Minutes}]";
+
+            //pausa pranzo
+            if ((DateTime.Parse(startTime).Hour < 12 & DateTime.Parse(endTime).Hour >12)|
+                    (DateTime.Parse(startTime).Hour <13 & DateTime.Parse(endTime).Hour>13))
+                    {
+                        ore -= 1;
+                        comment +="-1h pranzo";
+                    }
+
+            if(minutes !=0) result = $"{ore}h{minutes} {comment}";
+            if(minutes ==0) result = $"{ore}h {comment}";
 
             return result;
         }

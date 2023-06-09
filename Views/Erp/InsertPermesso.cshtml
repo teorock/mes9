@@ -81,6 +81,12 @@ function conferma() {
             $("#confirmationModal").modal('toggle');
             return;
         }
+        if($('#DataInizio').val() > $('#DataFine').val())
+        {
+            alert("data di inizio successiva a data fine");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
         $("#frmInsPermesso").submit();
     }
 
@@ -221,16 +227,91 @@ function conferma() {
                 }                
         </table>
 }
+@if(insertor | authorize)
+{
+    <script>
+        $("#sel-tipologia").on('change', function() {
+            $("#Tipologia").val(this.value);
+            var selVal = this.value;
 
-<script>
-    $("#sel-tipologia").on('change', function() {
-        //alert( this.value );
-        $("#Tipologia").val(this.value);
-    });
-    $("#sel-dipendente").on('change', function() {
-        var dip = JSON.parse($(this).val());
-        //alert(dip.Nome);
-        $("#Nome").val(dip.Nome);
-        $('#Cognome').val(dip.Cognome);
-    });
-</script>
+            if(selVal=="ferie" | selVal=="malattia"){
+                $('#DataInizio').attr('type', 'date'); 
+                $('#DataFine').attr('type', 'date');       
+            } else{
+                $('#DataInizio').attr('type', 'datetime-local');
+                $('#DataFine').attr('type', 'datetime-local');
+            }
+        });
+        $("#sel-dipendente").on('change', function() {
+            var dip = JSON.parse($(this).val());
+            //alert(dip.Nome);
+            $("#Nome").val(dip.Nome);
+            $('#Cognome').val(dip.Cognome);
+        });
+    </script> 
+}
+@if(!insertor & !authorize)
+{
+    <script>
+        $("#sel-tipologia").on('change', function() {
+            $("#Tipologia").val(this.value);
+            var selVal = this.value;
+
+            if(selVal=="ferie" | selVal=="malattia"){
+                $('#DataInizio').attr('type', 'date'); 
+                $('#DataFine').attr('type', 'date');       
+            } else{
+                $('#DataInizio').attr('type', 'datetime-local');
+                $('#DataFine').attr('type', 'datetime-local');
+            }
+
+            var dateType = $('#DataInizio').attr("type");
+            SetMinDate(dateType);
+        });
+        $("#sel-dipendente").on('change', function() {
+            var dip = JSON.parse($(this).val());
+            //alert(dip.Nome);
+            $("#Nome").val(dip.Nome);
+            $('#Cognome').val(dip.Cognome);
+        });
+
+        function SetMinDate(dateType)
+        {
+            var dtToday = new Date();
+            
+            var month = dtToday.getMonth() + 1;
+            var day = dtToday.getDate();
+            var year = dtToday.getFullYear();
+            if(month < 10)
+                month = '0' + month.toString();
+            if(day < 10)
+                day = '0' + day.toString();
+
+            //alert(dateType);
+
+            if(dateType == "datetime-local")
+            {
+                var maxDate = year + '-' + month + '-' + day + 'T00:00:00';
+            }
+            else
+            {
+                var maxDate = year + '-' + month + '-' + day;
+            }
+            
+            // or instead:
+            // var maxDate = dtToday.toISOString().substr(0, 10);
+
+            //alert(maxDate);
+            $('#DataInizio').attr('min', maxDate);
+            $('#DataFine').attr('min', maxDate);
+        };
+
+        $(document).ready(function(){
+            var dateType = $('#DataInizio').attr("type");
+
+            SetMinDate(dateType);
+
+            }      
+        );
+    </script>
+}

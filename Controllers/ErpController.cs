@@ -178,8 +178,6 @@ namespace mes.Controllers
             int actualMonth = DateTime.Today.Month;
             int actualYear = DateTime.Today.Year;
             int lastDay = DateTime.DaysInMonth(actualYear,actualMonth);
-            //string actualMont = DateTime.Today.Month.ToString("d2");
-            //string actualYear = DateTime.Today.Year.ToString();
 
             UserData userData = GetUserData();
             ViewBag.userRoles = userData.UserRoles;
@@ -275,12 +273,6 @@ namespace mes.Controllers
                                                 .Where(z => Convert.ToDateTime(z.DataInizio).Date >= Convert.ToDateTime(filter.DataInizio).Date)
                                                 .Where(y => Convert.ToDateTime(y.DataFine).Date <= Convert.ToDateTime(filter.DataFine).Date)                                                
                                                 .ToList();
-
-                    //DateTime debug1 = Convert.ToDateTime(permessi[8].DataInizio);
-                    //DateTime debug2 = Convert.ToDateTime(filter.DataInizio);
-
-                    //bool test =(debug1.Date <= debug2.Date) ? true:false;
-
                 }
                 else if(filter.Username == null && filter.Tipologia != null) // tutta la lista di quella tipologia per tutti
                 {
@@ -429,7 +421,7 @@ namespace mes.Controllers
             newPermesso.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
             newPermesso.DataDiRichiesta = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
             GeneralPurpose genPurpose = new GeneralPurpose();
-            newPermesso.IntervalloTempo = genPurpose.PermissionTimeSpan(newPermesso.DataInizio, newPermesso.DataFine);
+            newPermesso.IntervalloTempo = genPurpose.PermissionTimeSpan(newPermesso.DataInizio, newPermesso.DataFine, newPermesso.Tipologia);
             newPermesso.Stato = "in attesa";
             if(newPermesso.Note == null) newPermesso.Note ="nessuna";
 
