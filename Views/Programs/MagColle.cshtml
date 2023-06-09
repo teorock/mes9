@@ -1,0 +1,159 @@
+@using mes.Models.ViewModels
+@using System.Collections.Generic
+@model List<CollaViewModel>
+@{
+    string userRoles = ViewBag.userRoles;
+    bool authorize = false;
+    if(userRoles.Contains("MagMaterialiScrivi")||userRoles.Contains("root")) authorize=true;
+}
+
+<script>
+function conferma()
+{
+    if(!$("#quantita").val()) {
+        alert("campo 'quantita' vuoto");
+        $("#confirmationModal").modal('toggle');
+        return;
+        }
+
+    var inputs = $("[id=quantita]");
+    var validChars = /^[0-9.]+$/;
+    var isIvalid = true;
+
+    inputs.each(function() {
+        var inputVal = $(this).val();
+        if(!validChars.test(inputVal)) {
+            $(this).css({
+                'border-color': 'red',
+                'border-width': '3px'
+                });
+                isIvalid = false;
+            } else {
+            $(this).css({
+                'border-color': '',
+                'border-width': ''
+                });                
+            }
+        });
+
+    if(!isIvalid) {
+        alert("correggere i campi evidenziati");
+        $("#confirmationModal").modal('toggle');
+        return;   
+    }
+
+    $("#frmAggColle").submit();
+        
+}
+
+</script>
+
+<!-- Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Aggiornamento dati</h5>
+      </div>
+      <div class="modal-body">
+        <p>confermi aggiornamento ?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">annulla</button>
+        <button type="button" class="btn btn-outline-success" onclick="conferma()">aggiorna</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal end -->
+
+<style>
+    table, th, td {
+        font-size: 16px;
+    }
+    input {
+        font-size: 14px;
+    }
+
+    input:hover {
+        background-color: gold;
+    }
+    input:focus {
+        background-color: lightyellow;
+    }
+
+
+</style>
+
+<div class="row align-items-start">
+    <div class="col-md-1" align="center">
+        <i class="fa-solid fa-jar fa-3x"></i>
+    </div>
+    <div class="col-md-4">
+        <h3>gestione magazzino colle</h3>
+    </div>
+</div>
+<br>
+<br>
+<hr>
+<h4>colle a magazzino</h4>
+<hr>
+@using(Html.BeginForm("AggiornaColle", "Programs", FormMethod.Post, new { name = "frmAggColle", id = "frmAggColle" }))
+{
+    <table>
+        <tr>
+            <th style="text-align: center;">codice</th>
+            <th style="text-align: center;">tipo colla</th>            
+            <th style="text-align: center;">formato colla</th>
+            <th style="text-align: center;">quantità</th>
+            <th style="text-align: center;">quan.minima</th>
+            <th style="text-align: center;">unità di misura</th>
+        </tr>
+            @for(int x=0; x<Model.Count; x++)
+            {
+                <tr>
+                    @if(!authorize)
+                    {
+                    <td><input style="width: 160px;" type="text" asp-for=@Model[x].Codice class="form-control" value=@Model[x].Codice readonly /></td> 
+                    <td><input style="width: 260px;" type="text" asp-for=@Model[x].Nome class="form-control" value=@Model[x].Nome readonly /></td>                    
+                    <td><input style="width: 160px;" type="text" asp-for=@Model[x].FormatoColla class="form-control" value=@Model[x].FormatoColla readonly /></td>
+                    <td><input style="width: 160px; text-align: center;" type="text" asp-for=@Model[x].Quantita class="form-control" value=@Model[x].Quantita readonly /></td>
+                    <td><input style="width: 160px; text-align: center;" type="text" asp-for=@Model[x].QuantitaMin class="form-control" value=@Model[x].QuantitaMin readonly /></td>
+                    <td><input style="width: 160px; text-align: center;"type="text" asp-for=@Model[x].UnitaMisura class="form-control" value=@Model[x].UnitaMisura readonly /></td>
+                    <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].id class="form-control" value=@Model[x].id readonly /></td> 
+                    }
+                    else
+                    {
+                    <td><input type="text" style="width: 160px;" asp-for=@Model[x].Codice class="form-control" value=@Model[x].Codice readonly /></td> 
+                    <td><input type="text" style="width: 260px;" asp-for=@Model[x].Nome class="form-control" value=@Model[x].Nome readonly /></td>                    
+                    <td><input type="text" style="width: 160px;" asp-for=@Model[x].FormatoColla class="form-control" value=@Model[x].FormatoColla readonly /></td>
+                    <td><input type="text" id="quantita" style="width: 160px; text-align: center;" asp-for=@Model[x].Quantita class="form-control" value=@Model[x].Quantita /></td>
+                    <td><input type="text" style="width: 160px; text-align: center;" asp-for=@Model[x].QuantitaMin class="form-control" value=@Model[x].QuantitaMin readonly /></td>
+                    <td><input type="text" style="width: 160px; text-align: center;" asp-for=@Model[x].UnitaMisura class="form-control" value=@Model[x].UnitaMisura readonly /></td>
+                    <td style="padding-left: 25px;"><a asp-controller="Programs" asp-action="ModColla" asp-route-id="@Model[x].id"><i class="material-icons text-warning">&#xE254;</i></a></td>
+
+                    <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].id class="form-control" value=@Model[x].id readonly /></td>                     
+                    }                   
+                </tr>
+            }    
+    </table>
+    <br>
+    <br>
+    @if(authorize)
+    {
+        <div class="row">
+            <div class="col-md-3 d-grid">
+                <!-- button class="btn btn-outline-primary btn-block" type="submit">aggiorna</button -->   
+                <button type="button" class="btn btn-outline-primary btn-block" data-bs-toggle="modal" data-bs-target="#confirmationModal">aggiorna</button>         
+            </div>
+            <div class="col-md-3 d-grid">
+                <a class="btn btn-outline-success btn-block" asp-controller="Programs" asp-action="InsertColla">crea nuova colla</a>
+            </div>    
+        </div>  
+    }
+}
+
+
+
+
+

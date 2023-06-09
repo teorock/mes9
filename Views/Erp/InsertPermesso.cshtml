@@ -1,0 +1,236 @@
+@using mes.Models.ViewModels
+@using System.Collections.Generic
+@model PermessoViewModel
+@{
+    List<PermessoViewModel> PermessiList = ViewBag.PermessiList;
+    DipendenteViewModel dipendente = ViewBag.Dipendente;
+    string nome = dipendente.Nome;
+    string cognome = dipendente.Cognome;
+
+    string userRoles = ViewBag.userRoles;
+    bool authorize = false;
+    if(userRoles.Contains("PermessiSupervisor")||userRoles.Contains("root")) authorize=true;
+
+    bool insertor = (ViewBag.UserRoles.Contains("PermessiInsert")||ViewBag.UserRoles.Contains("root"))? true : false;
+    
+    List<DipendenteViewModel> allDipendenti = ViewBag.allDipendenti;
+    List<string> tipologie = ViewBag.tipologie;
+}
+
+<style>     
+    select {
+        border-radius: 0.25em;
+        border-color: rgb(196, 196, 196);
+        width: 120px;
+        height: 38px;
+    }
+
+    table, th, select {
+        font-size: 14px;        
+    }
+    th {
+        font-family: Arial, Helvetica, sans-serif;
+    }
+    input, td, select {
+        font-size: 14px;
+    }
+    input:hover {
+        background-color: gold;
+    }
+    input:focus {
+        background-color: lightyellow;
+    }  
+</style>
+
+<script>
+
+function conferma() {
+
+        if(!$("#Nome").val()) {
+            alert("campo 'Nome' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#Cognome").val()) {
+            alert("campo 'Cognome' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#DataInizio").val()) {
+            alert("campo 'DataInizio' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#DataFine").val()) {
+            alert("campo 'DataFine' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#Tipologia").val()) {
+            alert("campo 'Tipologia' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#Motivazione").val()) {
+            alert("campo 'Motivazione' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#Urgente").val()) {
+            alert("campo 'Urgente' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        $("#frmInsPermesso").submit();
+    }
+
+</script>
+
+<!-- Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Creazione nuovo permesso</h5>
+      </div>
+      <div class="modal-body">
+        <p>confermi creazione nuovo permesso?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">annulla</button>
+        <button type="button" class="btn btn-outline-success" onclick="conferma()">salva</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal end -->
+
+
+<h2>crea nuova richiesta</h2>
+<br>
+<hr>
+@if(insertor)
+{
+    <div class="col-md-6">
+        <div class="select-editeable">
+            <label><h4>nome dipendente:</h4></label>
+            <select id="sel-dipendente" style="width: 250px;">
+                <option value="" selected> </option>
+                @foreach (var oneDipendente in allDipendenti)
+                {
+                    <option value='@System.Text.Json.JsonSerializer.Serialize(@oneDipendente)'>@oneDipendente.Nome @oneDipendente.Cognome</option>
+                }
+            </select>
+        </div>             
+    </div>
+    <hr>
+}
+
+
+
+@using(Html.BeginForm("InsertPermesso", "Erp", FormMethod.Post, new { name = "frmInsPermesso", id = "frmInsPermesso" }))
+{
+    <table>
+        <tr>
+            <th style="text-align: center;">nome</th>
+            <th style="text-align: center;">cognome</th>
+            <th style="text-align: center;">tipologia</th>            
+            <th style="text-align: center;">datainizio</th>
+            <th style="text-align: center;">datafine</th>            
+            <th style="text-align: center;">motivazione</th>
+            <th style="text-align: center;">urgente</th>
+        </tr>
+        <tr>
+            <td><input id="Nome" style="width: 170px;" type="text" asp-for=@Model.Nome value="@nome" class="form-control" readonly/></td>
+            <td><input id="Cognome" style="width: 170px;" type="text" asp-for=@Model.Cognome value="@cognome" class="form-control" readonly/></td>
+            <td>
+                <div class="select-editeable">
+                    <select id="sel-tipologia">
+                        <option value="" selected></option>
+                        @foreach (var tipologia in tipologie)
+                        {
+                            <option value="@tipologia">@tipologia</option>
+                        }                        
+                    </select>
+                    <input id="Tipologia" style="width: 100px;" type="hidden" asp-for=@Model.Tipologia class="form-control"/>
+                </div>                
+            </td>               
+            <td><input id="DataInizio" style="width: 180px;" type="datetime-local" asp-for=@Model.DataInizio class="form-control" required/></td>
+            <td><input id="DataFine" style="width: 180px;" type="datetime-local" asp-for=@Model.DataFine class="form-control" required/></td>
+            <td><input id="Motivazione" style="width: 180px;" type="text" asp-for=@Model.Motivazione class="form-control" required/></td>                                                       
+            <td style="text-align: center;"><input id="Urgente" style="width: 25px; height: 25px; align: center;" class="form-check-input" type="checkbox" asp-for=@Model.Urgente class="form-control" /></td>
+        </tr> 
+    </table>
+    <br>
+    <br>
+
+    <div class="row">
+        <div class="col-md-3 d-grid">
+            <button type="button" class="btn btn-outline-primary btn-block" data-bs-toggle="modal" data-bs-target="#confirmationModal">salva</button>            
+        </div>
+        <div class="col-md-3 d-grid">
+            <a class="btn btn-outline-secondary  btn-block" asp-controller="Erp" asp-action="MainPermessi">annulla</a>
+        </div>             
+    </div>  
+}
+
+@if(authorize)
+{
+    @if(PermessiList.Count!=0)
+    {
+        <hr>
+        <h4>lista permessi presenti</h4>
+        } else {
+            <h4>lista permessi presenti per @nome @cognome</h4>
+        }
+        <br>
+        <table>
+                <tr>
+                    <th style="text-align: center;">nome</th> 
+                    <th style="text-align: center;">cognome</th> 
+                    <th style="text-align: center;">tipologia</th>                 
+                    <th style="text-align: center;">data inizio</th> 
+                    <th style="text-align: center;">data fine</th> 
+                    <th style="text-align: center;">durata</th> 
+                    <th style="text-align: center;">motivazione</th> 
+                    <th style="text-align: center;">stato</th> 
+                    <th style="text-align: center;">urgente</th> 
+                    <th style="text-align: center;">note</th> 
+                </tr>
+                @foreach (PermessoViewModel oneModel in PermessiList)
+                {
+                    <tr>
+                        <td><input style="width: 130px; text-align: center;" type="text" asp-for=@oneModel.Nome class="form-control" value=@oneModel.Nome readonly /></td> 
+                        <td><input style="width: 130px; text-align: center;" type="text" asp-for=@oneModel.Cognome class="form-control" value=@oneModel.Cognome readonly /></td>
+                        <td><input style="width: 130px; text-align: center;" type="text" asp-for=@oneModel.Tipologia class="form-control" value=@oneModel.Tipologia readonly /></td>                     
+                        <td><input style="width: 130px; text-align: center;" type="text" asp-for=@oneModel.DataInizio class="form-control" value=@oneModel.DataInizio readonly /></td> 
+                        <td><input style="width: 130px; text-align: center;" type="text" asp-for=@oneModel.DataFine class="form-control" value=@oneModel.DataFine readonly /></td> 
+                        <td><input style="width: 130px; text-align: center;" type="text" asp-for=@oneModel.IntervalloTempo class="form-control" value=@oneModel.IntervalloTempo readonly /></td> 
+                        <td><input style="width: 130px; text-align: center;" type="text" asp-for=@oneModel.Motivazione class="form-control" value=@oneModel.Motivazione readonly /></td> 
+                        <td><input style="width: 130px; text-align: center;" type="text" asp-for=@oneModel.Stato class="form-control" value=@oneModel.Stato readonly /></td> 
+                        @if(oneModel.Urgente == "true")
+                        {
+                            <td style="text-align: center;"><input id="Urgente" style="width: 25px; height: 25px; align: center;" class="form-check-input" type="checkbox" asp-for=@Model.Urgente class="form-control" disabled checked/></td> 
+                        } else
+                        {
+                            <td style="text-align: center;"><input id="Urgente" style="width: 25px; height: 25px; align: center;" class="form-check-input" type="checkbox" asp-for=@Model.Urgente class="form-control" disabled/></td> 
+                        }
+                        
+                        <td><input style="width: 130px; text-align: center;" type="text" asp-for=@oneModel.Note class="form-control" value=@oneModel.Note readonly /></td> 
+                    </tr>  
+                }                
+        </table>
+}
+
+<script>
+    $("#sel-tipologia").on('change', function() {
+        //alert( this.value );
+        $("#Tipologia").val(this.value);
+    });
+    $("#sel-dipendente").on('change', function() {
+        var dip = JSON.parse($(this).val());
+        //alert(dip.Nome);
+        $("#Nome").val(dip.Nome);
+        $('#Cognome').val(dip.Cognome);
+    });
+</script>

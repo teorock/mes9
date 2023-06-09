@@ -1,0 +1,216 @@
+@using mes.Models.ViewModels
+@using System.Collections.Generic
+@model PermessoViewModel
+@{
+    List<PermessoViewModel> PermessiList = ViewBag.PermessiList;
+    List<string> statiPermessi = ViewBag.statiPermessi;
+    int selectedStatus = ViewBag.selectedStatus;
+    string startDate = ViewBag.startDatePermesso;
+    string endDate = ViewBag.endDtaePermesso;
+}
+
+<style>
+    table, th {
+        font-size: 16px;
+    }
+    input, td {
+        font-size: 14px;
+    }
+    input:hover {
+        background-color: gold;
+    }
+    input:focus {
+        background-color: lightyellow;
+    } 
+    select {
+        border-radius: 0.25em;
+        border-color: rgb(196, 196, 196);
+        width: 120px;
+        height: 38px;
+    }
+</style>
+
+<script>
+   function confirmLoadModal(){
+        if(!$("#Nome").val()) {
+            alert("campo 'Nome' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#Cognome").val()) {
+            alert("campo 'Cognome' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#DataInizio").val()) {
+            alert("campo 'DataInizio' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#DataFine").val()) {
+            alert("campo 'DataFine' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#Tipologia").val()) {
+            alert("campo 'Tipologia' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#IntervalloTempo").val()) {
+            alert("campo 'IntervalloTempo' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#Motivazione").val()) {
+            alert("campo 'Motivazione' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#Stato").val()) {
+            alert("campo 'Stato' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#Urgente").val()) {
+            alert("campo 'Urgente' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+
+        $("#frmCreatePermesso").submit();
+   }
+</script>
+
+<!-- modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="confirmationModal">Richiesta conferma</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <p>confermi modifica Permesso?</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">annulla</button>
+            <button type="button" id="btnConfirm" class="btn btn-success" onclick="confirmLoadModal()">conferma</button>
+        </div>
+        </div>
+    </div>
+</div>
+<!-- Modal end -->
+
+<h2>modifica permesso esistente</h2>
+<br>
+<br>
+@using(Html.BeginForm("ModPermesso", "Erp", FormMethod.Post, new { name = "frmCreatePermesso", id = "frmCreatePermesso" }))
+{    
+    <table>
+        <tr>
+            <th style="text-align: center;">nome</th> 
+            <th style="text-align: center;">cognome</th> 
+            <th style="text-align: center;">datainizio</th> 
+            <th style="text-align: center;">datafine</th> 
+            <th style="text-align: center;">tipologia</th> 
+            <th style="text-align: center;">durata</th> 
+            <th style="text-align: center;">motivazione</th> 
+            <th style="text-align: center;">stato</th> 
+            <th style="text-align: center;">urgente</th> 
+            <th style="text-align: center;">note</th>
+            <th style="text-align: center;">visibile</th>
+        </tr>
+        <tr>
+            <td><input style="width: 130px; text-align: center;" type="text" asp-for=@Model.Nome class="form-control" id="Nome" readonly/></td>
+            <td><input style="width: 130px; text-align: center;" type="text" asp-for=@Model.Cognome class="form-control" id="Cognome" readonly/></td>
+            <td><input style="width: 170px; text-align: center;" type="datetime-local" asp-for=@Model.DataInizio class="form-control" id="DataInizio" value=@startDate /></td>
+            <td><input style="width: 170px; text-align: center;" type="datetime-local" asp-for=@Model.DataFine class="form-control" id="DataFine" value=@endDate/></td>
+            <td><input style="width: 100px; text-align: center;" type="text" asp-for=@Model.Tipologia class="form-control" id="Tipologia" readonly/></td>
+            <td><input style="width: 100px; text-align: center;" type="text" asp-for=@Model.IntervalloTempo class="form-control" id="IntervalloTempo" readonly/></td>
+            <td><input style="width: 160px; text-align: center;" type="text" asp-for=@Model.Motivazione class="form-control" id="Motivazione" readonly/></td>
+
+
+            <td>
+                <div class="select-editeable">
+                    <select id="sel-stato">
+                        <option value="" selected> </option>
+                        @foreach (var stato in statiPermessi)
+                        {
+                            <option value=@stato>@stato</option>
+                        }
+                    </select>
+                    <input id ="Stato" style="width: 130px; text-align: center;" type="hidden" asp-for=@Model.Stato class="form-control" />
+                </div>                                 
+            </td> 
+
+            @if(Model.Urgente=="true") {
+                <td style="text-align: center;"><input style="width: 25px; height: 25px;" class="form-check-input" type="checkbox" asp-for=@Model.Urgente class="form-control" disabled/></td>
+            } else {
+                <td style="text-align: center;"><input style="width: 25px; height: 25px;" class="form-check-input" type="checkbox" asp-for=@Model.Urgente class="form-control" disabled/></td>
+            }
+            
+            
+            <td><input style="width: 160px; text-align: center;" type="text" asp-for=@Model.Note class="form-control" id="Note" /></td>
+            <td><input style="width: 50px; text-align: center;" type="text" asp-for=@Model.Enabled class="form-control"/></td>
+            <td><input style="width: 10px;" type="hidden" asp-for=@Model.Username class="form-control"/></td>            
+            <td><input style="width: 10px;" type="hidden" asp-for=@Model.DataDiRichiesta class="form-control"/></td>
+        </tr> 
+    </table>
+    <br>
+    <br>
+
+    <div class="row">
+        <div class="col-md-3 d-grid">
+        <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#confirmationModal">
+            conferma
+        </button>            
+        </div>
+        <div class="col-md-3 d-grid">
+            <a class="btn btn-outline-secondary btn-block" asp-controller="Erp" asp-action="MainPermessi">annulla</a>
+        </div>             
+    </div>  
+}
+<hr>
+<br>
+<h4>lista permessi presenti</h4>
+<br>
+<table>
+        <tr>
+            <th style="text-align: center;">nome</th> 
+            <th style="text-align: center;">cognome</th> 
+            <th style="text-align: center;">datainizio</th> 
+            <th style="text-align: center;">datafine</th> 
+            <th style="text-align: center;">tipologia</th> 
+            <th style="text-align: center;">durata</th> 
+            <th style="text-align: center;">motivazione</th> 
+            <th style="text-align: center;">stato</th> 
+            <th style="text-align: center;">urgente</th> 
+            <th style="text-align: center;">note</th> 
+        </tr>
+        @foreach (PermessoViewModel oneModel in PermessiList)
+        {
+            <tr>
+                <td><input style="width: 130px; text-align: center;" type="text" asp-for=@oneModel.Nome class="form-control" value=@oneModel.Nome disabled /></td> 
+                <td><input style="width: 130px; text-align: center;" type="text" asp-for=@oneModel.Cognome class="form-control" value=@oneModel.Cognome disabled /></td> 
+                <td><input style="width: 170px; text-align: center;" type="text" asp-for=@oneModel.DataInizio class="form-control" value=@oneModel.DataInizio disabled /></td> 
+                <td><input style="width: 170px; text-align: center;" type="text" asp-for=@oneModel.DataFine class="form-control" value=@oneModel.DataFine disabled /></td> 
+                <td><input style="width: 100px; text-align: center;" type="text" asp-for=@oneModel.Tipologia class="form-control" value=@oneModel.Tipologia disabled /></td> 
+                <td><input style="width: 100px; text-align: center;" type="text" asp-for=@oneModel.IntervalloTempo class="form-control" value=@oneModel.IntervalloTempo disabled /></td> 
+                <td><input style="width: 160px; text-align: center;" type="text" asp-for=@oneModel.Motivazione class="form-control" value=@oneModel.Motivazione disabled /></td> 
+                <td><input style="width: 160px; text-align: center;" type="text" asp-for=@oneModel.Stato class="form-control" value=@oneModel.Stato readonly /></td> 
+                <td style="text-align: center;"><input style="width: 25px; height: 25px;" class="form-check-input" type="checkbox" asp-for=@Model.Urgente class="form-control" disabled/></td>
+                <td><input style="width: 160px;" type="text" asp-for=@oneModel.Note class="form-control" value=@oneModel.Note disabled /></td> 
+            </tr>
+        }
+</table>
+
+<script>
+
+    $("#sel-stato").prop("selectedIndex",@selectedStatus);
+
+    $("#sel-stato").on('change', function() {
+        //alert( this.value );
+        $("#Stato").val(this.value);
+    });
+</script>

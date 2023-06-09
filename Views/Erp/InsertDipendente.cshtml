@@ -1,0 +1,140 @@
+@using mes.Models.ViewModels
+@using System.Collections.Generic
+@model DipendenteViewModel
+@{
+    List<DipendenteViewModel> DipendentiList = ViewBag.DipendentiList;
+    
+}
+
+<script>
+
+function conferma() {
+
+        if(!$("#Nome").val()) {
+            alert("campo 'Nome' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#Cognome").val()) {
+            alert("campo 'Cognome' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#DataAssunzione").val()) {
+            alert("campo 'DataAssunzione' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#Matricola").val()) {
+            alert("campo 'Matricola' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#Username").val()) {
+            alert("campo 'Username' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#NotifyAddress").val()) {
+            alert("campo 'email notifica' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }        
+        if(!$("#Ruolo").val()) {
+            alert("campo 'Ruolo' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+
+        $("#frmInsDipendente").submit();
+    }
+
+</script>
+
+<!-- Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Creazione nuovo dipendente</h5>
+      </div>
+      <div class="modal-body">
+        <p>confermi creazione nuovo dipendente?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">annulla</button>
+        <button type="button" class="btn btn-outline-success" onclick="conferma()">salva</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal end -->
+
+
+<h2>crea nuovo dipendente</h2>
+<br>
+@using(Html.BeginForm("InsertDipendente", "Erp", FormMethod.Post, new { name = "frmInsDipendente", id = "frmInsDipendente" }))
+{
+    <table>
+        <tr>
+            <th style="text-align: center;">nome</th>
+            <th style="text-align: center;">cognome</th>
+            <th style="text-align: center;">data assunzione</th>
+            <th style="text-align: center;">matricola</th>
+            <th style="text-align: center;">username</th>
+            <th style="text-align: center;">email di notifica</th>
+            <th style="text-align: center;">ruolo</th>
+        </tr>
+        <tr>
+            <td><input id="Nome" style="width: 180px; text-align: center;" type="text" asp-for=@Model.Nome class="form-control" required/></td>
+            <td><input id="Cognome" style="width: 180px; text-align: center;" type="text" asp-for=@Model.Cognome class="form-control" required/></td>
+            <td><input id="DataAssunzione" style="width: 130px; text-align: center;" type="text" asp-for=@Model.DataAssunzione class="form-control" required/></td>
+            <td><input id="Matricola" style="width: 80px; text-align: center;" type="text" asp-for=@Model.Matricola class="form-control" required/></td>
+            <td><input id="Username" style="width: 230px; text-align: center;" type="text" asp-for=@Model.Username class="form-control" required/></td>
+            <td><input id="NotifyAddress" style="width: 230px; text-align: center;" type="text" asp-for=@Model.NotifyAddress class="form-control" required/></td>
+            <td><input id="Ruolo" style="width: 230px; text-align: center;" type="text" asp-for=@Model.Ruolo class="form-control" required/></td>
+        </tr> 
+    </table>
+    <br>
+    <br>
+
+    <div class="row">
+        <div class="col-md-3 d-grid">
+            <button type="button" class="btn btn-outline-primary btn-block" data-bs-toggle="modal" data-bs-target="#confirmationModal">salva</button>            
+        </div>
+        <div class="col-md-3 d-grid">
+            <a class="btn btn-outline-secondary  btn-block" asp-controller="Erp" asp-action="MainDipendenti">annulla</a>
+        </div>             
+    </div>  
+}
+
+<hr>
+<h4>lista dipendenti presenti</h4>
+<br>
+<table>
+        <tr>
+            <th style="text-align: center;">nome</th> 
+            <th style="text-align: center;">cognome</th> 
+            <th style="text-align: center;">data assunzione</th> 
+            <th style="text-align: center;">matricola</th> 
+            <th style="text-align: center;">username</th> 
+            <th style="text-align: center;">email di notifica</th>
+            <th style="text-align: center;">ruolo</th> 
+            <th style="text-align: center;">enabled</th> 
+        </tr>
+        @foreach (DipendenteViewModel oneModel in DipendentiList)
+        {
+            <tr>
+                <td><input style="width: 180px; text-align: center;" type="text" asp-for=@oneModel.Nome class="form-control" value=@oneModel.Nome readonly /></td> 
+                <td><input style="width: 180px; text-align: center;" type="text" asp-for=@oneModel.Cognome class="form-control" value=@oneModel.Cognome readonly /></td> 
+                <td><input style="width: 130px; text-align: center;" type="text" asp-for=@oneModel.DataAssunzione class="form-control" value=@oneModel.DataAssunzione readonly /></td> 
+                <td><input style="width: 80px; text-align: center;" type="text" asp-for=@oneModel.Matricola class="form-control" value=@oneModel.Matricola readonly /></td> 
+                <td><input style="width: 230px; text-align: center;" type="text" asp-for=@oneModel.Username class="form-control" value=@oneModel.Username readonly /></td> 
+                <td><input style="width: 230px; text-align: center;" type="text" asp-for=@oneModel.NotifyAddress class="form-control" value=@oneModel.NotifyAddress readonly /></td> 
+                <td><input style="width: 230px; text-align: center;" type="text" asp-for=@oneModel.Ruolo class="form-control" value=@oneModel.Ruolo readonly /></td> 
+                <td><input style="width: 80px; text-align: center;" type="text" asp-for=@oneModel.Enabled class="form-control" value=@oneModel.Enabled readonly /></td> 
+            </tr>  
+        }        
+
+    
+</table>

@@ -1,0 +1,263 @@
+@using mes.Models.ViewModels
+@using System.Collections.Generic
+@using Newtonsoft.Json
+@model PermessoFilter
+@{
+    DipendenteViewModel dipendente = ViewBag.Dipendente;
+    string nome = dipendente.Nome;
+    string cognome = dipendente.Cognome;
+
+    string userRoles = ViewBag.userRoles;
+    bool authorize = false;
+    if(userRoles.Contains("PermessiMaster")
+        ||userRoles.Contains("root")) authorize=true;
+    
+    bool canFilter = false;
+    if(userRoles.Contains("PermessiMaster")
+        ||userRoles.Contains("root")
+        ||userRoles.Contains("PermessiSupervisor")) canFilter=true;    
+
+
+    List<string>statiPermessi = ViewBag.statiPermessi;
+    string userName = ViewBag.userName;
+
+    List<CalendarEvent> events = ViewBag.calendarEvents;
+    List<DipendenteViewModel> dipendenti = ViewBag.dipendenti;
+    List<PermessoViewModel> permessi = ViewBag.Permessi;
+    List<string> tipologie = ViewBag.tipologie;
+}
+
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js'></script>
+
+<script>
+    function conferma() {
+            $("#frmAggPermessi").submit();
+        }
+
+      document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+          locale: 'it',  
+          initialView: 'dayGridMonth',
+            initialDate: '@DateTime.Today.ToString("yyyy-MM-dd")',
+            headerToolbar: {
+              left: 'prev,next today',
+              center: 'title',
+              right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            events: [
+            @foreach (var item in events)
+            {
+              <text>
+                {
+                  title: '@Html.Raw(item.Title)',
+                  start: '@item.StartDate.ToString("yyyy-MM-ddTHH:mm:ss")',
+                  end: '@item.EndDate.ToString("yyyy-MM-ddTHH:mm:ss")',
+                  color: '@item.Color',
+                  url: '@item.Url'
+                },
+              </text>          
+            }
+            ]
+          });
+
+        calendar.render();
+      });
+</script>
+
+<style>
+    table, th {
+        font-size: 14px;
+    }
+    input, td {
+        font-size: 14px;
+    }
+    input:hover {
+        background-color: gold;
+    }
+    input:focus {
+        background-color: lightyellow;
+    } 
+    select {
+        border-radius: 0.25em;
+        border-color: rgb(196, 196, 196);
+        width: 120px;
+        height: 38px;
+    }
+    #calendar {
+      max-width: 1100px;
+      margin: 50px auto;
+    }     
+</style>
+
+
+<hr>
+@if(canFilter)
+{
+<h5>filtra dati</h5>
+  <form class="form form-inline" method="post" asp-action="MainPermessi" asp-controller="Erp">
+  <div class="row align-items-bottom">    
+    <div class="col-md-3">
+      <label for="">filtra per dipendente</label>
+        <select class="form-control" name="Username">
+            <option value="">tutti</option>
+            @foreach (var obj in dipendenti)
+            {
+                <option value="@obj.Username">@obj.Cognome @obj.Nome</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-2">
+      <label for="">data di inizio</label>
+      <input type="date" class="form-control" name="DataInizio" id="startDate"/>
+    </div>
+    <div class="col-md-2">
+      <label for="">data di fine</label>
+      <input type="date" class="form-control" name="DataFine" id="endDate"/>
+    </div>
+    <div class="col-md-2">
+      <label for="">tipologia</label>
+        <select class="form-control" name="Tipologia">
+            <option value="">----</option>
+            @foreach (var str in tipologie)
+            {
+                <option value="@str">@str</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-2">
+      <div class="d-flex align-items-center justify-content-center h-100"> 
+        <button type="submit" class="btn btn-primary flex-grow-1 align-self-end">filtra</button>
+      </div>
+    </div>      
+  </div>    
+  </form>
+<br>
+  <button id="stampa" class="btn btn-outline-secondary flex-grow-1 align-self-end">stampa</button>
+<hr>
+}
+
+@if(permessi.Count !=0)
+{
+  <table id="permessi">
+      <tr>
+          <th style="text-align: center; font-family: Consolas;">nome</th> 
+          <th style="text-align: center; font-family: Consolas;">cognome</th> 
+          <th style="text-align: center; font-family: Consolas;">data inizio</th> 
+          <th style="text-align: center; font-family: Consolas;">data fine</th>
+          <th style="text-align: center; font-family: Consolas;">richiesto il</th> 
+          <th style="text-align: center; font-family: Consolas;">tipologia</th> 
+          <th style="text-align: center; font-family: Consolas;">durata</th> 
+          <th style="text-align: center; font-family: Consolas;">motivazione</th> 
+          <th style="text-align: center; font-family: Consolas;">stato</th> 
+          <th style="text-align: center; font-family: Consolas;">urgente</th>
+          @if(canFilter){        
+          <th style="text-align: center; font-family: Consolas;">note</th> }
+          <th> </th>
+          <th> </th>
+      </tr>
+          @for(int x=0; x<permessi.Count; x++)
+          {
+            string bkgColor="";
+            if(permessi[x].Stato=="in attesa") bkgColor="lightyellow";
+            if(permessi[x].Stato=="approvato") bkgColor="lightgreen";
+            if(permessi[x].Stato=="respinto") bkgColor="orange";
+            <tr>
+                @if(!authorize)
+                {                        
+                    <td><input readonly style="width: 130px; text-align: center;" type="text" asp-for=@permessi[x].Nome class="form-control" value=@permessi[x].Nome  /></td>
+                    <td><input readonly style="width: 130px; text-align: center;" type="text" asp-for=@permessi[x].Cognome class="form-control" value=@permessi[x].Cognome  /></td>
+                    <td><input readonly style="width: 170px; text-align: center;" type="text" asp-for=@permessi[x].DataInizio class="form-control" value=@permessi[x].DataInizio  /></td>
+                    <td><input readonly style="width: 170px; text-align: center;" type="text" asp-for=@permessi[x].DataFine class="form-control" value=@permessi[x].DataFine/></td>
+                    <td><input readonly style="width: 170px; text-align: center;" type="text" asp-for=@permessi[x].DataDiRichiesta class="form-control" value=@permessi[x].DataDiRichiesta/></td>
+                    <td><input readonly style="width: 100px; text-align: center;" type="text" asp-for=@permessi[x].Tipologia class="form-control" value=@permessi[x].Tipologia  /></td>
+                    <td><input readonly style="width: 100px; text-align: center;" type="text" asp-for=@permessi[x].IntervalloTempo class="form-control" value=@permessi[x].IntervalloTempo  /></td>
+                    <td><input readonly style="width: 230px; text-align: center;" type="text" asp-for=@permessi[x].Motivazione class="form-control" value=@permessi[x].Motivazione  /></td>
+                    <td><input readonly style="background-color: @bkgColor; width: 130px; text-align: center;" type="text" asp-for=@permessi[x].Stato class="form-control" value=@permessi[x].Stato  /></td>                    
+                    <td><input readonly style="width: 130px; text-align: center;" type="text" asp-for=@permessi[x].Urgente class="form-control" value=@permessi[x].Urgente  /></td>
+                    <td><input readonly style="width: 130px; text-align: center;" type="text" asp-for=@permessi[x].Note class="form-control" value=@permessi[x].Note  /></td>
+                    <td> </td>
+                    <td> </td>
+                    <td style="width: 10px;"><input type="hidden" asp-for=@permessi[x].id class="form-control" value=@permessi[x].id readonly /></td>
+                    <td style="width: 10px;"><input type="hidden" asp-for=@permessi[x].Enabled class="form-control" value=@permessi[x].Enabled readonly/></td>
+                }
+                else
+                {
+                    <td><input style="width: 130px; text-align: center;" type="text" asp-for=@permessi[x].Nome class="form-control" value=@permessi[x].Nome readonly /></td>
+                    <td><input style="width: 130px; text-align: center;" type="text" asp-for=@permessi[x].Cognome class="form-control" value=@permessi[x].Cognome readonly /></td>
+                    <td><input style="width: 170px; text-align: center;" type="text" asp-for=@permessi[x].DataInizio class="form-control" value=@permessi[x].DataInizio readonly /></td>
+                    <td><input style="width: 170px; text-align: center;" type="text" asp-for=@permessi[x].DataFine class="form-control" value=@permessi[x].DataFine readonly /></td>
+                    <td><input style="width: 170px; text-align: center;" type="text" asp-for=@permessi[x].DataDiRichiesta class="form-control" value=@permessi[x].DataDiRichiesta readonly/></td>
+                    <td><input style="width: 90px; text-align: center;" type="text" asp-for=@permessi[x].Tipologia class="form-control" value=@permessi[x].Tipologia readonly /></td>
+                    <td><input style="width: 100px; text-align: center;" type="text" asp-for=@permessi[x].IntervalloTempo class="form-control" value=@permessi[x].IntervalloTempo readonly /></td>
+                    <td><input style="width: 230px; text-align: center;" type="text" asp-for=@permessi[x].Motivazione class="form-control" value=@permessi[x].Motivazione readonly /></td>
+                    <td><input readonly style="background-color: @bkgColor; width: 130px; text-align: center;" type="text" asp-for=@permessi[x].Stato class="form-control" value=@permessi[x].Stato  /></td>     
+                      @if(permessi[x].Urgente=="true") {
+                          <td style="text-align: center;"><input style="width: 25px; height: 25px;" class="form-check-input" type="checkbox" asp-for=@permessi[x].Urgente class="form-control" disabled/></td>
+                      } else {
+                          <td style="text-align: center;"><input style="width: 25px; height: 25px;" class="form-check-input" type="checkbox" asp-for=@permessi[x].Urgente class="form-control" disabled/></td>
+                      }
+                    @if(canFilter){
+                    <td><input style="width: 130px; text-align: center;" type="text" asp-for=@permessi[x].Note class="form-control" value=@permessi[x].Note readonly /></td> }
+                    <td style="padding-left: 25px;"><a asp-controller="Erp" asp-action="ModPermesso" asp-route-id="@permessi[x].id"><i class="material-icons text-warning">&#xE254;</i></a></td>
+                    <td style="width: 10px;"><input type="hidden" asp-for=@permessi[x].id class="form-control" value=@permessi[x].id /></td>                         
+                    <td style="width: 10px;"><input type="hidden" asp-for=@permessi[x].Enabled class="form-control" value=@permessi[x].Enabled readonly/></td>
+                    <td style="width: 10px;"><input type="hidden" asp-for=@permessi[x].Username class="form-control" value=@permessi[x].Username readonly/></td>
+                }                   
+            </tr>
+          }    
+  </table>
+} else {
+  <h4>nessuna richiesta presente</h4>
+}
+<hr>
+<br>
+    <div class="row">
+        <div class="col-md-3 d-grid">
+            <a class="btn btn-outline-success btn-block" asp-controller="Erp" asp-action="InsertPermesso">crea nuova richiesta</a>
+        </div>        
+    </div> 
+<hr>
+<br>
+<div id='calendar'></div>
+
+<script>
+  $("#sel-stato").on('change', function() {
+      //alert( this.value );
+      $("#statoPermesso").val(this.value);
+  });
+
+  $(document).ready(function() {
+    // Set default date value to today
+    var today = new Date();
+    var firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1+1);
+    var startdateString = firstDayOfMonth.toISOString().substr(0, 10);
+    $("#startDate").val(startdateString);
+
+    var lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    var enddateString = lastDayOfMonth.toISOString().substr(0, 10);
+    $("#endDate").val(enddateString);
+
+  });
+
+
+  function printData()
+    {
+      var divToPrint=document.getElementById("permessi");
+          var pageTitle = 'Stampa permessi',
+              stylesheet = '//cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css',      
+              newWin= window.open('','Print','width=500,height=300');
+              newWin.document.write('<html><head><title>' + pageTitle + '</title>' +
+                  '<link rel="stylesheet" href="' + stylesheet + '">' +
+                  '</head><body>' + divToPrint.outerHTML + '</body></html>');              
+      //newWin.document.write(divToPrint.outerHTML);
+      newWin.print();
+      newWin.close();
+    }
+
+    $('button[id="stampa"]').on('click',function(){
+      printData();
+    });
+
+</script>

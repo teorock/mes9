@@ -1,0 +1,68 @@
+{
+	"ConnString": "Data Source= c:\\core\\mesData\\erpdata.db",
+	"Table": "ProductionCalendar",
+	"EventSourceUrl": "https://localhost:5001/test/getevents?eventFilter=",
+	"DbContactListener": "https://localhost:5001/Test/InsertEvent?jsonString=",
+	"CalendarAssignments": [
+			{
+				"AssignmentName": "RvB Plast",
+				"BackgroundColor": "#ff9900",
+				"BorderColor": "#e68a00"
+			},
+			{
+				"AssignmentName": "RvB 1536",
+				"BackgroundColor": "#47d147",
+				"BorderColor": "#2eb82e"
+			},
+			{
+				"AssignmentName": "RvB 1836",
+				"BackgroundColor": "#4d94ff",
+				"BorderColor": "#4d94ff"
+			},
+			{
+				"AssignmentName": "Waterjet",
+				"BackgroundColor": "#ffc266",
+				"BorderColor": "#ff9900"
+			},
+			{
+				"AssignmentName": "EasyJet 512",
+				"BackgroundColor": "#c299ff",
+				"BorderColor": "#6600ff"
+			},
+			{
+				"AssignmentName": "Record 100",
+				"BackgroundColor": "#c2d6d6",
+				"BorderColor": "#669999"
+			},
+			{
+				"AssignmentName": "EasyJet 480",
+				"BackgroundColor": "#b3e6ff",
+				"BorderColor": "#33bbff"
+			},
+			{
+				"AssignmentName": "Akron",
+				"BackgroundColor": "#99ff99",
+				"BorderColor": "#00cc00"
+			},
+			{
+				"AssignmentName": "Stefani",
+				"BackgroundColor": "#cccc00",
+				"BorderColor": "#ffff1a"
+			},
+			{
+				"AssignmentName": "Officina",
+				"BackgroundColor": "#e6e6ff",
+				"BorderColor": "#4d4dff"
+			},
+			{
+				"AssignmentName": "Montaggio",
+				"BackgroundColor": "#ffcccc",
+				"BorderColor": "#ff4d4d"
+			},
+			{
+				"AssignmentName": "Incollaggio",
+				"BackgroundColor": "#ffccff",
+				"BorderColor": "#cc00cc"
+			}
+		]
+}

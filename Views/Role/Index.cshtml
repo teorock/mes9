@@ -1,0 +1,52 @@
+@model List<Microsoft.AspNetCore.Identity.IdentityRole>  
+@{  
+    ViewData["Title"] = "gestione utenti e ruoli";  
+}  
+
+<h3>@ViewData["Title"]</h3>
+<br>
+<hr>
+<br>
+<!-- div class="row">
+    <div class="col-md-6">
+        <div class="btn-group-vertical">
+            <a class="btn btn-outline-primary btn-lg btn-block" asp-area="" asp-controller="Role" asp-action="List">Lista ruoli</a>
+            <a class="btn btn-outline-success btn-lg btn-block" asp-area="" asp-controller="Role" asp-action="Create">Crea ruolo</a>
+            <a class="btn btn-outline-danger btn-lg btn-block" asp-area="" asp-controller="Role" asp-action="Delete">Cancella ruolo</a>
+            <a class="btn btn-outline-info btn-lg btn-block" asp-area="" asp-controller="Role" asp-action="Assign">Associa utenti a ruoli</a>
+            <a class="btn btn-outline-warning btn-lg btn-block" asp-area="" asp-controller="Role" asp-action="Remove">Rimuovi utenti da ruoli</a>
+        </div>
+    </div>
+</div -->   
+    <div class="row">
+        <div class="col-md-4 d-grid">
+            <a class="btn btn-primary btn-lg btn-block" asp-area="" asp-controller="Role" asp-action="List">Lista ruoli</a>
+        </div>
+        <div class="col-md-4 d-grid">
+            <a class="btn btn-primary btn-lg btn-block" asp-area="" asp-controller="Role" asp-action="Create">Crea ruolo</a>
+        </div>
+    </div>
+    <br>
+    <br>
+    <div class="row">
+        <div class="col-md-4 d-grid">
+            <a class="btn btn-warning btn-lg btn-block" asp-area="" asp-controller="Role" asp-action="RemoveRole">Cancella ruolo</a>
+        </div>
+        <!--div class="col-md-5">
+            <a class="btn btn-primary btn-lg btn-block p-3" asp-area="" asp-controller="Role" asp-action="Create">Crea ruolo</a>
+        </div -->
+    </div>
+    <br>
+    <br>     
+    <div class="row">
+        <div class="col-md-4 d-grid">
+            <a  class="btn btn-success btn-lg btn-block" asp-area="" asp-controller="Role" asp-action="Assign">Associa utenti a ruoli</a>
+        </div>
+        <div class="col-md-4 d-grid">
+            <a  class="btn btn-danger btn-lg btn-block" asp-area="" asp-controller="Role" asp-action="Remove">Rimuovi utenti da ruoli</a>
+        </div>
+    </div>   
+
+
+
+

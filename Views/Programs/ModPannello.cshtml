@@ -1,0 +1,240 @@
+@using mes.Models.ViewModels
+@using System.Collections.Generic
+@model PannelloViewModel
+@{
+    List<PannelloViewModel> panelsList = ViewBag.panelsList; 
+    List<MaterialiPannelli> allMateriali = ViewBag.NomiMateriali;
+    List<ClienteViewModel> customers = ViewBag.customers;
+    int selectedMaterial = ViewBag.selectedMaterial;
+    int selectedCustomer = ViewBag.selectedCustomer;
+    string defaultDate = ViewBag.defaultDate;
+}
+
+<style>     
+    select {
+        border-radius: 0.25em;
+        border-color: rgb(196, 196, 196);
+        width: 120px;
+        height: 38px;
+    }
+</style>
+
+<script>
+
+    function conferma()
+    {
+        //alert("confermo");
+        if(!$("#codice").val()) {
+            alert("campo 'codice' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#codiceEsterno").val()) {
+            alert("campo 'codice esterno' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#dataIngresso").val()) {
+            alert("campo 'data di ingresso' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }                
+        if(!$("#nomepannello").val()) {
+            alert("campo 'nome pannello' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#tipomateriale").val()) {
+            alert("campo 'tipo materiale' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#colore").val()) {
+            alert("campo 'colore' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#lunghezza").val()) {
+            alert("campo 'lunghezza' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#larghezza").val()) {
+            alert("campo 'larghezza' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#spessore").val()) {
+            alert("campo 'spessore' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }                        
+        if(!$("#quantita").val()) {
+            alert("campo 'quantità' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }        
+        if(!$("#quantitamin").val()) {
+            alert("campo 'quantità minima' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }    
+        if(!$("#cliente").val()) {
+            alert("campo 'cliente' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }      
+        $("#frmModPannello").submit();
+    }
+</script>
+
+<!-- Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Modifica bordo</h5>
+      </div>
+      <div class="modal-body">
+        <p>confermi modifica pannello?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">annulla</button>
+        <button type="button" class="btn btn-outline-success" onclick="conferma()">salva</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal end -->
+
+
+<div class="row align-items-start">
+    <div class="col-md-1" align="center">
+        <i class="fa-solid fa-layer-group fa-3x"></i>
+    </div>
+    <div class="col-md-4">
+        <h3>modifica pannello esistente</h3>
+    </div>
+</div>
+<br>
+<br>
+<hr>
+@using(Html.BeginForm("ModPannello", "Programs", FormMethod.Post, new { name = "frmModPannello", id = "frmModPannello" }))
+{
+    <table>
+        <tr>
+            <th style="text-align: center;">codice</th>
+            <th style="text-align: center;">codice esterno</th>
+            <th style="text-align: center;">data ingresso</th>
+            <th style="text-align: center;">nome pannello</th>            
+            <th style="text-align: center;">nome materiale</th>
+            <th style="text-align: center;">colore</th>
+            <th style="text-align: center;">lunghezza</th>
+            <th style="text-align: center;">larghezza</th>
+            <th style="text-align: center;">spessore</th>
+            <th style="text-align: center;">quantità</th>
+            <th style="text-align: center;">quantità min</th>
+            <th style="text-align: center;">cliente</th>
+            <th style="text-align: center;">locazione</th>
+            <th style="text-align: center;">abilitato</th>
+        </tr>
+        <tr>
+            <td><input id="codice" style="width: 90px;" type="text" asp-for=@Model.Codice class="form-control" /></td>
+            <td><input id="codiceEsterno" style="width: 150px;" type="text" asp-for=@Model.CodiceEsterno class="form-control" /></td>
+            <td><input id="dataIngresso" style="width: 130px;" type="date" asp-for=@Model.DataIngresso class="form-control" value="@defaultDate"/></td> 
+            <td><input id="nomepannello" style="width: 130px;" type="text" asp-for=@Model.Nome class="form-control" /></td>
+            <td>
+                <div class="select-editeable">
+                    <select id="sel-materiale">
+                        @foreach (var materiale in allMateriali)
+                        {
+                            <option value=@materiale.Nome>@materiale.Nome</option>
+                        }
+                    </select>
+                    <input id="tipomateriale" style="width: 90px;" type="hidden" asp-for=@Model.Tipomateriale class="form-control"/>
+                </div>  
+            </td>
+            <td><input id="colore" style="width: 80px;" type="text" asp-for=@Model.Colore class="form-control" /></td>
+            <td><input id="lunghezza" style="width: 70px;" type="text" asp-for=@Model.Lunghezza class="form-control" /></td>
+            <td><input id="larghezza" style="width: 70px;" type="text" asp-for=@Model.Larghezza class="form-control" /></td>
+            <td><input id="spessore" style="width: 60px; text-align:center;" type="text" asp-for=@Model.Spessore class="form-control" /></td>
+            <td><input id="quantita" style="width: 60px; text-align:center;" type="text" asp-for=@Model.Quantita class="form-control" /></td>
+            <td><input id="quantitamin" style="width: 60px; text-align:center;" type="text" asp-for=@Model.QuantitaMin class="form-control" /></td>
+            <td>
+                <div class="select-editeable">
+                    <select id="sel-cliente">
+
+                        @foreach (var customer in customers)
+                        {
+                            <option value=@customer.Nome>@customer.Nome</option>
+                        }
+                    </select>
+                    <input id="cliente" style="width: 150px;" type="hidden" asp-for=@Model.Cliente class="form-control" />
+                </div> 
+            </td>
+            <td><input id="locazione" style="width: 180px;" type="text" asp-for=@Model.Locazione class="form-control" /></td>
+            <td><input id="enabled" style="width: 60px; text-align:center;" type="text" asp-for=@Model.Enabled class="form-control" /></td>
+            <td style="width: 10px; text-align:center;"><input type="hidden" asp-for=@Model.id class="form-control" /></td>                                     
+        </tr> 
+    </table>
+    <br>
+    <br>
+
+    <div class="row">
+        <div class="col-md-3 d-grid">
+            <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#confirmationModal">
+                conferma
+            </button>            
+        </div>
+        <div class="col-md-3 d-grid">
+            <a class="btn btn-outline-secondary btn-block" asp-controller="Programs" asp-action="MagPannelli">annulla</a>
+        </div>             
+    </div>  
+}
+<hr>
+<br>
+<h4>lista pannelli presenti</h4>
+<br>
+<table>
+        <tr>
+            <th style="text-align: center;">codice</th>
+            <th style="text-align: center;">codice esterno</th>
+            <th style="text-align: center;">data ingresso</th>
+            <th style="text-align: center;">nome pannello</th>            
+            <th style="text-align: center;">nome materiale</th>
+            <th style="text-align: center;">colore</th>
+            <th style="text-align: center;">lunghezza</th>
+            <th style="text-align: center;">larghezza</th>
+            <th style="text-align: center;">spessore</th>
+            <th style="text-align: center;">quantità</th>
+            <th style="text-align: center;">quantità min</th>
+            <th style="text-align: center;">cliente</th>
+            <th style="text-align: center;">locazione</th>
+        </tr>
+        @foreach (PannelloViewModel oneModel in panelsList)
+        {
+            <tr>
+                <td><input readonly style="width: 90px;" type="text" asp-for=@oneModel.Codice class="form-control" /></td>
+                <td><input readonly style="width: 150px;" type="text" asp-for=@oneModel.CodiceEsterno class="form-control" /></td>
+                <td><input readonly style="width: 120px;" type="text" asp-for=@oneModel.DataIngresso class="form-control" /></td>                  
+                <td><input readonly style="width: 130px;" type="text" asp-for=@oneModel.Nome class="form-control" /></td>
+                <td><input readonly style="width: 100px;" type="text" asp-for=@oneModel.Tipomateriale class="form-control" /></td>
+                <td><input readonly style="width: 90px;" type="text" asp-for=@oneModel.Colore class="form-control" /></td>
+                <td><input readonly style="width: 70px;" type="text" asp-for=@oneModel.Lunghezza class="form-control" /></td>
+                <td><input readonly style="width: 70px;" type="text" asp-for=@oneModel.Larghezza class="form-control" /></td>
+                <td><input readonly style="width: 60px; text-align:center;" type="text" asp-for=@oneModel.Spessore class="form-control" /></td>
+                <td><input readonly style="width: 60px; text-align:center;" type="text" asp-for=@oneModel.Quantita class="form-control" /></td>
+                <td><input readonly style="width: 60px; text-align:center;" type="text" asp-for=@oneModel.QuantitaMin class="form-control" /></td>
+                <td><input readonly style="width: 150px;" type="text" asp-for=@oneModel.Cliente class="form-control" /></td>
+                <td><input readonly style="width: 200px;" type="text" asp-for=@oneModel.Locazione class="form-control" /></td>
+                <td style="width: 10px;"><input type="hidden" asp-for=@oneModel.Enabled class="form-control" /></td>  
+                <td style="width: 10px;"><input type="hidden" asp-for=@oneModel.id class="form-control" /></td>         
+            </tr>  
+        }        
+</table>
+
+<script>
+    $("#sel-materiale").prop("selectedIndex",@selectedMaterial);
+
+    $("#sel-cliente").prop("selectedIndex",@selectedCustomer);
+</script>

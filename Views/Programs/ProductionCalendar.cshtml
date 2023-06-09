@@ -1,0 +1,210 @@
+@using mes.Models.ViewModels
+@using System.Collections.Generic
+@model ProductionCalendar
+@{
+    List<ProductionCalendar> productionList = ViewBag.ProductionList;
+    string weekNumber = ViewBag.WeekNumber.ToString();
+    List<string> assignedTo = ViewBag.AssignedTo;
+}
+
+<script>
+
+    function conferma() {
+
+            if(!$("#StartDate").val()) {
+                alert("campo 'data inzio' vuoto");
+                $("#confirmationModal").modal('toggle');
+                return;
+            }
+            if(!$("#EndDate").val()) {
+                alert("campo 'data fine' vuoto");
+                $("#confirmationModal").modal('toggle');
+                return;
+            }
+            if(!$("#AssignedTo").val()) {
+                alert("campo 'assegnato a' vuoto");
+                $("#confirmationModal").modal('toggle');
+                return;
+            }
+            if(!$("#TaskName").val()) {
+                alert("campo 'nome task' vuoto");
+                $("#confirmationModal").modal('toggle');
+                return;
+            }
+            if(!$("#Description").val()) {
+                alert("campo 'descrizione' vuoto");
+                $("#confirmationModal").modal('toggle');
+                return;
+            }
+            if(!$("#Description").val()) {
+                alert("campo 'descrizione' vuoto");
+                $("#confirmationModal").modal('toggle');
+                return;
+            }
+            if(!$("#Description").val()) {
+                alert("campo 'descrizione' vuoto");
+                $("#confirmationModal").modal('toggle');
+                return;
+            }                                            
+            $("#frmInsGanttTask").submit();
+        }
+
+    function Deploy(){
+        window.location.href="/Programs/DeliverGanttWeek/";
+    }
+
+</script>
+
+<style>     
+    select {
+        border-radius: 0.25em;
+        border-color: rgb(196, 196, 196);
+        width: 120px;
+        height: 38px;
+    }
+</style>
+
+<!-- Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Creazione nuovo task</h5>
+      </div>
+      <div class="modal-body">
+        <p>confermi creazione nuovo task?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">annulla</button>
+        <button type="button" class="btn btn-outline-success" onclick="conferma()">salva</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal end -->
+
+<!-- Modal -->
+<div class="modal fade" id="confirmationDeployModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Pubblicazione calendario</h5>
+      </div>
+      <div class="modal-body">
+        <p>confermi la pubblicazione del calendario</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">annulla</button>
+        <button type="button" class="btn btn-outline-success" onclick="Deploy()">salva</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal end -->
+
+<br>
+<div class="row align-items-start">
+    <div class="col-md-1" align="center">
+        <i class="fa-solid fa-chart-gantt fa-3x"></i>
+    </div>
+    <div class="col-md-4">
+        <h3>gestione calendario produzione</h3>
+    </div>
+</div>
+<div class="row align-items-start">
+    <div class="col-md-1" align="center">
+
+    </div>    
+    <div class="col-md-4">
+        <h5>settimana @weekNumber</h5>
+    </div>
+</div>
+<br>
+<hr>
+@using(Html.BeginForm("InsertGanttTask", "Programs", FormMethod.Post, new { name = "frmInsGanttTask", id = "frmInsGanttTask" }))
+{
+    <table>
+        <tr>
+            <th style="text-align: center;">data inizio</th>
+            <th style="text-align: center;">data fine</th>
+            <th style="text-align: center;">assegnato a</th>
+            <th style="text-align: center;">nome task</th>
+            <th style="text-align: center;">descrizione</th>
+            <th style="text-align: center;">settimana n.</th>
+        </tr>
+        <tr>
+            <td><input id="StartDate" style="width: 130px;" type="date" asp-for=@Model.StartDate class="form-control" required/></td>
+            <td><input id="EndDate" style="width: 130px;" type="date" asp-for=@Model.EndDate class="form-control" required/></td>
+            <td>
+
+                <div class="select-editeable">
+                    <select id="sel-assigned" style="width: 180px;">
+                        <option value="" selected> </option>
+                        @foreach (var assigned in assignedTo)
+                        {
+                            <option value=@assigned>@assigned</option>
+                        }
+                    </select>
+                    <input id="AssignedTo" style="width: 210px;" type="hidden" asp-for=@Model.AssignedTo class="form-control" required/>
+                </div>  
+            </td>
+            <td><input id="TaskName" style="width: 325px;" type="text" asp-for=@Model.TaskName class="form-control" required/></td>
+            <td><input id="Description" style="width: 425px;" type="text" asp-for=@Model.Description class="form-control" required/></td>               
+            <td><input id="WeekNumber" style="width: 100px; text-align: center;" type="text" asp-for=@Model.WeekNumber class="form-control" value=@weekNumber readonly/></td>
+        </tr> 
+    </table>
+    <br>
+    <br>
+
+    <div class="row">
+        <div class="col-md-3 d-grid">
+            <button type="button" class="btn btn-outline-primary btn-block" data-bs-toggle="modal" data-bs-target="#confirmationModal">aggiungi task</button>            
+        </div>
+        <div class="col-md-3 d-grid">
+            <a class="btn btn-outline-secondary btn-block" asp-controller="Programs" asp-action="MainMatPannelli">annulla</a>
+        </div>
+        <div class="col-md-1 d-grid">
+
+        </div>    
+        <div class="col-md-4 d-grid">
+            <button type="button" class="btn btn-outline-warning btn-block" data-bs-toggle="modal" data-bs-target="#confirmationDeployModal">pubblica</button> 
+            <!-- a class="btn btn-outline-warning btn-block" asp-controller="Programs" asp-action="DeliverGanttWeek">pubblica</a -->
+        </div>                   
+    </div>  
+}
+
+<hr>
+<h4>lista task presenti</h4>
+<br>
+<table>
+    <tr>
+        <th style="text-align: center;">data inizio</th>
+        <th style="text-align: center;">data fine</th>
+        <th style="text-align: center;">assegnato a</th>
+        <th style="text-align: center;">nome task</th>
+        <th style="text-align: center;">descrizione</th>
+        <th style="text-align: center;">settimana n.</th>
+    </tr>
+    @foreach (ProductionCalendar oneModel in productionList)
+    {
+        <tr>
+            <td><input style="width: 130px;" type="text" asp-for=@oneModel.StartDate class="form-control" readonly/></td>
+            <td><input style="width: 130px; text-align: center;" type="text" asp-for=@oneModel.EndDate class="form-control" readonly/></td>
+            <td><input style="width: 180px;" type="text" asp-for=@oneModel.AssignedTo class="form-control" readonly/></td>
+            <td><input style="width: 325px;" type="text" asp-for=@oneModel.TaskName class="form-control" readonly/></td>
+            <td><input style="width: 425px;" type="text" asp-for=@oneModel.Description class="form-control" readonly/></td>
+            <td><input style="width: 100px; text-align: center;" type="text" asp-for=@oneModel.WeekNumber class="form-control" readonly/></td>
+            <td style="padding-left: 25px;"><a asp-controller="Programs" asp-action="ModProdCalendar" asp-route-id="@oneModel.id"><i class="material-icons text-warning">&#xE254;</i></a></td>
+        </tr>  
+    }            
+</table>
+
+
+<script>
+    $("#sel-assigned").on('change', function() {
+        $("#AssignedTo").val(this.value);
+    });
+    //$("#StartDate").on('change', function() {
+    //    alert(this.value);
+    //});    
+</script>

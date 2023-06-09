@@ -1,0 +1,172 @@
+@using mes.Models.ViewModels
+@using System.Collections.Generic
+@model SemilavoratoViewModel
+@{ List<SemilavoratoViewModel> SemilavoratiList = ViewBag.SemilavoratiList; }
+
+<script>
+
+   function confirmLoadModal(){
+        if(!$("#Codice").val()) {
+            alert("campo 'Codice' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#NomeArticolo").val()) {
+            alert("campo 'NomeArticolo' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#Lunghezza").val()) {
+            alert("campo 'Lunghezza' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#Larghezza").val()) {
+            alert("campo 'Larghezza' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#Spessore").val()) {
+            alert("campo 'Spessore' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#Colore").val()) {
+            alert("campo 'Colore' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#Cliente").val()) {
+            alert("campo 'Cliente' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#TipoBordo").val()) {
+            alert("campo 'TipoBordo' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#Quantita").val()) {
+            alert("campo 'Quantita' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#QuantitaMin").val()) {
+            alert("campo 'QuantitaMin' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#Enabled").val()) {
+            alert("campo 'Enabled' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+
+        $("#frmCreateSemilavorato").submit();
+   }
+
+</script>
+
+<!-- modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="confirmationModal">Richiesta conferma</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <p>confermi modifica Semilavorato?</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">annulla</button>
+            <button type="button" id="btnConfirm" class="btn btn-success" onclick="confirmLoadModal()">conferma</button>
+        </div>
+        </div>
+    </div>
+</div>
+<!-- Modal end -->
+
+<h2>modifica semilavorato esistente</h2>
+<br>
+<br>
+@using(Html.BeginForm("ModSemilavorato", "Programs", FormMethod.Post, new { name = "frmCreateSemilavorato", id = "frmCreateSemilavorato" }))
+{
+    <table>
+        <tr>
+            <th style="text-align: center;">codice</th> 
+            <th style="text-align: center;">nome articolo</th> 
+            <th style="text-align: center;">lunghezza</th> 
+            <th style="text-align: center;">larghezza</th> 
+            <th style="text-align: center;">spessore</th> 
+            <th style="text-align: center;">colore</th> 
+            <th style="text-align: center;">cliente</th> 
+            <th style="text-align: center;">tipoBordo</th> 
+            <th style="text-align: center;">quantita</th> 
+            <th style="text-align: center;">quantita min</th> 
+            <th style="text-align: center;">enabled</th> 
+        </tr>
+        <tr>
+            <td><input style="width: 130px;" type="text" asp-for=@Model.Codice class="form-control" id="Codice" required/></td>
+            <td><input style="width: 130px;" type="text" asp-for=@Model.NomeArticolo class="form-control" id="NomeArticolo" required/></td>
+            <td><input style="width: 90px;" type="text" asp-for=@Model.Lunghezza class="form-control" id="Lunghezza" required/></td>
+            <td><input style="width: 90px;" type="text" asp-for=@Model.Larghezza class="form-control" id="Larghezza" required/></td>
+            <td><input style="width: 90px;" type="text" asp-for=@Model.Spessore class="form-control" id="Spessore" required/></td>
+            <td><input style="width: 130px; text-align:center;" type="text" asp-for=@Model.Colore class="form-control" id="Colore" required/></td>
+            <td><input style="width: 120px;" type="text" asp-for=@Model.Cliente class="form-control" id="Cliente" required/></td>
+            <td><input style="width: 190px;" type="text" asp-for=@Model.TipoBordo class="form-control" id="TipoBordo" required/></td>
+            <td><input style="width: 110px; text-align:center;" type="text" asp-for=@Model.Quantita class="form-control" id="Quantita" required/></td>
+            <td><input style="width: 110px; text-align:center;" type="text" asp-for=@Model.QuantitaMin class="form-control" id="QuantitaMin" required/></td>
+            <td><input style="width: 90px; text-align:center;" type="text" asp-for=@Model.Enabled class="form-control" id="Enabled" required/></td>
+        </tr> 
+    </table>
+    <br>
+    <br>
+
+    <div class="row">
+        <div class="col-md-3 d-grid">
+        <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#confirmationModal">
+        conferma
+        </button>            
+        </div>
+        <div class="col-md-3 d-grid">
+            <a class="btn btn-outline-secondary btn-block" asp-controller="Programs" asp-action="MainSemilavorati">annulla</a>
+        </div>             
+    </div>  
+}
+<hr>
+<br>
+<h4>lista semilavorati presenti</h4>
+<br>
+<table>
+        <tr>
+            <th style="text-align: center;">codice</th> 
+            <th style="text-align: center;">nome articolo</th> 
+            <th style="text-align: center;">lunghezza</th> 
+            <th style="text-align: center;">larghezza</th> 
+            <th style="text-align: center;">spessore</th> 
+            <th style="text-align: center;">colore</th> 
+            <th style="text-align: center;">cliente</th> 
+            <th style="text-align: center;">tipo bordo</th> 
+            <th style="text-align: center;">quantita</th> 
+            <th style="text-align: center;">quantita min</th> 
+            <th style="text-align: center;">enabled</th> 
+        </tr>
+        @foreach (SemilavoratoViewModel oneModel in SemilavoratiList)
+        {
+            <tr>
+                <td><input style="width: 130px;" type="text" asp-for=@oneModel.Codice class="form-control" value=@oneModel.Codice readonly /></td> 
+                <td><input style="width: 130px;" type="text" asp-for=@oneModel.NomeArticolo class="form-control" value=@oneModel.NomeArticolo readonly /></td> 
+                <td><input style="width: 90px;" type="text" asp-for=@oneModel.Lunghezza class="form-control" value=@oneModel.Lunghezza readonly /></td> 
+                <td><input style="width: 90px;" type="text" asp-for=@oneModel.Larghezza class="form-control" value=@oneModel.Larghezza readonly /></td> 
+                <td><input style="width: 90px;" type="text" asp-for=@oneModel.Spessore class="form-control" value=@oneModel.Spessore readonly /></td> 
+                <td><input style="width: 130px; text-align:center;" type="text" asp-for=@oneModel.Colore class="form-control" value=@oneModel.Colore readonly /></td> 
+                <td><input style="width: 120px;" type="text" asp-for=@oneModel.Cliente class="form-control" value=@oneModel.Cliente readonly /></td> 
+                <td><input style="width: 190px;" type="text" asp-for=@oneModel.TipoBordo class="form-control" value=@oneModel.TipoBordo readonly /></td> 
+                <td><input style="width: 110px; text-align:center;" type="text" asp-for=@oneModel.Quantita class="form-control" value=@oneModel.Quantita readonly /></td> 
+                <td><input style="width: 110px; text-align:center;" type="text" asp-for=@oneModel.QuantitaMin class="form-control" value=@oneModel.QuantitaMin readonly /></td> 
+                <td><input style="width: 90px; text-align:center;" type="text" asp-for=@oneModel.Enabled class="form-control" value=@oneModel.Enabled readonly /></td> 
+            </tr>
+        }
+</table>
+

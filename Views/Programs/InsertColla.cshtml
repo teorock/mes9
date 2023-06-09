@@ -1,0 +1,93 @@
+@using mes.Models.ViewModels
+@using System.Collections.Generic
+@model CollaViewModel
+@{
+    List<CollaViewModel> gluesList = ViewBag.GluesList;
+    string errorMessage = ViewBag.errorMessage;
+    }
+
+<script>
+
+    var message = '@errorMessage';
+    if(message)
+    {
+        alert("codice colla già presente");
+    }
+
+</script>
+
+<div class="row align-items-start">
+    <div class="col-md-1" align="center">
+        <i class="fa-solid fa-jar fa-3x"></i>
+    </div>
+    <div class="col-md-4">
+        <h3>crea nuova colla</h3>
+    </div>
+</div>
+<br>
+<br>
+<hr>
+@using(Html.BeginForm("InsertColla", "Programs", FormMethod.Post))
+{
+    <table>
+        <tr>
+            <th style="text-align: center;">codice</th>
+            <th style="text-align: center;">tipo colla</th>            
+            <th style="text-align: center;">formato colla</th>
+            <th style="text-align: center;">quantità</th>
+            <th style="text-align: center;">quan.minima</th>
+            <th style="text-align: center;">unità di misura</th>
+        </tr>
+        <tr>
+            <td><input style="width: 160px;" type="text" asp-for=@Model.Codice class="form-control" /></td>                
+            <td><input style="width: 260px;" type="text" asp-for=@Model.Nome class="form-control" /></td>            
+            <td><input style="width: 160px;" type="text" asp-for=@Model.FormatoColla class="form-control" /></td>
+            <td><input style="width: 160px;" type="text" asp-for=@Model.Quantita class="form-control" /></td>
+            <td><input style="width: 160px;" type="text" asp-for=@Model.QuantitaMin class="form-control" /></td>  
+            <td><input style="width: 160px;" type="text" asp-for=@Model.UnitaMisura class="form-control" /></td>            
+        </tr> 
+    </table>
+    <br>
+
+
+    <div class="row">
+        <div class="col-md-3 d-grid">
+            <button class="btn btn-outline-success btn-block" type="submit">inserisci</button>
+        </div>
+        <div class="col-md-3 d-grid">
+            <a class="btn btn-outline-secondary btn-block" asp-controller="Programs" asp-action="MagColle">annulla</a>
+        </div>             
+    </div>  
+}
+<br>
+<hr>
+<h4>lista colle presenti</h4>
+<br>
+<table>
+        <tr>
+            <th style="text-align: center;">codice</th>
+            <th style="text-align: center;">tipo colla</th>            
+            <th style="text-align: center;">formato colla</th>
+            <th style="text-align: center;">quantità</th>
+            <th style="text-align: center;">quan.minima</th>
+            <th style="text-align: center;">unità di misura</th>
+        </tr>
+        @foreach (CollaViewModel oneModel in gluesList)
+        {
+            <tr>
+                    <td><input style="width: 160px;" type="text" asp-for=@oneModel.Codice class="form-control" value=@oneModel.Codice readonly /></td>                    
+                    <td><input style="width: 260px;" type="text" asp-for=@oneModel.Nome class="form-control" value=@oneModel.Nome readonly /></td>                    
+                    <td><input style="width: 160px;" type="text" asp-for=@oneModel.FormatoColla class="form-control" value=@oneModel.FormatoColla readonly /></td>
+                    <td><input style="width: 160px; text-align: center;" type="text" asp-for=@oneModel.Quantita class="form-control" value=@oneModel.Quantita readonly /></td>
+                    <td><input style="width: 160px; text-align: center;" type="text" asp-for=@oneModel.QuantitaMin class="form-control" value=@oneModel.QuantitaMin readonly /></td>
+                    <td><input style="width: 160px; text-align: center;"type="text" asp-for=@oneModel.UnitaMisura class="form-control" value=@oneModel.UnitaMisura readonly /></td>
+                    <td style="width: 10px;"><input type="hidden" asp-for=@oneModel.id class="form-control" value=@oneModel.id readonly /></td>            
+            </tr>  
+        }        
+</table>
+
+
+
+
+
+

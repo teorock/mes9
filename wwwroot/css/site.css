@@ -1,0 +1,31 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+.file-browser li {
+  cursor: pointer;
+  user-select: none;
+}
+
+.file-browser li.selected {
+  background-color: lightblue;
+}
+
+.copy-folder {
+  margin-top: 20px;
+}

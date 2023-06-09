@@ -1,0 +1,99 @@
+@using mes.Models.ViewModels
+@using System.Collections.Generic
+@model MatPannelloViewModel
+@{ List<MatPannelloViewModel> MatPannelliList = ViewBag.MatPannelliList; }
+
+<script>
+
+   function confirmLoadModal(){
+        if(!$("#NomeMateriale").val()) {
+            alert("campo 'NomeMateriale' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#Enabled").val()) {
+            alert("campo 'Enabled' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+
+        $("#frmModMatPannello").submit();
+   }
+
+</script>
+
+<!-- modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="confirmationModal">Richiesta conferma</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <p>confermi modifica MatPannello?</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">annulla</button>
+            <button type="button" id="btnConfirm" class="btn btn-success" onclick="confirmLoadModal()">conferma</button>
+        </div>
+        </div>
+    </div>
+</div>
+<!-- Modal end -->
+
+<div class="row align-items-start">
+    <div class="col-md-1" align="center">
+        <i class="fa-solid fa-pallet fa-3x"></i>
+    </div>
+    <div class="col-md-4">
+        <h3>modifica materiale esistente</h3>
+    </div>
+</div>
+<br>
+<br>
+<hr>
+@using(Html.BeginForm("ModMatPannello", "Programs", FormMethod.Post, new { name = "frmModMatPannello", id = "frmModMatPannello" }))
+{
+    <table>
+        <tr>
+            <th style="text-align: center;">NomeMateriale</th> 
+            <th style="text-align: center;">Enabled</th> 
+        </tr>
+        <tr>
+            <td><input style="width: 160px;" type="text" asp-for=@Model.Nome class="form-control" id="NomeMateriale" required/></td>
+            <td><input style="width: 160px; text-align: center;" type="text" asp-for=@Model.Enabled class="form-control" id="Enabled" required/></td>
+        </tr> 
+    </table>
+    <br>
+    <br>
+
+    <div class="row">
+        <div class="col-md-3 d-grid">
+        <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#confirmationModal">
+        conferma
+        </button>            
+        </div>
+        <div class="col-md-3 d-grid">
+            <a class="btn btn-outline-secondary btn-block" asp-controller="DataInput" asp-action="MagBordi">annulla</a>
+        </div>             
+    </div>  
+}
+<hr>
+<br>
+<h4>lista MatPannelli presenti</h4>
+<br>
+<table>
+        <tr>
+            <th style="text-align: center;">NomeMateriale</th> 
+            <th style="text-align: center;">Enabled</th> 
+        </tr>
+        @foreach (MatPannelloViewModel oneModel in MatPannelliList)
+        {
+            <tr>
+                <td><input style="width: 160px;" type="text" asp-for=@oneModel.Nome class="form-control" value=@oneModel.Nome readonly /></td> 
+                <td><input style="width: 160px;  text-align: center;" type="text" asp-for=@oneModel.Enabled class="form-control" value=@oneModel.Enabled readonly /></td> 
+            </tr>
+        }
+</table>
+

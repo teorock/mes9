@@ -1,0 +1,133 @@
+@using mes.Models.ViewModels
+@using System.Collections.Generic
+@model List<ClienteViewModel>
+@{
+    string userRoles = ViewBag.userRoles;
+    bool authorize = false;
+    if(userRoles.Contains("MagMaterialiScrivi")||userRoles.Contains("root")) authorize=true;
+}
+
+<script>
+    function cancella(id, nome, altezza)
+    {
+        var redirection ="";
+        if(confirm("confermi cancellazione bordo: \n" + nome + " -altezza- " + altezza +" ?")){
+            $.get("/DataInput/Customers/" + id);
+        } else {
+            return;
+        }
+    }
+
+    function conferma() {
+            //alert("salvo");
+            $("#frmAggBordi").submit();
+        }
+
+</script>
+
+<!-- Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Aggiornamento dati</h5>
+      </div>
+      <div class="modal-body">
+        <p>confermi aggiornamento ?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">annulla</button>
+        <button type="button" class="btn btn-outline-success" onclick="conferma()">aggiorna</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal end -->
+
+<style>
+    table, th {
+        font-size: 16px;
+    }
+    input, td {
+        font-size: 14px;
+    }
+    input:hover {
+        background-color: gold;
+    }
+    input:focus {
+        background-color: lightyellow;
+    } 
+</style>
+
+<div class="row align-items-start">
+    <div class="col-md-1" align="center">
+        <i class="fa-solid fa-people-group fa-3x"></i>
+    </div>
+    <div class="col-md-4">
+        <h3>gestione clienti</h3>
+    </div>
+</div>
+<br>
+<br>
+<hr>
+@using(Html.BeginForm("AggiornaClienti", "DataInput", FormMethod.Post, new { name = "frmAggClienti", id = "frmAggClienti" }))
+{
+    <table>
+        <tr>
+            <th style="text-align: center;">denominazione</th> 
+            <th style="text-align: center;">codice esterno</th>            
+            <th style="text-align: center;">indirizzo</th>
+            <th style="text-align: center;">telefono</th>
+            <th style="text-align: center;">referente 1</th>
+            <th style="text-align: center;">tel. referente</th>
+            <th style="text-align: center;">referente 2</th>
+            <th style="text-align: center;">tel. referente</th>            
+            <th> </th>
+            <th> </th>
+        </tr>
+            @for(int x=0; x<Model.Count; x++)
+            {
+                <tr>
+                    @if(!authorize)
+                    {
+                        <td><input readonly style="width: 190px;" type="text" asp-for=@Model[x].Nome class="form-control" value=@Model[x].Nome  readonly/></td>                    
+                        <td><input readonly style="width: 170px;" type="text" asp-for=@Model[x].CodiceEsterno class="form-control" value=@Model[x].CodiceEsterno  readonly/></td>                    
+                        <td><input readonly style="width: 170px; text-align:center;" type="text" asp-for=@Model[x].Indirizzo class="form-control" value=@Model[x].Indirizzo  readonly/></td>
+                        <td><input readonly style="width: 150px; text-align:center;" type="text" asp-for=@Model[x].Telefono class="form-control" value=@Model[x].Telefono  readonly/></td>
+                        <td><input readonly style="width: 150px; text-align:center;" type="text" asp-for=@Model[x].Referente1 class="form-control" value=@Model[x].Referente1  readonly/></td>
+                        <td><input readonly style="width: 150px; text-align:center;" type="text" asp-for=@Model[x].TelReferente1 class="form-control" value=@Model[x].TelReferente1  readonly/></td>
+                        <td><input readonly style="width: 150px; text-align:center;" type="text" asp-for=@Model[x].Referente2 class="form-control" value=@Model[x].Referente2  readonly/></td>
+                        <td><input readonly style="width: 150px; text-align:center;" type="text" asp-for=@Model[x].TelReferente2 class="form-control" value=@Model[x].TelReferente2  readonly/></td>
+                        <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].id class="form-control" value=@Model[x].id readonly /></td>
+                    }
+                    else
+                    {
+                        <td><input readonly style="width: 190px;" type="text" asp-for=@Model[x].Nome class="form-control" value=@Model[x].Nome  readonly/></td>                    
+                        <td><input readonly style="width: 170px;" type="text" asp-for=@Model[x].CodiceEsterno class="form-control" value=@Model[x].CodiceEsterno  readonly/></td>                    
+                        <td><input readonly style="width: 170px; text-align:center;" type="text" asp-for=@Model[x].Indirizzo class="form-control" value=@Model[x].Indirizzo  readonly/></td>
+                        <td><input readonly style="width: 150px; text-align:center;" type="text" asp-for=@Model[x].Telefono class="form-control" value=@Model[x].Telefono  readonly/></td>
+                        <td><input readonly style="width: 150px; text-align:center;" type="text" asp-for=@Model[x].Referente1 class="form-control" value=@Model[x].Referente1  readonly/></td>
+                        <td><input readonly style="width: 150px; text-align:center;" type="text" asp-for=@Model[x].TelReferente1 class="form-control" value=@Model[x].TelReferente1  readonly/></td>
+                        <td><input readonly style="width: 150px; text-align:center;" type="text" asp-for=@Model[x].Referente2 class="form-control" value=@Model[x].Referente2  readonly/></td>
+                        <td><input readonly style="width: 150px; text-align:center;" type="text" asp-for=@Model[x].TelReferente2 class="form-control" value=@Model[x].TelReferente2  readonly/></td>
+                        <td style="padding-left: 25px;"><a asp-controller="DataInput" asp-action="ModCustomer" asp-route-id="@Model[x].id"><i class="material-icons text-warning">&#xE254;</i></a></td>
+                        <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].id class="form-control" value=@Model[x].id readonly /></td>
+                    }                   
+                </tr>
+            }    
+    </table>
+    <br>
+    <br>
+    @if(authorize)
+    {
+        <div class="row">
+            <!-- div class="col-md-3 d-grid">
+                <button type="button" class="btn btn-outline-primary btn-block" data-bs-toggle="modal" data-bs-target="#confirmationModal">aggiorna</button>          
+            </div -->
+            <div class="col-md-3 d-grid">
+                <a class="btn btn-outline-success btn-block" asp-controller="DataInput" asp-action="InsertCustomer">crea nuovo cliente</a>
+            </div>    
+        </div>  
+    }
+}
+

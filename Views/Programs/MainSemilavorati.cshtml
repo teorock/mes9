@@ -1,0 +1,188 @@
+@using mes.Models.ViewModels
+@using System.Collections.Generic
+@model List<SemilavoratoViewModel>
+
+@{
+    string userRoles = ViewBag.userRoles;
+    bool authorize = false;
+    if(userRoles.Contains("MagSemilavoratiScrivi")||userRoles.Contains("root")) authorize=true;
+    List<ClienteViewModel> Clienti = ViewBag.Clienti;
+}
+
+<script>
+
+function conferma()
+{
+    if(!$("#quantita").val()) {
+        alert("campo 'quantita' vuoto");
+        $("#confirmationModal").modal('toggle');
+        return;
+        }
+
+    var inputs = $("[id=quantita]");
+    var validChars = /^[0-9.]+$/;
+    var isIvalid = true;
+
+    inputs.each(function() {
+        var inputVal = $(this).val();
+        if(!validChars.test(inputVal)) {
+            $(this).css({
+                'border-color': 'red',
+                'border-width': '3px'
+                });
+                isIvalid = false;
+            } else {
+            $(this).css({
+                'border-color': '',
+                'border-width': ''
+                });                
+            }
+        });
+
+    if(!isIvalid) {
+        alert("correggere i campi evidenziati");
+        $("#confirmationModal").modal('toggle');
+        return;   
+    }
+
+    $("#frmAggSemilavorati").submit();
+        
+}
+
+</script>
+
+<!-- Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Aggiornamento dati</h5>
+      </div>
+      <div class="modal-body">
+        <p>confermi aggiornamento ?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">annulla</button>
+        <button type="button" class="btn btn-outline-success" onclick="conferma()">aggiorna</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal end -->
+
+<style>
+    table, th {
+        font-size: 16px;
+    }
+    input, td {
+        font-size: 14px;
+    }
+    input:hover {
+        background-color: gold;
+    }
+    input:focus {
+        background-color: lightyellow;
+    } 
+</style>
+
+<h2>gestione magazzino semilavorati</h2>
+<br>
+<br>
+<hr>
+
+<div class="row justify-content-center align-items-center g-2">
+    <div class="col"><h4>semilavorati a magazzino</h4></div>
+    <div class="col">
+            <div class="dropdown">
+                <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+                    filtra per cliente
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" asp-controller="Programs" asp-action="MainSemilavorati" asp-route-cliente="">tutti</a></li>
+                    @foreach (var item in Clienti)
+                    {
+                        <li><a class="dropdown-item" asp-controller="Programs" asp-action="MainSemilavorati" asp-route-cliente="@item.Nome">@item.Nome</a></li>
+                    }
+                    
+                </ul>
+            </div>        
+    </div>
+</div>
+<hr>
+@using(Html.BeginForm("AggiornaSemilavorati", "Programs", FormMethod.Post, new { name = "frmAggSemilavorati", id = "frmAggSemilavorati" }))
+{
+    <table>
+        <tr>
+            <th style="text-align: center;">codice</th> 
+            <th style="text-align: center;">nome articolo</th> 
+            <th style="text-align: center;">lunghezza</th> 
+            <th style="text-align: center;">larghezza</th> 
+            <th style="text-align: center;">spessore</th> 
+            <th style="text-align: center;">colore</th> 
+            <th style="text-align: center;">cliente</th> 
+            <th style="text-align: center;">tipo bordo</th> 
+            <th style="text-align: center;">quantita</th> 
+            <th style="text-align: center;">quantita min</th> 
+            <th style="text-align: center;">enabled</th> 
+            <th> </th>
+            <th> </th>
+        </tr>
+            @for(int x=0; x<Model.Count; x++)
+            {
+                int quan = Convert.ToInt16(Model[x].Quantita);
+                int qMin = Convert.ToInt16(Model[x].QuantitaMin);
+                string color=( quan > qMin)? "none" : "orange";
+                <tr>
+                    @if(!authorize)
+                    {
+                        <td><input readonly style="width: 130px; background-color: @color;" type="text" asp-for=@Model[x].Codice class="form-control" value=@Model[x].Codice  /></td>
+                        <td><input readonly style="width: 130px; background-color: @color;" type="text" asp-for=@Model[x].NomeArticolo class="form-control" value=@Model[x].NomeArticolo  /></td>
+                        <td><input readonly style="width: 90px;  background-color: @color;" type="text" asp-for=@Model[x].Lunghezza class="form-control" value=@Model[x].Lunghezza  /></td>
+                        <td><input readonly style="width: 90px;  background-color: @color;" type="text" asp-for=@Model[x].Larghezza class="form-control" value=@Model[x].Larghezza  /></td>
+                        <td><input readonly style="width: 90px;  background-color: @color;" type="text" asp-for=@Model[x].Spessore class="form-control" value=@Model[x].Spessore  /></td>
+                        <td><input readonly style="width: 130px; background-color: @color;" type="text" asp-for=@Model[x].Colore class="form-control" value=@Model[x].Colore  /></td>
+                        <td><input readonly style="width: 120px; background-color: @color;" type="text" asp-for=@Model[x].Cliente class="form-control" value=@Model[x].Cliente  /></td>
+                        <td><input readonly style="width: 190px; background-color: @color;" type="text" asp-for=@Model[x].TipoBordo class="form-control" value=@Model[x].TipoBordo  /></td>
+                        <td><input readonly style="width: 130px; background-color: @color;" type="text" asp-for=@Model[x].Quantita class="form-control" value=@Model[x].Quantita  /></td>
+                        <td><input readonly style="width: 130px; background-color: @color;" type="text" asp-for=@Model[x].QuantitaMin class="form-control" value=@Model[x].QuantitaMin  /></td>
+                        <td><input readonly style="width: 90px;  background-color: @color;" type="text" asp-for=@Model[x].Enabled class="form-control" value=@Model[x].Enabled  /></td>
+                        <td> </td>
+                        <td> </td>
+                        <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].id class="form-control" value=@Model[x].id readonly /></td>
+                        <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].Enabled class="form-control" value=@Model[x].Enabled readonly/></td>
+                    }
+                    else
+                    {
+                        <td><input style="width: 130px; background-color: @color;" type="text" asp-for=@Model[x].Codice class="form-control" value=@Model[x].Codice readonly /></td>
+                        <td><input style="width: 130px; background-color: @color;" type="text" asp-for=@Model[x].NomeArticolo class="form-control" value=@Model[x].NomeArticolo readonly /></td>
+                        <td><input style="width: 90px;  background-color: @color;" type="text" asp-for=@Model[x].Lunghezza class="form-control" value=@Model[x].Lunghezza readonly /></td>
+                        <td><input style="width: 90px;  background-color: @color;" type="text" asp-for=@Model[x].Larghezza class="form-control" value=@Model[x].Larghezza readonly /></td>
+                        <td><input style="width: 90px;  background-color: @color;" type="text" asp-for=@Model[x].Spessore class="form-control" value=@Model[x].Spessore readonly /></td>
+                        <td><input style="width: 130px; background-color: @color; text-align:center;" type="text" asp-for=@Model[x].Colore class="form-control" value=@Model[x].Colore readonly /></td>
+                        <td><input style="width: 120px; background-color: @color;" type="text" asp-for=@Model[x].Cliente class="form-control" value=@Model[x].Cliente readonly /></td>
+                        <td><input style="width: 190px; background-color: @color;" type="text" asp-for=@Model[x].TipoBordo class="form-control" value=@Model[x].TipoBordo readonly /></td>
+                        <td><input id="quantita" style="width: 130px; background-color: @color; text-align:center;" type="text" asp-for=@Model[x].Quantita class="form-control" value=@Model[x].Quantita /></td>
+                        <td><input style="width: 130px; background-color: @color; text-align:center;" type="text" asp-for=@Model[x].QuantitaMin class="form-control" value=@Model[x].QuantitaMin readonly /></td>
+                        <td><input style="width: 90px;  background-color: @color; text-align:center;" type="text" asp-for=@Model[x].Enabled class="form-control" value=@Model[x].Enabled readonly /></td>
+                        <td style="padding-left: 25px;"><a asp-controller="Programs" asp-action="ModSemilavorato" asp-route-id="@Model[x].id"><i class="material-icons text-warning">&#xE254;</i></a></td>
+                        <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].id class="form-control" value=@Model[x].id /></td>                         
+                        <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].Enabled class="form-control" value=@Model[x].Enabled readonly/></td>
+                    }                   
+                </tr>
+            }    
+    </table>
+    <br>
+    <br>
+    @if(authorize)
+    {
+        <div class="row">
+            <div class="col-md-3 d-grid">
+                <!-- button class="btn btn-outline-primary btn-block" type="submit">aggiorna quantità</button -->
+                <button type="button" class="btn btn-outline-primary btn-block" data-bs-toggle="modal" data-bs-target="#confirmationModal">aggiorna</button>          
+            </div>
+            <div class="col-md-3 d-grid">
+                <a class="btn btn-outline-success btn-block" asp-controller="Programs" asp-action="InsertSemilavorato">crea nuovo semilavorato</a>
+            </div>    
+        </div>  
+    }
+}

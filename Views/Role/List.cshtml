@@ -1,0 +1,37 @@
+@model List<Microsoft.AspNetCore.Identity.IdentityRole>  
+@{  
+    ViewData["Title"] = "Index";  
+}  
+<h1>Lista ruoli presenti</h1> 
+<hr>
+<br>
+<div class="container">
+    <br>
+    <div class="row">
+        <div class="col-md-4">
+            <h7><b>Nome</b></h7>
+        </div>
+        <div class="col-md-4">
+            <h7><b>Id</b></h7>
+        </div>
+    </div>
+    @foreach (var role in Model)  
+    {  
+        <hr>
+        <div class="row">
+            <div class="col-md-4">
+                <h7>@role.Name</h7>
+            </div>
+            <div class="col-md-4">
+                <h7>@role.Id</h7>
+            </div> 
+        </div>           
+    }          
+<br>
+<br>
+    <div class="row">
+        <div class="col-md-5">
+            <a class="btn btn-outline-primary" asp-action="Create">Crea nuovo ruolo</a>
+        </div>
+    </div>
+</div>

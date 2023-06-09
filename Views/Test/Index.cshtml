@@ -1,0 +1,467 @@
+@using mes.Models.InfrastructureModels;
+@using mes.Models.ViewModels;
+@using System.Collections.Generic
+@using mes.Models.ControllersConfig;
+@using mes.Models.ControllersConfigModels;
+@model List<ProductionCalendarDbModel>
+@{
+  var authorize = ViewBag.authorize;
+  string dbContactListener = ViewBag.dbContactListener;
+  string eventSourceUrl = ViewBag.eventSourceUrl;
+  string defaultView = ViewBag.defaultView;
+  string baseAddress = ViewBag.baseAddress;
+  TestControllerConfig config = ViewBag.config;
+
+}
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css' rel='stylesheet'>
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css' rel='stylesheet'>  
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>  
+    
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.6/index.global.min.js'></script>    
+    
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js'></script>
+
+    <script src="/js/popper.min.js"></script>
+    <script src="https://unpkg.com/tippy.js@6/dist/tippy-bundle.umd.js"></script>
+
+    <link rel="stylesheet"  href="https://unpkg.com/tippy.js@6/themes/light.css" />
+    <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/light-border.css" />
+    <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/translucent.css" />
+    <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/material.css" />
+    
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/2.0.2/luxon.min.js"></script>
+
+    <style>
+        select {
+            border-color: #ccc;
+            border-radius: 3px;
+            height: 30px;
+        }
+
+        html, body {
+          margin: 0;
+          padding: 0;
+          font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
+          font-size: 14px;
+        }
+
+        button {
+          border-radius: 5px;
+        }
+
+        #calendar {
+          max-width: 900px;
+          margin: 40px auto;
+        }
+
+    </style>
+
+    <script>
+		//var dbContactListener = 'https://dc2:5003/Test?jsonString=';       
+		//var eventSourceUrl = "https://dc2:5003/Test/GetAllEvents";
+    var dbContactListener = '@dbContactListener';
+    var eventSourceUrl = '@eventSourceUrl';
+    console.log("eventSource:" + eventSourceUrl);
+    console.log("dbCOntactListener:" + dbContactListener);
+    var version = "ProductionCalendar v1.1 - 17 maggio 2023"; 
+		
+    console.log(version);
+    //ProductionCalendar - versione 1.0 - 17 maggio 2023
+    
+      document.addEventListener('DOMContentLoaded', function () {
+          var calendarEl = document.getElementById('calendarPlast');
+
+          var calendarPlast = new FullCalendar.Calendar(calendarEl, {
+            timeZone: 'UTC',
+            themeSystem: 'bootstrap5',
+            locale: 'it',  
+            initialView: '@defaultView',
+            buttonText: {
+                prev: "prec",
+                next: "pross",
+                prevYear: "prev year",
+                nextYear: "next year",
+                year: "anno",
+                today: "oggi",
+                month: "mese",
+                week: "sett",
+                day: "giorno",
+						    list: "lista"
+					},                   
+            headerToolbar: {
+              left: 'prev,next',
+              center: 'title',
+              right: 'timeGridDay,dayGridWeek,dayGridMonth'
+            },
+            hiddenDays: [0],
+            nowIndicator: true,
+            weekNumbers: false,
+            dayMaxEvents: false, 
+            eventSources: [
+                        {
+                            url: eventSourceUrl,
+                            dataType : 'jsonp',
+                            className: 'feed_one'
+                        }
+                    ],
+              editable: @authorize,
+              selectable: @authorize,
+              eventResizableFromStart: @authorize,
+            businessHours: {
+                // days of week. an array of zero-based day of week integers (0=Sunday)
+                daysOfWeek: [ 1, 2, 3, 4, 5 ], // Monday - Thursday
+
+                startTime: '07:30', // a start time (10am in this example)
+                endTime: '18:00', // an end time (6pm in this example)
+                },
+            eventRender: function(info) {
+
+              var extendedProps = info.event.extendedProps;
+
+              // Check the extendedProps and set the event color accordingly
+              if (extendedProps && extendedProps.color) {
+                info.el.style.backgroundColor = extendedProps.backgroundColor;
+                info.el.style.borderColor = extendedProps.borderColor;
+              }             
+            },     
+
+            //eventOverlap: function(stillEvent, movingEvent) {
+            //                        alert(movingEvent.allDay);
+            //                        return stillEvent.allDay && movingEvent.allDay;
+            //                      } 
+            eventResize: function(resizingEvent) {console.log(JSON.stringify(resizingEvent));},
+            //eventDrop: function(movingEvent) {console.log(JSON.stringify(movingEvent));},
+            eventResizeStart: function(event) {console.log(JSON.stringify(event));},
+            eventClick: function(calEvent, jsEvent, view) {              
+                showModal(calEvent, "edit");
+              },
+            select: function(calEvent, jsEvent, view) {
+                showModal(calEvent, "create");
+              },
+            eventChange: function(calEvent, jsEvent, view){
+              confirmMove(calEvent, "move");
+            },
+            eventDidMount: function(info) {
+              var fuse = luxon.Duration.fromObject({hours : 2}) ;
+
+              var startDate = info.event.start;
+              var parsedStartDate = luxon.DateTime.fromJSDate(new Date(startDate));
+              var startHour = parsedStartDate.minus(fuse).hour;              
+              var formattedStartDate = parsedStartDate.setLocale('it').toFormat('cccc d');
+
+              var endDate = info.event.end;
+              var parsedEndDate = luxon.DateTime.fromJSDate(new Date(endDate));
+              var endHour = parsedEndDate.minus(fuse).hour;
+              var formattedEndDate = parsedEndDate.setLocale('it').toFormat('cccc d');              
+
+                tippy(info.el, {
+                    content:  info.event.title + '<br> per: ' + info.event.extendedProps.assignedTo + '<br> dalle ' + startHour + ' di ' + formattedStartDate + ' alle ' + endHour + ' di ' + formattedEndDate + '<br>' + info.event.description,
+                    allowHTML: true,
+                    theme: 'translucent'           
+                });
+            }        
+          });
+
+
+          function confirmMove(calEvent, mode){  
+            //alert("move");
+              if(confirm('Confermi le informazioni?'))
+                {
+                var event = calEvent.event;
+                var oldEvent = calEvent.oldEvent;
+                var data = {
+                          oldEventStart: oldEvent.start,
+                          oldEventEnd: oldEvent.end,
+                          eventTitle: event.title,                          
+                          eventDescription: event.extendedProps.description,
+                          startDate: event.start,
+                          endDate: event.end,
+                          assignedTo: event.extendedProps.assignedTo,
+                          operationType: mode,
+                          fileLocation: event.extendedProps.fileLocation,
+                          id: event.id                          
+                          };
+                  console.log(JSON.stringify(event));
+                $.ajax({
+                  type: 'POST',
+                  url: dbContactListener + encodeURIComponent(JSON.stringify(data)),
+                  //url: dbContactListener,
+                  data: { 
+                    
+                   },
+                  xhrFields: {withCredentials: true},
+                  rejectUnathorized: false,                
+                  success: function(response) {
+                    console.log(JSON.stringify(response));
+                    location.reload(true);
+                  },
+                  error: function(error) {
+                    alert(JSON.stringify(error));
+                  }
+                });
+                $('#myModal').modal('hide');
+              }
+                
+            }            
+                    
+          function showModal(event, mode) {
+            //var extendedP = event.extendedProps;
+            //console.log("showModal " + event.title);
+            $('#myModal .modal-body').html(`
+            <form id="myForm" asp-controller="Test" asp-action="InsertEvent">
+                <div class="form-group">
+                  <label for="eventName">Nome task</label>
+                  <input type="text" class="form-control" id="eventName" name="eventName" value="${event.title}">
+                </div>                
+                <div class="form-group">
+                  <label for="eventDescription">Descrizione</label>
+                  <textarea class="form-control" id="eventDescription" name="eventDescription" rows="3">${event.description}</textarea>
+                </div>
+                <br>
+                <div class="form-group">
+                  <label for="startDate">Data inizio</label>
+                  <input type="datetime-local" class="form-control" id="startDate" name="startDate" >
+                </div>
+                <div class="form-group">
+                  <label for="endDate">Data fine</label>
+                  <input type="datetime-local" class="form-control" id="endDate" name="endDate">
+                </div>
+                <br>
+                <div class="form-group">
+                  <label for="link">link ai file</label>
+                    <div class="input-group">
+                      <input type="text" class="form-control" id="fileLocation" value="test" name="fileLocation">
+                    </div>
+                </div>               
+                <div class="form-group">
+                  <input type="hidden" class="form-control" id="recordId" name="recordId">
+                </div>                              
+                <div class="form-group">
+                    <label for="endDate">Assegnato a</label>
+                    <br>
+                    <select id="assignedTo" style="width: 470px;">
+                        <option value="RvB Plast">RvB Plast</option>
+                        <option value="RvB 1536">RvB 1536</option>
+                        <option value="RvB 1836">RvB 1836</option>
+                        <option value="Waterjet">Waterjet</option>
+                        <option value="EasyJet 512">EasyJet 512</option>
+                        <option value="Record 100">Record 100</option>
+                        <option value="EasyJet 480">EasyJet 480</option>
+                        <option value="Akron">Akron</option>
+                        <option value="Stefani">Stefani</option>
+                        <option value="Officina">Officina</option>
+                        <option value="Montaggio">Montaggio</option>
+                        <option value="Incollaggio">Incollaggio</option>                                                                    
+                    </select>
+                </div>                
+              </form>
+            `);
+            
+            if(mode=="edit")
+            {
+                var event2 = event.event;
+                console.log(JSON.stringify(event2));
+                $('#eventName').val(event2.title);
+                $('#eventDescription').val(event2.extendedProps.description);                
+                $('#startDate').val(moment(event2.start).format('YYYY-MM-DD') + "T" + moment(event2.start).subtract(2, 'hours').format('HH:mm'));
+                $('#endDate').val(moment(event2.end).format('YYYY-MM-DD') + "T" + moment(event2.end).subtract(2, 'hours').format('HH:mm'));
+                $('#assignedTo').val(event2.extendedProps.assignedTo);
+                $('#fileLocation').val(event2.extendedProps.fileLocation);
+                $('#recordId').val(event2.id);
+            }
+            if(mode =="create")
+            {
+              var startDiff = moment(event.start);
+              var endDiff = moment(event.end);
+              var dayDiff = endDiff.diff(startDiff, 'day');
+              console.log("giorni "+dayDiff);
+              //se si tratta di un giorno solo, propone lo stesso giorno dalle 8 alle 17
+              //altrimenti procede cosme al solito
+              if(dayDiff == 1) {
+                //alert("daydiff ==1");
+                $('#startDate').val(moment(event.start).format('YYYY-MM-DD') + "T" + moment(event.start).add(6, 'hours').format('HH:mm'));
+                $('#endDate').val(moment(event.start).format('YYYY-MM-DD') + "T" + moment(event.start).add(15, 'hours').format('HH:mm'));
+              } else {
+                $('#startDate').val(moment(event.start).format('YYYY-MM-DD') + "T" + moment(event.start).subtract(2, 'hours').format('HH:mm'));
+                $('#endDate').val(moment(event.end).format('YYYY-MM-DD') + "T" + moment(event.end).subtract(2, 'hours').format('HH:mm'));
+              }          
+                $('#recordId').val(1000);                
+            }
+            $('#myModal').modal('show');
+            //--- confermi le info
+            $('#confirmBtn').click(function() {          
+              if(confirm('Confermi le informazioni?'))
+                {
+                var data = {
+                          assignedTo: $('#assignedTo').val(),
+                          eventTitle: $('#eventName').val(),
+                          eventDescription: $('#eventDescription').val(),
+                          startDate: $('#startDate').val(),
+                          endDate: $('#endDate').val(),
+                          assignedTo: $('#assignedTo').val(),
+                          operationType: mode,
+                          fileLocation: $('#fileLocation').val(),
+                          id: $('#recordId').val(),
+                          };
+
+                $.ajax({
+                  type: 'POST',
+                  url: dbContactListener + encodeURIComponent(JSON.stringify(data)),
+                  data: {
+
+                  },
+                  success: function(response) {
+                    console.log(JSON.stringify(response));
+                    location.reload(true);
+                  },
+                  error: function(error) {
+                    alert(JSON.stringify(error));
+                  }
+                });
+                $('#myModal').modal('hide');
+              }
+                
+            });
+
+            $('#deleteBtn').click(function() {          
+              if(confirm('Cancellare l\'evento?'))
+                {
+                var data = {
+                          eventTitle: $('#eventName').val(),
+                          eventDescription: $('#eventDescription').val(),
+                          startDate: $('#startDate').val(),
+                          endDate: $('#endDate').val(),
+                          assignedTo: $('#assignedTo').val(),
+                          operationType: 'delete',
+                          fileLocation: $('#fileLocation').val(),
+                          id: $('#recordId').val()                          
+                          };
+
+                $.ajax({
+                  type: 'POST',
+                  url: dbContactListener + encodeURIComponent(JSON.stringify(data)),
+                  data: {
+
+                  },
+                  success: function(response) {
+                    console.log(JSON.stringify(response));
+                    location.reload(true);
+                  },
+                  error: function(error) {
+                    alert(JSON.stringify(error));
+                  }
+                });
+                $('#myModal').modal('hide');
+              }                
+            });            
+
+          }        
+            // Add the event listener for the close button click
+            $('#closeBtn').click(function() {
+                $('#myModal').modal('hide');                
+            });
+
+            // Add the event listener for the file button click
+          $('#fileBtn').click(function() {
+                var smbPath = $('#fileLocation').val();
+                //var url = '/Test/OpenSmbFolder?path2open=' + encodeURIComponent(smbPath);
+                //$.ajax({
+                //    url: url,
+                //    type: 'GET',
+                //    success: function(response) {
+                //        console.log(response);
+                //        var scriptElement = document.createElement('script');
+                //        scriptElement.textContent = response;                        
+                //        //document.body.appendChild(scriptElement);
+                //        window.open(response);
+                //    }
+                //});
+                console.log(smbPath);
+                window.location.href = smbPath;
+            });
+
+          calendarPlast.render();
+        });
+
+    </script>
+
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
+      font-size: 14px;
+    }
+
+    #external-events {
+        position: fixed;
+        z-index: 2;
+        top: 20px;
+        left: 20px;
+        width: 150px;
+        padding: 0 10px;
+        border: 1px solid #ccc;
+        background: #eee;
+      }
+    
+      #external-events { /* will get stripped out */
+        top: 60px;
+      }
+    
+      #external-events .fc-event {
+        cursor: move;
+        margin: 3px 0;
+      }
+
+  </style>
+
+
+
+  <div class="row">
+    <div class="col-md-2">
+      <div class="btn-group-vertical" style="padding-top:100px;">
+        <a type="button" class="btn btn-primary btn-lg" style="background-color: bleu; border-color:bleu;" asp-controller="Test" asp-action="Index" asp-route-eventFilter="">tutti</a>
+        @foreach (CalendarAssignment oneConf in config.CalendarAssignments)
+        {
+          <a type="button" class="btn btn-primary btn-lg" style="background-color: @oneConf.BackgroundColor; border-color:@oneConf.BorderColor; color: #3d3d29;" asp-controller="Test" asp-action="Index" asp-route-eventFilter="@oneConf.AssignmentName">@oneConf.AssignmentName</a>
+        }
+      </div>    
+    </div>
+    <div class="col-md-10">     
+      <br>      
+      <div id="calendarPlast" class="fc fc-media-screen fc-direction-ltr fc-theme-bootstrap5"></div>              
+    </div>
+  </div>
+
+
+    
+  <!-- Modal -->
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="myModalLabel">Conferma evento</h5>
+          <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <input type="text" />
+          Are you sure you want to confirm this event?
+        </div>
+        <div class="modal-footer">
+          @if(authorize=="true")
+          {
+              <button type="button" class="btn btn-outline-warning me-auto" id="deleteBtn" >Cancella</button> 
+              <button type="button" class="btn btn-outline-info" id="fileBtn" >Files</button>  
+              <button type="button" class="btn btn-outline-secondary" id="closeBtn" >Annulla</button>
+              <button type="button" class="btn btn-outline-primary" id="confirmBtn">Conferma</button>
+          } else {
+            <button type="button" class="btn btn-outline-secondary" id="closeBtn" >Annulla</button>
+          }
+        </div>
+      </div>
+    </div>
+  </div>

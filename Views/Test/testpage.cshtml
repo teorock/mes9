@@ -1,0 +1,51 @@
+@{string str="{\"Id\":\"123\",\"DateOfRegistration\":\"2012-10-21T00:00:00+05:30\",\"Status\":0}";}
+
+<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js'></script>
+
+
+<h3>test controller</h3>
+
+<div class="container">
+  <div class="row align-items-start">
+    <div class="col-md-7" align="center">
+      <br>
+      <h4>test chiamata POST</h4>
+      <hr>
+        <form asp-controller="Test" asp-action="Index" asp-route-jsonString="@str" method="post">
+          <div class="form-group">
+            <input style="font-size: 30px;" type="text" class="form-control" value="test" readonly>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block btn-lg">test</button>
+        </form>
+    </div>
+  </div>
+  <div class="row align-items-start">
+    <div class="col-md-7" align="center">
+      <br>
+      <h4>test chiamata POST da javascript</h4>
+      <hr>
+      <button onclick="sendPostRequest(@str)">test Jquery</button>
+    </div>
+  </div>  
+</div>
+
+<script>
+
+    function sendPostRequest(str){
+      $.ajax({
+        type: 'POST',
+        url: 'https://localhost:5001/Test?jsonString=' + encodeURIComponent(JSON.stringify(str)),
+        data: {
+
+        },
+        success: function(response) {
+          console.log(JSON.stringify(response));
+          location.reload(true);
+        },
+        error: function(error) {
+          alert(JSON.stringify(error));
+        }
+      });
+    }
+
+</script>

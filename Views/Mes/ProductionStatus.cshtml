@@ -1,0 +1,285 @@
+@using mes.Models.ViewModels
+@using System.Collections.Generic
+@model List<MachineStatusPicker>
+@{
+  List<string> allMachines = ViewBag.allMachines;
+    int automatico = ViewBag.automatico;
+    int attesa = ViewBag.attesa;
+    int manuali = ViewBag.manuali;
+    int spente = ViewBag.spente;
+    int emergenza = ViewBag.emergenza;
+}
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+<h2>stato produzione</h2>
+
+</div>
+  <style>
+    /* Set height of the grid so .sidenav can be 100% (adjust as needed) */
+    .row.content {height: 850px}
+    
+    /* Set gray background color and 100% height */
+    .sidenav {
+      background-color: #f1f1f1;
+      height: 100%;
+    }
+
+    th, td {
+      width: 180px;
+      text-align: left;
+      font-size: 16px;   
+    }
+    .machine:hover {
+      background-color: rgb(188, 248, 248);
+    }
+    th {
+      font-size: 30px;
+      padding-left: 10px;
+    }
+    tr {
+      
+    }
+    table {
+      width: 80%;
+    }
+  </style>
+
+
+<nav class="navbar navbar-inverse visible-xs">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>                        
+      </button>
+      <a class="navbar-brand" href="#">Macchine</a>
+    </div>
+    <div class="collapse navbar-collapse" id="myNavbar">
+      <table>
+        <tr style="border-bottom: 0px;">
+          <td>Tutte</td>    
+        </tr>
+        <tr><td><br></td></tr>
+        @foreach (string oneMachine in allMachines)
+        {
+          <tr style="border-bottom: 0px;">
+            <td class="machine">@oneMachine</td>
+          </tr>
+          <tr><td><br></td></tr> 
+        }
+      </table>
+    </div>
+  </div>
+</nav>
+<!-- barra verticale a sx-->
+<div class="container-fluid">
+  <div class="row content">
+    <div class="col-sm-2 sidenav hidden-xs">
+      <h2>Macchine</h2>
+      <br>
+      <table>
+        <tr style="border-bottom: 0px;">
+          <td>Tutte</td>    
+        </tr>
+        <tr><td><br></td></tr>
+        @foreach (string oneMachine in allMachines)
+        {
+          <tr style="border-bottom: 0px;">
+            <td class="machine"  style="padding-left:10px;"><a asp-controller="Mes" asp-action="GetMachineHistory" asp-route-machineName="@oneMachine">@oneMachine</a>  </td>
+          </tr>
+          <tr><td><br></td></tr> 
+        }
+      </table>
+      <br>
+    </div>
+    <br>
+<!-- prima riga di info -->    
+    <div class="col-sm-10">
+      <div class="well">
+        <table>
+          <tr style="border-bottom: 0px;">
+            <th style="color: rgb(0, 175, 0);">@automatico</th>
+            <th style="color: rgb(0, 93, 129);">@attesa</th>
+            <th style="color: orange;">@manuali</th>
+            <th style="color: grey;">@spente</th>
+            <th style="color: rgb(207, 0, 0);">@emergenza</th>
+          </tr>
+          <tr style="border-bottom: 0px;">
+            <td>automatico</td>
+            <td>in attesa</td>
+            <td>manuale</td>
+            <td>spente o scollegate</td>
+            <td>emergenza</td>
+          </tr>
+        </table>
+      </div>
+      <div class="row">
+        <div class="col-sm-12">        
+          <div class="well">
+            <table style="width: 100%;">
+              @foreach (MachineStatusPicker oneStatus in Model)
+              {                
+                if(oneStatus.MachineType=="BIESSE1") 
+                {
+                  <tr style="border-top: 1px solid rgb(211, 211, 211);">
+                    <td style="font-size: 13px; font-style: italic;">macchina</td>
+                    <td style="font-size: 13px; font-style: italic;">stato</td>
+                    <td style="font-size: 13px; font-style: italic;">distinta</td>
+                    <td style="font-size: 13px; font-style: italic;">programma</td>
+                    <td style="font-size: 13px; font-style: italic; text-align: center;">contatore</td>
+                    <td style="font-size: 13px; font-style: italic; text-align: center;">quantità</td>
+                    <td style="font-size: 13px; font-style: italic; text-align: center;">progresso</td>             
+                  </tr>                                      
+                  <tr>
+                    <td>@oneStatus.MachineName</td>
+                    @switch(oneStatus.MachineState)
+                    {
+                      case "start - automatico":
+                        <td style="padding-bottom: 15px;"><h3><span class ="label label-success label-block" style="display: inline-block;width:90%;">@oneStatus.MachineState</span></h3></td>
+                        break;
+                      case "in attesa":
+                        <td style="padding-bottom: 15px;"><h3><span class ="label label-info label-block" style="display: inline-block;width:90%;">@oneStatus.MachineState</span></h3></td>
+                        break;
+                      case "mov.manuali":
+                        <td style="padding-bottom: 15px;"><h3><span class ="label label-warning" style="display: inline-block;width:90%;">@oneStatus.MachineState</span></h3></td>
+                        break;
+                      case "non connessa":
+                        <td style="padding-bottom: 15px;"><h3><span class ="label label-default" style="display: inline-block;width:90%;">@oneStatus.MachineState</span></h3></td>
+                        break;
+                      case "emergenza":
+                        <td style="padding-bottom: 15px;"><h3><span class ="label label-danger" style="display: inline-block;width:90%;">@oneStatus.MachineState</span></h3></td>
+                        break;                                                                                            
+                    }
+                    <td>@oneStatus.WorklistName</td>
+                    <td>@oneStatus.ProgramName</td>
+                    <td style="text-align: center;">@oneStatus.Counter</td>
+                    <td style="text-align: center;">@oneStatus.Quantity</td>
+                    @{double counter = Convert.ToDouble(oneStatus.Counter);
+                      double quantity = Convert.ToDouble(oneStatus.Quantity);
+                      double barWidth = Math.Round((counter/quantity)*100,0);
+                    }
+                    <td style="padding-top: 15px;"><div class="progress"><div class="progress-bar progress-bar-success" role="progressbar" style="width:@barWidth%; height: 26px;">@barWidth%</div></div></td>
+                  </tr>
+              } //BIESSE1
+                if(oneStatus.MachineType=="INTERMAC1") 
+                {                  
+                  <tr style="border-top: 1px solid rgb(211, 211, 211);">
+                    <td style="font-size: 13px; font-style: italic;">macchina</td>
+                    <td style="font-size: 13px; font-style: italic;">stato</td>
+                    <td style="font-size: 13px; font-style: italic;">distinta</td>
+                    <td style="font-size: 13px; font-style: italic;">programma</td>           
+                  </tr>                      
+                  <tr>
+                    <td>@oneStatus.MachineName</td>
+                    @switch(oneStatus.MachineState)
+                    {
+                      case "connessa":
+                        <td style="padding-bottom: 15px;"><h3><span class ="label label-success" style="display: inline-block;width:90%;">@oneStatus.MachineState</span></h3></td>
+                        break;
+                      case "non connessa":
+                        <td style="padding-bottom: 15px;"><h3><span class ="label label-default" style="display: inline-block;width:90%;">@oneStatus.MachineState</span></h3></td>
+                        break;                                                                                            
+                    }
+                    <td>@oneStatus.WorklistName</td>
+                    <td>@oneStatus.ProgramName</td>
+                    <!-- td style="padding-top: 15px;"><div class="progress"><div class="progress-bar progress-bar-success" role="progressbar" style="width:30%; height: 26px;">30%</div></div></td -->
+                  </tr>
+              } //INTERMAC1
+                if(oneStatus.MachineType=="SCM1") 
+                { 
+                  <tr style="border-top: 1px solid rgb(211, 211, 211);">
+                    <td style="font-size: 13px; font-style: italic;">macchina</td>
+                    <td style="font-size: 13px; font-style: italic;">stato</td>
+                    <td style="font-size: 13px; font-style: italic;">distinta</td>
+                    <td style="font-size: 13px; font-style: italic;">programma</td>            
+                  </tr>                        
+                  <tr style="border-bottom: 0px;">
+                    <td>@oneStatus.MachineName</td>
+                    @switch(oneStatus.MachineState)
+                    {
+                      case "connessa":
+                        <td style="padding-bottom: 15px;"><h3><span class ="label label-success label-block" style="display: inline-block;width:90%;">@oneStatus.MachineState</span></h3></td>
+                        break;
+                      case "non connessa":
+                        <td style="padding-bottom: 15px;"><h3><span class ="label label-default" style="display: inline-block;width:90%;">@oneStatus.MachineState</span></h3></td>
+                        break;                                                                                            
+                    }
+                    <td>@oneStatus.WorklistName</td>
+                    <td>@oneStatus.ProgramName</td>
+                  </tr>
+              } //SCM1
+                if(oneStatus.MachineType=="AKRON") 
+                {
+                  <tr style="border-top: 1px solid rgb(211, 211, 211);">
+                    <td style="font-size: 13px; font-style: italic;">macchina</td>
+                    <td style="font-size: 13px; font-style: italic;">stato</td>
+                    <td style="font-size: 13px; font-style: italic;">programma</td>
+                    <td style="font-size: 13px; font-style: italic; text-align: center;">totale metri</td>
+                    <td style="font-size: 13px; font-style: italic; text-align: center;">totale pannelli</td>         
+                  </tr>                                                         
+                  <tr>
+                    <td>@oneStatus.MachineName</td>
+                    @switch(oneStatus.MachineState)
+                    {
+                      case "connessa":
+                        <td style="padding-bottom: 15px;"><h3><span class ="label label-success" style="display: inline-block;width:90%;">@oneStatus.MachineState</span></h3></td>
+                        break;
+                      case "non connessa":
+                        <td style="padding-bottom: 15px;"><h3><span class ="label label-default" style="display: inline-block;width:90%;">@oneStatus.MachineState</span></h3></td>
+                        break;                                                                                            
+                    }
+                    <td>@oneStatus.ProgramName</td>
+                    <td style="text-align: center;">@oneStatus.TotalPanels</td>
+                    <td style="text-align: center;">@oneStatus.TotalMeters</td>
+                    <!-- td style="padding-top: 15px;"><div class="progress"><div class="progress-bar progress-bar-success" role="progressbar" style="width:30%; height: 26px;">30%</div></div></td -->
+                  </tr>
+              } //AKRON
+                if(oneStatus.MachineType=="SCM2") 
+                {
+                  <tr style="border-top: 1px solid rgb(211, 211, 211);">
+                    <td style="font-size: 13px; font-style: italic;">macchina</td>
+                    <td style="font-size: 13px; font-style: italic;">stato</td>
+                    <td style="font-size: 13px; font-style: italic;">programma</td>
+                    <td style="font-size: 13px; font-style: italic; text-align: center;">nome bordo</td>
+                    <td style="font-size: 13px; font-style: italic; text-align: center;">spessore</td>
+                    <td style="font-size: 13px; font-style: italic; text-align: center;">passaggio</td>
+                    <td style="font-size: 13px; font-style: italic; text-align: center;">velocità</td>                                 
+                  </tr>
+                  <tr>                                                   
+                    <td>@oneStatus.MachineName</td>
+                    @switch(oneStatus.MachineState)
+                    {
+                      case "in lavorazione":
+                        <td style="padding-bottom: 15px;"><h3><span class ="label label-success" style="display: inline-block;width:90%;">@oneStatus.MachineState</span></h3></td>
+                        break;
+                      case "in attesa":
+                        <td style="padding-bottom: 15px;"><h3><span class ="label label-info" style="display: inline-block;width:90%;">@oneStatus.MachineState</span></h3></td>
+                        break;                        
+                      case "non connessa":
+                        <td style="padding-bottom: 15px;"><h3><span class ="label label-default" style="display: inline-block;width:90%;">@oneStatus.MachineState</span></h3></td>
+                        break;                                                                                            
+                    }
+                    <td>@oneStatus.ProgramName</td>
+                    <td style="text-align: center;">@oneStatus.EdgeName</td>
+                    <td style="text-align: center;">@oneStatus.Thickness</td>
+                    <td style="text-align: center;">@oneStatus.Passage</td>
+                    <td style="text-align: center;">@oneStatus.TrackSpeed</td>
+                  </tr>
+              } //Scm2 - Stefani                           
+            } <!-- foreach status -->              
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+

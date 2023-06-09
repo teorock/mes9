@@ -1,0 +1,120 @@
+@using mes.Models.ViewModels
+@using System.Collections.Generic
+@model ClienteViewModel
+@{ List<ClienteViewModel> customersList = ViewBag.customersList; }
+
+
+
+<script>
+    function conferma() {
+            if(!$("#codice").val()) {
+                alert("campo 'codice' vuoto");
+                $("#confirmationModal").modal('toggle');
+                return;
+            }
+            if(!$("#nome").val()) {
+                alert("campo 'nome' vuoto");
+                $("#confirmationModal").modal('toggle');
+                return;
+            }         
+            $("#frmAggCliente").submit();
+        }
+</script>
+
+<!-- Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Modifica cliente</h5>
+      </div>
+      <div class="modal-body">
+        <p>Confermi modifica cliente?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">annulla</button>
+        <button type="button" class="btn btn-outline-success" onclick="conferma()">salva</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal end -->
+<div class="row align-items-start">
+    <div class="col-md-1" align="center">
+        <i class="fa-solid fa-people-group fa-3x"></i>
+    </div>
+    <div class="col-md-4">
+        <h3>modifica cliente esistente</h3>
+    </div>
+</div>
+<br>
+<br>
+<hr>
+@using(Html.BeginForm("ModCustomer", "DataInput", FormMethod.Post, new { name = "frmAggCliente", id = "frmAggCliente" }))
+{
+    <table>
+        <tr>
+            <th style="text-align: center;">denominazione</th> 
+            <th style="text-align: center;">codice esterno</th>            
+            <th style="text-align: center;">indirizzo</th>
+            <th style="text-align: center;">telefono</th>
+            <th style="text-align: center;">referente 1</th>
+            <th style="text-align: center;">tel. referente</th>
+            <th style="text-align: center;">referente 2</th>
+            <th style="text-align: center;">tel. referente</th>            
+            <th> </th>
+        </tr>
+        <tr>                    
+            <td><input style="width: 200px;" type="text" asp-for=@Model.Nome class="form-control" value=@Model.Nome  /></td>                    
+            <td><input style="width: 160px;" type="text" asp-for=@Model.CodiceEsterno class="form-control" value=@Model.CodiceEsterno  /></td>                    
+            <td><input style="width: 160px; text-align:center;" type="text" asp-for=@Model.Indirizzo class="form-control" value=@Model.Indirizzo  /></td>
+            <td><input style="width: 160px; text-align:center;" type="text" asp-for=@Model.Telefono class="form-control" value=@Model.Telefono  /></td>
+            <td><input style="width: 160px; text-align:center;" type="text" asp-for=@Model.Referente1 class="form-control" value=@Model.Referente1  /></td>
+            <td><input style="width: 120px; text-align:center;" type="text" asp-for=@Model.TelReferente1 class="form-control" value=@Model.TelReferente1  /></td>
+            <td><input style="width: 120px; text-align:center;" type="text" asp-for=@Model.Referente2 class="form-control" value=@Model.Referente2  /></td>
+            <td><input style="width: 120px; text-align:center;" type="text" asp-for=@Model.TelReferente2 class="form-control" value=@Model.TelReferente2  /></td>
+            <td style="width: 10px;"><input type="hidden" asp-for=@Model.id class="form-control" value=@Model.id readonly /></td>                                   
+        </tr>
+  
+    </table>
+    <br>
+    <br>
+
+    <div class="row">
+        <div class="col-md-3 d-grid">
+            <button type="button" class="btn btn-outline-primary btn-block" data-bs-toggle="modal" data-bs-target="#confirmationModal">salva</button>            
+        </div>
+        <div class="col-md-3 d-grid">
+            <a class="btn btn-outline-secondary btn-block" asp-controller="Programs" asp-action="MagBordi">annulla</a>
+        </div>             
+    </div>  
+}
+
+<hr>
+<h4>lista clienti presenti</h4>
+<br>
+<table>
+    <tr>
+        <th style="text-align: center;">denominazione</th> 
+        <th style="text-align: center;">codice esterno</th>            
+        <th style="text-align: center;">indirizzo</th>
+        <th style="text-align: center;">telefono</th>
+        <th style="text-align: center;">referente 1</th>
+        <th style="text-align: center;">tel. referente 1</th>
+        <th style="text-align: center;">referente 2</th>
+        <th style="text-align: center;">tel. referente 2</th>            
+    </tr>
+    @foreach (ClienteViewModel oneModel in customersList)
+    {
+        <tr>                    
+            <td><input readonly id="nome" style="width: 200px;" type="text" asp-for=@oneModel.Nome class="form-control" value=@oneModel.Nome  readonly/></td>                    
+            <td><input readonly id="codice" style="width: 160px;" type="text" asp-for=@oneModel.CodiceEsterno class="form-control" value=@oneModel.CodiceEsterno  readonly/></td>                    
+            <td><input readonly id="indirizzo" style="width: 160px; text-align:center;" type="text" asp-for=@oneModel.Indirizzo class="form-control" value=@oneModel.Indirizzo  readonly/></td>
+            <td><input readonly id="telefono" style="width: 160px; text-align:center;" type="text" asp-for=@oneModel.Telefono class="form-control" value=@oneModel.Telefono  readonly/></td>
+            <td><input readonly id="ref1" style="width: 160px; text-align:center;" type="text" asp-for=@oneModel.Referente1 class="form-control" value=@oneModel.Referente1  readonly/></td>
+            <td><input readonly id="telref1" style="width: 120px; text-align:center;" type="text" asp-for=@oneModel.TelReferente1 class="form-control" value=@oneModel.TelReferente1  readonly/></td>
+            <td><input readonly id="ref2" style="width: 120px; text-align:center;" type="text" asp-for=@oneModel.Referente2 class="form-control" value=@oneModel.Referente2  readonly/></td>
+            <td><input readonly id="telref2" style="width: 120px; text-align:center;" type="text" asp-for=@oneModel.TelReferente2 class="form-control" value=@oneModel.TelReferente2  readonly/></td>                             
+        </tr>
+    }            
+</table>

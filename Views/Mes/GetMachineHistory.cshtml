@@ -1,0 +1,336 @@
+@using mes.Models.ViewModels
+@using System.Collections.Generic
+@model MachineStatusPicker
+@{
+  List<string> allMachines = ViewBag.allMachines;
+    int avanzamento = ViewBag.avanzamento;
+    string statusColor="";
+
+    int automatico =   Convert.ToInt16(ViewBag.automatico);
+    int attesa = Convert.ToInt16(ViewBag.attesa);
+    int manuali = Convert.ToInt16(ViewBag.manuali);
+    int scollegata = Convert.ToInt16(ViewBag.scollegata);
+    string dataInizio = ViewBag.dataInizio;
+    string dataFine = ViewBag.dataFine;
+
+    List<MachineStatustPickerWeek> oneWeek = ViewBag.oneWeekStatus;
+    List<KeyValuePair<string,string>> oneWeekProgs = ViewBag.oneWeekProgs;
+}
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>  
+
+  <style>
+    /* Set height of the grid so .sidenav can be 100% (adjust as needed) */
+    .row.content {height: 850px}
+    
+    /* Set gray background color and 100% height */
+    .sidenav {
+      background-color: #f1f1f1;
+      height: 100%;
+    }
+
+    th, td {
+      width: 180px;
+      text-align: left;
+      font-size: 16px;   
+    }
+    .machine:hover {
+      background-color: rgb(188, 248, 248);
+    }
+    th {
+      font-size: 30px;
+      padding-left: 10px;
+    }
+    tr {
+      
+    }
+    table {
+      width: 80%;
+    }
+  </style>
+
+  </div>
+<nav class="navbar navbar-inverse visible-xs">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>                        
+      </button>
+      <a class="navbar-brand" href="#">Macchine</a>
+    </div>
+    <div class="collapse navbar-collapse" id="myNavbar">
+      <table>
+        <tr style="border-bottom: 0px;">
+          <td>Tutte</td>    
+        </tr>
+        <tr><td><br></td></tr>
+        @foreach (string oneMachine in allMachines)
+        {
+          <tr style="border-bottom: 0px;">
+            <td class="machine">@oneMachine</td>
+          </tr>
+          <tr><td><br></td></tr> 
+        }
+      </table>
+    </div>
+  </div>
+</nav>
+<!-- barra verticale a sx-->
+<div class="container-fluid">
+  <div class="row content">
+    <div class="col-sm-2 sidenav hidden-xs">
+      <h2>Macchine</h2>
+      <br>
+      <table>
+        <tr style="border-bottom: 0px;">
+          <td><a asp-controller="Mes" asp-action="ProductionStatus">Tutte</a></td>    
+        </tr>
+        <tr><td><br></td></tr>
+        @foreach (string oneMachine in allMachines)
+        {
+          <tr style="border-bottom: 0px;">
+            <td class="machine" style="padding-left:10px;"><a asp-controller="Mes" asp-action="GetMachineHistory" asp-route-machineName="@oneMachine">@oneMachine</a>  </td>
+          </tr>
+          <tr><td><br></td></tr> 
+        }
+      </table>
+    </div>
+    <br>
+<!-- prima riga di info -->    
+    <div class="col-sm-10">
+      <div class="well">
+        <h2>@Model.MachineName</h2>
+      </div>
+<!-- sconda riga di info -->    
+      <div class="row">
+        <div class="col-sm-2">
+          <div style = "background-color : rgb(92, 204, 219)"></div>
+            @if(Model.MachineState=="start - automatico" || Model.MachineState =="connessa") statusColor = "rgb(0, 175, 0)";
+            @if(Model.MachineState=="in attesa") statusColor = "rgb(92, 204, 219)";
+            @if(Model.MachineState=="mov.manuali") statusColor = "orange";
+            @if(Model.MachineState=="emergenza") statusColor = "rgb(207, 0, 0)";
+            @if(Model.MachineState=="non connessa") statusColor = "grey";
+            <div class="well" style="background-color: @statusColor;">
+                <h4>Stato</h4>
+                <h3>@Model.MachineState</h3> 
+            </div>
+        </div>
+    @if(Model.MachineType=="BIESSE1" || Model.MachineType=="SCM1" || Model.MachineType =="INTERMAC1")
+      {
+        <div class="col-sm-2">
+          <div class="well">
+            <h4>Distinta</h4>
+            <h3>@Model.WorklistName</h3> 
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <div class="well">
+            <h4>Programma</h4>
+            <h3>@Model.ProgramName</h3>               
+          </div>
+        </div>                    
+        <div class="col-sm-1">
+          <div class="well">
+            <h4 style="text-align: center;">Contatore</h4>
+            <h2 style="text-align: center;">@Model.Counter</h2> 
+          </div>
+        </div>
+        <div class="col-sm-1">
+          <div class="well">
+            <h4 style="text-align: center;">Richiesti</h4>
+            <h2 style="text-align: center;">@Model.Quantity</h2> 
+          </div>
+        </div>
+        <div class="col-sm-2">
+          <div class="well">
+            <h4 style="text-align: center;">avanzamento</h4>
+            <div class="progress">
+                <div class="progress-bar" role="progressbar" style="width:@avanzamento%">@avanzamento%</div>                
+            </div>          
+          </div>
+        </div>
+      }
+    @if(Model.MachineType=="SCM2")
+      {
+        <div class="col-sm-3">
+          <div class="well">
+            <h4>Programma</h4>
+            <h3>@Model.ProgramName</h3> 
+          </div>
+        </div>
+        <div class="col-sm-1">
+          <div class="well">
+            <h4 style="text-align: center;">Spessore</h4>
+            <h3 style="text-align: center;">@Model.Thickness</h3>               
+          </div>
+        </div>                    
+        <div class="col-sm-2">
+          <div class="well">
+            <h4 style="text-align: center;">Bordo</h4>
+            <h2 style="text-align: center;">@Model.EdgeName</h2> 
+          </div>
+        </div>
+        <div class="col-sm-2">
+          <div class="well">
+            <h4 style="text-align: center;">cons.bordo</h4>
+            <h2 style="text-align: center;">@Model.EdgeConsumption</h2> 
+          </div>
+        </div>
+        <div class="col-sm-1">
+          <div class="well">
+            <h4 style="text-align: center;">Passaggio</h4>
+            <h3 style="text-align: center;">@Model.Passage</h3>       
+          </div>
+        </div>
+        <div class="col-sm-1">
+          <div class="well">
+            <h4 style="text-align: center;">Velocità</h4>
+            @{string vel =(Model.TrackSpeed!= " ") ? Model.TrackSpeed : "--";}
+            <h3 style="text-align: center;">@vel</h3>       
+          </div>
+        </div>        
+      }
+    @if(Model.MachineType=="AKRON")
+      {
+        <div class="col-sm-3">
+          <div class="well">
+            <h4>Bordo</h4>
+            <h3>@Model.WorklistName</h3> 
+          </div>
+        </div>
+        <div class="col-sm-3">
+          <div class="well">
+            <h4>Programma</h4>
+            <h3>@Model.ProgramName</h3>               
+          </div>
+        </div>                    
+        <div class="col-sm-2">
+          <div class="well">
+            <h4 style="text-align: center;">Totale metri</h4>
+            @{string metri = Model.TotalMeters.Substring(0,Model.TotalMeters.IndexOf('.')+2);}
+            <h2 style="text-align: center;">@metri</h2> 
+          </div>
+        </div>
+        <div class="col-sm-2">
+          <div class="well">
+            <h4 style="text-align: center;">Totale pannelli</h4>
+            <h2 style="text-align: center;">@Model.TotalPanels</h2> 
+          </div>
+        </div>
+      }             
+      </div>
+      <div class="row">
+        <div class="col-sm-4">
+          <div class="well">
+            <canvas id="myChart" style="width:100%;max-width:600px"></canvas>
+          </div>
+        </div>
+        <div class="col-sm-8">
+          <div class="well">
+            <canvas id="weekChart" style="width:100%;max-width:950px"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-12">
+          <div class="well">
+            <h4>ultimi sette programmi eseguiti</h4>
+            <table>
+              <tr>
+                <th style="font-size:16px;">distinta</th>
+                <th style="font-size:16px;">programma</th>
+              </tr>
+            @foreach (KeyValuePair<string,string> item in oneWeekProgs)
+            {
+              <tr>
+                <td style="font-size:16px;">@item.Key</td>
+                <td style="font-size:16px;">@item.Value</td>
+              </tr>              
+            }
+            </table>
+          </div>
+        </div>
+      </div>
+          <!-- /div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div -->
+
+<script>
+    var xValues = ["automatico", "in attesa", "mov.manuali", "scollegata"];
+    var yValues = [@automatico, @attesa, @manuali, @scollegata];
+    var barColors = [
+      "#1e7145",      
+      "#00aba9",
+      "#2b5797",
+      "#b91d47"    
+    ];
+    
+    new Chart("myChart", {
+      type: "pie",
+      data: {
+        labels: xValues,
+        datasets: [{
+          backgroundColor: barColors,
+          data: yValues
+        }]
+      },
+      options: {
+        title: {
+          display: true,
+          text: "tempi macchina dal @dataInizio al @dataFine"
+        }
+      }
+    });
+
+    const xValues2 = ['@oneWeek[6].Day','@oneWeek[5].Day','@oneWeek[4].Day','@oneWeek[3].Day','@oneWeek[2].Day','@oneWeek[1].Day','@oneWeek[0].Day'];
+
+    new Chart("weekChart", {
+      type: "line",
+      data: {
+        labels: xValues2,
+        datasets: [{ 
+          label: 'in attesa',
+          data: [@oneWeek[6].Waiting,@oneWeek[5].Waiting,@oneWeek[4].Waiting,@oneWeek[3].Waiting,@oneWeek[2].Waiting,@oneWeek[1].Waiting,@oneWeek[0].Waiting],
+          borderColor: "orange",
+          fill: false
+        }, { 
+          label: 'start',
+          data: [@oneWeek[6].Start,@oneWeek[5].Start,@oneWeek[4].Start,@oneWeek[3].Start,@oneWeek[2].Start,@oneWeek[1].Start,@oneWeek[0].Start],
+          borderColor: "green",
+          fill: false
+        }, {
+          label: 'mov.manuali',
+          data: [@oneWeek[6].ManualMovements,@oneWeek[5].ManualMovements,@oneWeek[4].ManualMovements,@oneWeek[3].ManualMovements,@oneWeek[2].ManualMovements,@oneWeek[1].ManualMovements,@oneWeek[0].ManualMovements],
+          borderColor: "blue",
+          fill: false
+        },{
+          label: 'emergenza',
+          data: [@oneWeek[6].Emergency,@oneWeek[5].Emergency,@oneWeek[4].Emergency,@oneWeek[3].Emergency,@oneWeek[2].Emergency,@oneWeek[1].Emergency,@oneWeek[0].Emergency],
+          borderColor: "red",
+          fill: false
+        },{
+          label: 'scollegata',
+          data: [@oneWeek[6].NotConnected,@oneWeek[5].NotConnected,@oneWeek[4].NotConnected,@oneWeek[3].NotConnected,@oneWeek[2].NotConnected,@oneWeek[1].NotConnected,@oneWeek[0].NotConnected],
+          borderColor: "grey",
+          fill: false
+        },{
+          label: 'collegata',
+          data: [@oneWeek[6].Connected,@oneWeek[5].Connected,@oneWeek[4].Connected,@oneWeek[3].Connected,@oneWeek[2].Connected,@oneWeek[1].Connected,@oneWeek[0].Connected],
+          borderColor: "cyan",
+          fill: false                       
+        }]
+      },
+      options: {
+        legend: {display: true}
+      }
+    });
+
+    </script>

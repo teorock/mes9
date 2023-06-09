@@ -1,0 +1,60 @@
+@page
+
+@model RemoveRoleModel
+@{
+    ViewData["Title"] = "Rimuovi utenti da ruolo";
+    var roles = (List<IdentityRole>) ViewData["roles"];
+    var users = (List<IdentityUser>) ViewData["users"];
+    var usersRoles = (List<string>) ViewData["usersRoles"];
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div class="row">
+    <div class="col-md-5">
+        <form asp-route-returnUrl="@Model.ReturnUrl" method="post">
+            <h6><i>"ricorda... da grandi poteri derivano grandi responsabilità"</i></h6>
+            <hr />
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="form-group">  
+                <label asp-for="Input.UserName"></label>  
+                <select asp-for="Input.UserName" class="form-control" asp-items='new SelectList(users,"Id","UserName")'>  
+                </select>  
+                <span asp-validation-for="Input.UserName" class="text-danger"></span>  
+                <br>
+                <label asp-for="Input.RoleName"></label>  
+                <select asp-for="Input.RoleName" class="form-control" asp-items='new SelectList(roles,"Id","Name")'>  
+                </select>  
+                <span asp-validation-for="Input.RoleName" class="text-danger"></span>                  
+            </div>
+            <div class="form-group">  
+            <br>
+            </div>            
+            <button type="submit" class="btn btn-danger">Rimuovi da ruolo</button>
+        </form>
+    </div>
+</div>
+<br>
+<br>
+<div class="row">
+    <div class="col-md-6">
+        <h7><b>Utente e ruoli assegnati</b></h7>
+    </div>
+</div>
+
+@foreach (var line in usersRoles)
+{
+    <hr>
+    <div class="row">
+        <div class="col-md-6">
+            <h7>@line</h7>
+        </div>
+    </div>
+}
+<br>
+<hr>
+
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

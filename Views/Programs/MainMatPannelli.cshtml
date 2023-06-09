@@ -1,0 +1,115 @@
+@using mes.Models.ViewModels
+@using System.Collections.Generic
+@model List<MatPannelloViewModel>
+@{
+    string userRoles = ViewBag.userRoles;
+    bool authorize = false;
+    if(userRoles.Contains("PannelliScrivi")||userRoles.Contains("root")) authorize=true;
+}
+
+<script>
+    function cancella(id, nome, altezza)
+    {
+        var redirection ="";
+        if(confirm("confermi cancellazione MatPannelli: \n" + nome + " -altezza- " + altezza +" ?")){
+            $.get("/Programs/CancBordo/" + id);
+        } else {
+            return;
+        }
+    }
+
+    function conferma() {
+            $("#frmAggDati").submit();
+        }
+
+</script>
+
+<!-- Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Aggiornamento dati</h5>
+      </div>
+      <div class="modal-body">
+        <p>confermi aggiornamento ?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">annulla</button>
+        <button type="button" class="btn btn-outline-success" onclick="conferma()">aggiorna</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal end -->
+
+<style>
+    table, th {
+        font-size: 16px;
+    }
+    input, td {
+        font-size: 14px;
+    }
+    input:hover {
+        background-color: gold;
+    }
+    input:focus {
+        background-color: lightyellow;
+    } 
+</style>
+
+<div class="row align-items-start">
+    <div class="col-md-1" align="center">
+        <i class="fa-solid fa-pallet fa-3x"></i>
+    </div>
+    <div class="col-md-4">
+        <h3>gestione tipi materiali</h3>
+    </div>
+</div>
+<br>
+<br>
+<hr>
+<h4>tipi materiali presenti</h4>
+<hr>
+@using(Html.BeginForm("AggiornaMatPannelli", "Programs", FormMethod.Post, new { name = "frmAggDati", id = "frmAggDati" }))
+{
+    <table>
+        <tr>
+            <th style="text-align: center;">nome materiale</th> 
+            <th style="text-align: center;">abilitato</th> 
+        </tr>
+        
+            @for(int x=0; x<Model.Count; x++)
+            {
+                <tr>
+                    @if(!authorize)
+                    {
+                        <td><input readonly style="width: 130px;" type="text" asp-for=@Model[x].Nome class="form-control" value=@Model[x].Nome  /></td>
+                        <td><input readonly style="width: 130px; text-align: center;" type="text" asp-for=@Model[x].Enabled class="form-control" value=@Model[x].Enabled  /></td>
+                        <td><input type="hidden" asp-for=@Model[x].id class="form-control" value=@Model[x].id  /></td>
+                    }
+                    else
+                    {
+                        <td><input readonly style="width: 130px;" type="text" asp-for=@Model[x].Nome class="form-control" value=@Model[x].Nome  /></td>
+                        <td><input style="width: 130px; text-align: center;" type="text" asp-for=@Model[x].Enabled class="form-control" value=@Model[x].Enabled  /></td>
+                        <td><input type="hidden" asp-for=@Model[x].id class="form-control" value=@Model[x].id  /></td>
+                        <td style="padding-left: 25px;"><a asp-controller="Programs" asp-action="ModMatPannello" asp-route-id="@Model[x].id"><i class="material-icons text-warning">&#xE254;</i></a></td>
+                    }
+                </tr>                 
+            }   
+         
+    </table>
+    <br>
+    <br>
+    @if(authorize)
+    {
+        <div class="row">
+            <div class="col-md-3 d-grid">
+                <button type="button" class="btn btn-outline-primary btn-block" data-bs-toggle="modal" data-bs-target="#confirmationModal">aggiorna</button>          
+            </div>
+            <div class="col-md-3 d-grid">
+                <a class="btn btn-outline-success btn-block" asp-controller="Programs" asp-action="InsertMatPannello">crea nuovo materiale</a>
+            </div>    
+        </div>  
+    }
+}
