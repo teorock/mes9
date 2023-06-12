@@ -454,9 +454,14 @@ namespace mes.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "root, PermessiMaster")]
+        [Authorize(Roles = "root, PermessiMaster, User")]
         public IActionResult ModPermesso(long id)
         {
+            UserData userData = GetUserData();
+            bool authorize =    (userData.UserRoles.Contains("root")|
+                                userData.UserRoles.Contains("PermessiMaster")|
+                                userData.UserRoles.Contains("root")) ? true : false;
+
             List<string> statiPermessi = new List<string>();
             statiPermessi.Add("in attesa");
             statiPermessi.Add("approvato");
@@ -465,8 +470,16 @@ namespace mes.Controllers
             ViewBag.statiPermessi = statiPermessi;
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<PermessoViewModel> Permessi = (List<PermessoViewModel>)dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
-                                        .Where(x => x.Enabled=="1").ToList(); 
+            List<PermessoViewModel> Permessi = new List<PermessoViewModel>();
+            if(authorize)
+            {
+                Permessi = (List<PermessoViewModel>)dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                                            .Where(x => x.Enabled=="1").ToList(); 
+            } else {
+                Permessi = (List<PermessoViewModel>)dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                                            .Where(u => u.Username == userData.UserName)
+                                            .Where(x => x.Enabled=="1").ToList();                 
+            }
             ViewBag.PermessiList = Permessi;
             PermessoViewModel oneModel = Permessi.Where(x => x.id == id).FirstOrDefault();
 
@@ -476,9 +489,59 @@ namespace mes.Controllers
 
             ViewBag.startDatePermesso = DateToInputDateFormat(oneModel.DataInizio);
             ViewBag.endDtaePermesso = DateToInputDateFormat(oneModel.DataFine);
+            ViewBag.userRoles = userData.UserRoles;
 
             return View(oneModel);
         }
+
+        [HttpPost]
+        [Authorize(Roles = "root, PermessiMaster, User")]
+        public IActionResult ModPermesso(PermessoViewModel oneModel)
+        {                        
+            UserData userData = GetUserData();
+
+            oneModel.CreatedBy = userData.UserName;
+            oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
+            oneModel.Stato = "in attesa";
+
+            string actualDataInizio = oneModel.DataInizio;
+            oneModel.DataInizio = DateToDbDateFormat(actualDataInizio);
+            string actualDataFine = oneModel.DataFine;
+            oneModel.DataFine = DateToDbDateFormat(actualDataFine);
+            
+            //ricalcolo durata
+            GeneralPurpose genPurpose = new GeneralPurpose();
+            oneModel.IntervalloTempo = genPurpose.PermissionTimeSpan(oneModel.DataInizio, oneModel.DataFine, oneModel.Tipologia);
+
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            List<PermessoViewModel> actualPermessi = (List<PermessoViewModel>)dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                                        .Where(x => x.Enabled =="1").ToList();           
+
+            int result = dbAccessor.Updater<PermessoViewModel>(connectionString,"Permessi", oneModel, oneModel.id);
+
+            //notifica ai PermMaster se un permesso ha cambiato stato
+            string previousState = actualPermessi.Where(x => x.id == oneModel.id).Select(y => y.Stato).FirstOrDefault();
+            string actualState = oneModel.Stato;
+            if (previousState!=actualState)
+            {
+                EmailSender emailSender = new EmailSender();
+                //recupera la lista di tutti gli utenti con ruolo PermMaster
+                List<UsersRolesNotify> allUsersRolesNotify = GetCompleteUsersList();
+                List<string> notifyList = allUsersRolesNotify.Where(x => x.UserRoles.ToString().Contains("PermessiMaster"))
+                                                                            .Select( z=> z.UserNotifyAddress).ToList();
+                
+                string subject = $"cambio stato permesso: {oneModel.Nome} {oneModel.Cognome} -> {oneModel.Stato}";
+                string body = $"in data {DateTime.Now} l'utente {userData.UserName} ha cambiato lo stato della richiesta di {oneModel.Tipologia} fatta da:\n\n{oneModel.Nome} {oneModel.Cognome}" +
+                $"\nper il periodo\n{oneModel.DataInizio} -> {oneModel.DataFine}\nda:{previousState}\na:{actualState}";
+
+                foreach(string oneRecipient in notifyList)
+                {
+                   if(IsValidEmail(oneRecipient)) emailSender.SendEmail(subject, body, oneRecipient, "automation@intranet");
+                }
+            }
+            return RedirectToAction("MainPermessi");
+        } 
+
 
         private string DateToInputDateFormat(string inputString)
         {
@@ -501,61 +564,13 @@ namespace mes.Controllers
 
             return $"{day}/{month}/{year} {hour}:{minutes}";
         }        
-
-        [HttpPost]
-        [Authorize(Roles = "root, PermessiMaster")]
-        public IActionResult ModPermesso(PermessoViewModel oneModel)
-        {                        
-            UserData userData = GetUserData();
-
-            oneModel.CreatedBy = userData.UserName;
-            oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
-
-            string actualDataInizio = oneModel.DataInizio;
-            oneModel.DataInizio = DateToDbDateFormat(actualDataInizio);
-            string actualDataFine = oneModel.DataFine;
-            oneModel.DataFine = DateToDbDateFormat(actualDataFine);
-
-            DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<PermessoViewModel> actualPermessi = (List<PermessoViewModel>)dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
-                                        .Where(x => x.Enabled =="1").ToList();           
-
-            int result = dbAccessor.Updater<PermessoViewModel>(connectionString,"Permessi", oneModel, oneModel.id);
-
-            //notifica ai PermMaster se un permesso ha cambiato stato
-            //string previousState = actualPermessi.Where(x => x.Username == oneModel.Username).Select(y => y.Stato).FirstOrDefault();
-            string previousState = actualPermessi.Where(x => x.id == oneModel.id).Select(y => y.Stato).FirstOrDefault();
-            string actualState = oneModel.Stato;
-            if (previousState!=actualState)
-            {
-                EmailSender emailSender = new EmailSender();
-                //recupera la lista di tutti gli utenti con ruolo PermMaster
-                List<UsersRolesNotify> allUsersRolesNotify = GetCompleteUsersList();
-                List<string> notifyList = allUsersRolesNotify.Where(x => x.UserRoles.ToString().Contains("PermessiMaster"))
-                                                                            .Select( z=> z.UserNotifyAddress).ToList();
-
-
-                //List<DipendenteViewModel> permMasters = GetPermMasterUsers();
-                //invia una mail ad ognuno notificando quale permesso ha cambiato stato (respinto o approvato)
-                
-                string subject = $"cambio stato permesso: {oneModel.Nome} {oneModel.Cognome} -> {oneModel.Stato}";
-                string body = $"in data {DateTime.Now} l'utente {userData.UserName} ha cambiato lo stato della richiesta di {oneModel.Tipologia} fatta da:\n\n{oneModel.Nome} {oneModel.Cognome}" +
-                $"\nper il periodo\n{oneModel.DataInizio} -> {oneModel.DataFine}\nda:{previousState}\na:{actualState}";
-
-                foreach(string oneRecipient in notifyList)
-                {
-                   if(IsValidEmail(oneRecipient)) emailSender.SendEmail(subject, body, oneRecipient, "automation@intranet");
-                }
-            }
-            return RedirectToAction("MainPermessi");
-        }        
-
+        
         private bool IsValidEmail(string email)
         {
             var trimmedEmail = email.Trim();
 
             if (trimmedEmail.EndsWith(".")) {
-                return false; // suggested by @TK-421
+                return false; 
             }
             try {
                 var addr = new System.Net.Mail.MailAddress(email);

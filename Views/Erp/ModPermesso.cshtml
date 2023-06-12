@@ -7,6 +7,8 @@
     int selectedStatus = ViewBag.selectedStatus;
     string startDate = ViewBag.startDatePermesso;
     string endDate = ViewBag.endDtaePermesso;
+    bool authorize =    (ViewBag.userRoles.Contains("root")|
+                        ViewBag.userRoles.Contains("PermessiMaster"))?true:false;
 }
 
 <style>
@@ -86,17 +88,17 @@
 <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title" id="confirmationModal">Richiesta conferma</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-            <p>confermi modifica Permesso?</p>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">annulla</button>
-            <button type="button" id="btnConfirm" class="btn btn-success" onclick="confirmLoadModal()">conferma</button>
-        </div>
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmationModal">Richiesta conferma</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>confermi modifica permesso?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">annulla</button>
+                <button type="button" id="btnConfirm" class="btn btn-success" onclick="confirmLoadModal()">conferma</button>
+            </div>
         </div>
     </div>
 </div>
@@ -121,6 +123,7 @@
             <th style="text-align: center;">note</th>
             <th style="text-align: center;">visibile</th>
         </tr>
+
         <tr>
             <td><input style="width: 130px; text-align: center;" type="text" asp-for=@Model.Nome class="form-control" id="Nome" readonly/></td>
             <td><input style="width: 130px; text-align: center;" type="text" asp-for=@Model.Cognome class="form-control" id="Cognome" readonly/></td>
@@ -129,32 +132,56 @@
             <td><input style="width: 100px; text-align: center;" type="text" asp-for=@Model.Tipologia class="form-control" id="Tipologia" readonly/></td>
             <td><input style="width: 100px; text-align: center;" type="text" asp-for=@Model.IntervalloTempo class="form-control" id="IntervalloTempo" readonly/></td>
             <td><input style="width: 160px; text-align: center;" type="text" asp-for=@Model.Motivazione class="form-control" id="Motivazione" readonly/></td>
+            @if(authorize)
+            {
+                <td>
+                    <div class="select-editeable">
+                        <select id="sel-stato">
+                            <option value="" selected> </option>
+                            @foreach (var stato in statiPermessi)
+                            {
+                                <option value=@stato>@stato</option>
+                            }
+                        </select>
+                        <input id ="Stato" style="width: 130px; text-align: center;" type="hidden" asp-for=@Model.Stato  class="form-control" />
+                    </div>                                 
+                </td> 
 
-
-            <td>
-                <div class="select-editeable">
-                    <select id="sel-stato">
-                        <option value="" selected> </option>
-                        @foreach (var stato in statiPermessi)
-                        {
-                            <option value=@stato>@stato</option>
-                        }
-                    </select>
-                    <input id ="Stato" style="width: 130px; text-align: center;" type="hidden" asp-for=@Model.Stato class="form-control" />
-                </div>                                 
-            </td> 
-
-            @if(Model.Urgente=="true") {
-                <td style="text-align: center;"><input style="width: 25px; height: 25px;" class="form-check-input" type="checkbox" asp-for=@Model.Urgente class="form-control" disabled/></td>
+                @if(Model.Urgente=="true") {
+                    <td style="text-align: center;"><input style="width: 25px; height: 25px;" class="form-check-input" type="checkbox" asp-for=@Model.Urgente class="form-control" disabled/></td>
+                } else {
+                    <td style="text-align: center;"><input style="width: 25px; height: 25px;" class="form-check-input" type="checkbox" asp-for=@Model.Urgente class="form-control" disabled/></td>
+                }
+                            
+                <td><input style="width: 160px; text-align: center;" type="text" asp-for=@Model.Note class="form-control" id="Note" /></td>
+                <td><input style="width: 50px; text-align: center;" type="text" asp-for=@Model.Enabled class="form-control"/></td>
+                <td><input style="width: 10px;" type="hidden" asp-for=@Model.Username class="form-control"/></td>            
+                <td><input style="width: 10px;" type="hidden" asp-for=@Model.DataDiRichiesta class="form-control"/></td>
             } else {
-                <td style="text-align: center;"><input style="width: 25px; height: 25px;" class="form-check-input" type="checkbox" asp-for=@Model.Urgente class="form-control" disabled/></td>
+                <td>
+                    <div class="select-editeable">
+                        <select id="sel-stato" disabled>
+                            <option value="" selected> </option>
+                            @foreach (var stato in statiPermessi)
+                            {
+                                <option value=@stato>@stato</option>
+                            }
+                        </select>
+                        <input id ="Stato" style="width: 130px; text-align: center;" type="hidden" asp-for=@Model.Stato  class="form-control" />
+                    </div>                                 
+                </td> 
+
+                @if(Model.Urgente=="true") {
+                    <td style="text-align: center;"><input style="width: 25px; height: 25px;" class="form-check-input" type="checkbox" asp-for=@Model.Urgente class="form-control" disabled/></td>
+                } else {
+                    <td style="text-align: center;"><input style="width: 25px; height: 25px;" class="form-check-input" type="checkbox" asp-for=@Model.Urgente class="form-control" disabled/></td>
+                }
+                            
+                <td><input style="width: 160px; text-align: center;" type="text" asp-for=@Model.Note class="form-control" id="Note" /></td>
+                <td><input style="width: 50px; text-align: center;" type="text" asp-for=@Model.Enabled class="form-control"/></td>
+                <td><input style="width: 10px;" type="hidden" asp-for=@Model.Username class="form-control"/></td>            
+                <td><input style="width: 10px;" type="hidden" asp-for=@Model.DataDiRichiesta class="form-control"/></td>                
             }
-            
-            
-            <td><input style="width: 160px; text-align: center;" type="text" asp-for=@Model.Note class="form-control" id="Note" /></td>
-            <td><input style="width: 50px; text-align: center;" type="text" asp-for=@Model.Enabled class="form-control"/></td>
-            <td><input style="width: 10px;" type="hidden" asp-for=@Model.Username class="form-control"/></td>            
-            <td><input style="width: 10px;" type="hidden" asp-for=@Model.DataDiRichiesta class="form-control"/></td>
         </tr> 
     </table>
     <br>
@@ -162,13 +189,13 @@
 
     <div class="row">
         <div class="col-md-3 d-grid">
-        <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#confirmationModal">
-            conferma
-        </button>            
+            <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#confirmationModal">
+                conferma
+            </button>            
         </div>
         <div class="col-md-3 d-grid">
-            <a class="btn btn-outline-secondary btn-block" asp-controller="Erp" asp-action="MainPermessi">annulla</a>
-        </div>             
+            <a class="btn btn-outline-secondary btn-block" asp-controller="Erp" asp-action="MainPermessi">annulla modifiche</a>
+        </div>                 
     </div>  
 }
 <hr>

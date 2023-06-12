@@ -37,7 +37,7 @@ namespace mes.Models.Services.Infrastructures
         {
             //if tipologia= ferie, non calcola le ore
             string result="";
-            decimal minutes=0;
+            string minutes="";
             string comment="";
 
             TimeSpan duration = DateTime.Parse(endTime).Subtract(DateTime.Parse(startTime));
@@ -48,16 +48,19 @@ namespace mes.Models.Services.Infrastructures
                 return $"{giorni+1}g";
             
             decimal ore = Math.Round(Convert.ToDecimal(duration.TotalHours), 0);
-
-            if(duration.Minutes > 0 & duration.Minutes <=29) minutes = 30;
+            bool arrotondato = false;
+            if(duration.Minutes > 0 & duration.Minutes <=29)
+            {
+                minutes = "30";
+                arrotondato = true;
+            }
             if(duration.Minutes > 31 & duration.Minutes <= 59)
             {
-                minutes = 0;
+                minutes = "";
                 ore +=1;
-            }
-
-            comment = $"[{duration.Hours}h{duration.Minutes}]";
-
+                arrotondato = true;
+            }            
+            if(duration.Minutes == 30) minutes="30";
             //pausa pranzo
             if ((DateTime.Parse(startTime).Hour < 12 & DateTime.Parse(endTime).Hour >12)|
                     (DateTime.Parse(startTime).Hour <13 & DateTime.Parse(endTime).Hour>13))
@@ -66,8 +69,9 @@ namespace mes.Models.Services.Infrastructures
                         comment +="-1h pranzo";
                     }
 
-            if(minutes !=0) result = $"{ore}h{minutes} {comment}";
-            if(minutes ==0) result = $"{ore}h {comment}";
+            comment = $"[{duration.Hours}h{duration.Minutes}]";
+            
+            result = (arrotondato)? $"{ore}h{minutes} {comment}":$"{ore}h{duration.Minutes}";
 
             return result;
         }

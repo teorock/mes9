@@ -152,8 +152,8 @@
           <th style="text-align: center; font-family: Consolas;">motivazione</th> 
           <th style="text-align: center; font-family: Consolas;">stato</th> 
           <th style="text-align: center; font-family: Consolas;">urgente</th>
-          @if(canFilter){        
-          <th style="text-align: center; font-family: Consolas;">note</th> }
+                 
+          <th style="text-align: center; font-family: Consolas;">note</th> 
           <th> </th>
           <th> </th>
       </tr>
@@ -175,8 +175,13 @@
                     <td><input readonly style="width: 100px; text-align: center;" type="text" asp-for=@permessi[x].IntervalloTempo class="form-control" value=@permessi[x].IntervalloTempo  /></td>
                     <td><input readonly style="width: 230px; text-align: center;" type="text" asp-for=@permessi[x].Motivazione class="form-control" value=@permessi[x].Motivazione  /></td>
                     <td><input readonly style="background-color: @bkgColor; width: 130px; text-align: center;" type="text" asp-for=@permessi[x].Stato class="form-control" value=@permessi[x].Stato  /></td>                    
-                    <td><input readonly style="width: 130px; text-align: center;" type="text" asp-for=@permessi[x].Urgente class="form-control" value=@permessi[x].Urgente  /></td>
+                      @if(permessi[x].Urgente=="true") {
+                          <td style="text-align: center;"><input style="width: 25px; height: 25px;" class="form-check-input" type="checkbox" asp-for=@permessi[x].Urgente class="form-control" disabled/></td>
+                      } else {
+                          <td style="text-align: center;"><input style="width: 25px; height: 25px;" class="form-check-input" type="checkbox" asp-for=@permessi[x].Urgente class="form-control" disabled/></td>
+                      }
                     <td><input readonly style="width: 130px; text-align: center;" type="text" asp-for=@permessi[x].Note class="form-control" value=@permessi[x].Note  /></td>
+                    @if(permessi[x].Stato!="approvato"|permessi[x].Stato!="respinto"){ <td style="padding-left: 25px;"><a asp-controller="Erp" asp-action="ModPermesso" asp-route-id="@permessi[x].id"><i class="material-icons text-warning">&#xE254;</i></a></td>}
                     <td> </td>
                     <td> </td>
                     <td style="width: 10px;"><input type="hidden" asp-for=@permessi[x].id class="form-control" value=@permessi[x].id readonly /></td>

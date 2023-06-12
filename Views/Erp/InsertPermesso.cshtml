@@ -227,7 +227,7 @@ function conferma() {
                 }                
         </table>
 }
-@if(insertor | authorize)
+@if(authorize)
 {
     <script>
         $("#sel-tipologia").on('change', function() {
@@ -250,7 +250,7 @@ function conferma() {
         });
     </script> 
 }
-@if(!insertor & !authorize)
+@if(!authorize)
 {
     <script>
         $("#sel-tipologia").on('change', function() {
@@ -292,9 +292,7 @@ function conferma() {
             if(dateType == "datetime-local")
             {
                 var maxDate = year + '-' + month + '-' + day + 'T00:00:00';
-            }
-            else
-            {
+            } else {
                 var maxDate = year + '-' + month + '-' + day;
             }
             
