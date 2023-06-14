@@ -208,7 +208,7 @@ namespace mes.Controllers
             }
 
             List<DipendenteViewModel> dipendenti = (List<DipendenteViewModel>)dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti");
-            List<DipendenteViewModel>dipendentiOrdered =  dipendenti.Where(e => e.Enabled == "1").OrderBy(z => z.Cognome).ToList();;
+            List<DipendenteViewModel>dipendentiOrdered =  dipendenti.Where(e => e.Enabled == "1").OrderBy(z => z.Cognome).ToList();
             DipendenteViewModel dipendente = dipendenti.Where(x => x.Username == userData.UserName).FirstOrDefault();
             ViewBag.dipendente = dipendente;
             ViewBag.dipendenti = dipendentiOrdered;
@@ -216,7 +216,12 @@ namespace mes.Controllers
             ViewBag.userName = userData.UserName;
             //aggiornaPermessi = true;
             
-            List<CalendarEvent> events = PermessiExtractor(permessi);
+            //richiesta di vedere sul calendario sempre tutti i permessi
+            List<PermessoViewModel> allPermissions = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                                                                .Where(p => p.Enabled == "1").ToList();
+
+            List<CalendarEvent> events = PermessiExtractor(allPermissions);
+            //List<CalendarEvent> events = PermessiExtractor(permessi);
             ViewBag.calendarEvents = events; 
             ViewBag.permessi = permessi;
             List<string> tipologie = new List<string>();
