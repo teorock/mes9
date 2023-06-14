@@ -1,0 +1,7 @@
+{
+
+    "LastInstantConnString":"Data Source=../mesData/lastInstantDatasource.db",
+    "LastPeriodConnString":"Data Source=../mesData/lastPeriodDatasource.db",
+    "ConnectionString": "Data Source=../mesData/datasource.db"
+
+}

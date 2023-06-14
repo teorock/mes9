@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Linq;
 using System;
+using System.IO;
+using mes.Models.ControllersConfigModels;
+using Newtonsoft.Json;
 
 namespace mes.Controllers
 {
@@ -12,10 +15,20 @@ namespace mes.Controllers
     public class MesController : Controller
     {
        private readonly ILogger<MesController> _logger;
-       private readonly string connectionString ="Data Source=../mesData/datasource.db";
+       //private readonly string connectionString ="Data Source=../mesData/datasource.db";
+        MesControllerConfig config = new MesControllerConfig();
+        const string mesControllerConfigPath = @"c:\core\mes\ControllerConfig\MesController.json";       
        public MesController(ILogger<MesController> logger)
        {
            _logger = logger;
+
+            string rawConf = "";
+
+            using (StreamReader sr = new StreamReader(mesControllerConfigPath))
+            {
+                rawConf = sr.ReadToEnd();
+            }
+            config = JsonConvert.DeserializeObject<MesControllerConfig>(rawConf);            
        }
 
 
@@ -31,7 +44,7 @@ namespace mes.Controllers
         {
             List<MachineStatusPicker> lastMachinesStatus = new List<MachineStatusPicker>();
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<MachineStatusPicker> allMachineStatus = dbAccessor.Queryer<MachineStatusPicker>(connectionString,"MachineStatus");
+            List<MachineStatusPicker> allMachineStatus = dbAccessor.Queryer<MachineStatusPicker>(config.LastInstantConnString,"MachineStatus");
 
             //devo creare una lista contenente solo lo stato più recente per ogni macchina
             List<string> allMachines = allMachineStatus.Select(x => x.MachineName).Distinct().ToList();
@@ -91,7 +104,7 @@ namespace mes.Controllers
         public IActionResult GetMachineHistory(string machineName)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<MachineStatusPicker> allMachineStatus = dbAccessor.Queryer<MachineStatusPicker>(connectionString,"MachineStatus");
+            List<MachineStatusPicker> allMachineStatus = dbAccessor.Queryer<MachineStatusPicker>(config.LastPeriodConnString,"MachineStatus");
 
             List<MachineStatusPicker> oneMachineStatus = allMachineStatus.Where(x => x.MachineName == machineName).ToList();                    
             MachineStatusPicker last = oneMachineStatus[oneMachineStatus.Count -1];            
@@ -137,7 +150,7 @@ namespace mes.Controllers
             List<KeyValuePair<string,string>> result = new List<KeyValuePair<string, string>>();
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<MachineMovementsPicker> allMachineMovements = dbAccessor.Queryer<MachineMovementsPicker>(connectionString, "MachineMovements")
+            List<MachineMovementsPicker> allMachineMovements = dbAccessor.Queryer<MachineMovementsPicker>(config.ConnectionString, "MachineMovements")
                                                                 .Where(x=> x.MachineName == machineName).ToList();
             if(allMachineMovements.Count == 0) return result;
 
@@ -260,15 +273,6 @@ namespace mes.Controllers
             return barWidth;
         }        
 
-        private void GetMachineStatus(string machineName, string machineIp, string getProtocol)
-        {
-            // in base al getProtocol e al machineName interroga l'ip
-            // serve un file di configurazione macchina, ip, sistema di prelievo delle info
-            //protocolli
-            //pcquo
-            //json-1 (Akron)
-            //
-        }
 
     }
 }
