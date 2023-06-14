@@ -70,8 +70,9 @@ namespace mes.Models.Services.Infrastructures
                     }
 
             comment = $"[{duration.Hours}h{duration.Minutes}]";
-            
-            result = (arrotondato)? $"{ore}h{minutes} {comment}":$"{ore}h{duration.Minutes}";
+
+            result = (arrotondato)? $"{ore}h{minutes} {comment}":$"{ore}h{minutes}";
+
 
             return result;
         }

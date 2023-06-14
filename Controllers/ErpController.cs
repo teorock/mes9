@@ -217,8 +217,19 @@ namespace mes.Controllers
             //aggiornaPermessi = true;
             
             //richiesta di vedere sul calendario sempre tutti i permessi
-            List<PermessoViewModel> allPermissions = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
-                                                                .Where(p => p.Enabled == "1").ToList();
+            List<PermessoViewModel> allPermissions = new List<PermessoViewModel>();
+            if(level1)
+            {
+                allPermissions = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                                                                    .Where(p => p.Enabled == "1").ToList();
+            }
+            else
+            {
+            allPermissions = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                                                                .Where(u => u.Username == userData.UserName)
+                                                                .Where(p => p.Enabled == "1").ToList();                
+            }
+
 
             List<CalendarEvent> events = PermessiExtractor(allPermissions);
             //List<CalendarEvent> events = PermessiExtractor(permessi);
@@ -507,7 +518,7 @@ namespace mes.Controllers
 
             oneModel.CreatedBy = userData.UserName;
             oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
-            oneModel.Stato = "in attesa";
+            //oneModel.Stato = "in attesa";
 
             string actualDataInizio = oneModel.DataInizio;
             oneModel.DataInizio = DateToDbDateFormat(actualDataInizio);
