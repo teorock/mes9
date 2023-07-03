@@ -1,0 +1,16 @@
+{
+	"FileFilter": "*.*",
+	"Folder2Check": "C:\\sviluppo\\distinta\\dati-macchine",
+	"IncludeSubdirectories": true,
+	"AutoDrive": false,
+	"Logfile": "c:\\temp\\CronologiaFile.log",
+	"ExcludeString": "_previous",
+	"WorkListCadElementLine": "CadProgramWorklistItem",
+	"WorkListCadElementLineA1" :"PostProcessedProgramWorklistItem",
+	"WorkListCadElementLineA2": "ExecutionTimeData",
+	"DbPath":"Data Source=c:/core_source_2/mesData/datasource.db",
+	"DbTable":"MachineMovements",
+	"AutoTimer": false,
+	"AutoTimerLaps": 15,
+	"Verbose": true
+}

@@ -152,8 +152,8 @@
                       case "emergenza":
                         <td style="padding-bottom: 15px;"><h3><span class ="label label-danger" style="display: inline-block;width:90%;">@oneStatus.MachineState</span></h3></td>
                         break;                                                                                            
-                    }
-                    <td>@oneStatus.WorklistName</td>
+                    }                    
+                    <td><a asp-controller="Mes" asp-action="WLDetails" asp-route-wldata="@oneStatus.MachineName-@oneStatus.WorklistName-@oneStatus.ProgramName">@oneStatus.WorklistName</a> </td>
                     <td>@oneStatus.ProgramName</td>
                     <td style="text-align: center;">@oneStatus.Counter</td>
                     <td style="text-align: center;">@oneStatus.Quantity</td>

@@ -1,0 +1,64 @@
+@using System.Collections.Generic
+@using mes.Models.ViewModels
+
+@model List<WorklistCounter>
+
+<h2>dettaglio distinta</h2>
+<h3>@ViewBag.machineName - @ViewBag.worklistName</h3>
+<br>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-3">
+            <b>nome programma</b> 
+        </div>
+        <div class="col-md-1">
+            <b>quantità</b> 
+        </div>
+        <div class="col-md-1">
+            <b>contatore</b> 
+        </div>
+        <div class="col-md-7">
+            <b>percorso programma</b> 
+        </div>                        
+    </div>
+    <hr>
+    @foreach (WorklistCounter item in Model)
+    {
+        <div class="row">
+            @if(ViewBag.actualProgram  == item.ProgramName)
+            {
+            <div class="col-md-3" style="background-color:lightgreen;">
+                @item.ProgramName                
+            </div>
+            <div class="col-md-1" style="background-color:lightgreen;">
+                @item.Quantity
+            </div>
+            <div class="col-md-1" style="background-color:lightgreen;">
+                @item.Counter
+            </div>
+            <div class="col-md-7" style="background-color:lightgreen;font-size:14px;">
+                @item.ProgramUri
+            </div>             
+            } else {
+            <div class="col-md-3">
+                @item.ProgramName                
+            </div>
+            <div class="col-md-1">
+                @item.Quantity
+            </div>
+            <div class="col-md-1">
+                @item.Counter
+            </div>
+            <div class="col-md-7" style="font-size:14px;">
+                @item.ProgramUri
+            </div>              
+            }
+
+                      
+        </div>
+    <hr>    
+    }
+
+
+</div>

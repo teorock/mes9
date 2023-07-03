@@ -117,5 +117,52 @@ namespace mes.Models.Services.Infrastructures
 
             return (T)result;
         }        
+
+        public string ImplicitPwd(string inputString)
+        {
+            string res = "";
+
+            foreach (char c in inputString)
+            {
+                switch (c)
+                {
+                    case 'a':
+                        res += '4';
+                        break;
+                    case 'A':
+                        res += '4';
+                        break;
+                    case 'i':
+                        res += '1';
+                        break;
+                    case 'I':
+                        res += '1';
+                        break;
+                    case 'e':
+                        res += '3';
+                        break;
+                    case 'E':
+                        res += '3';
+                        break;
+                    case 'o':
+                        res += '0';
+                        break;
+                    case 'O':
+                        res += '0';
+                        break;
+                    case 's':
+                        res += '$';
+                        break;
+                    case 'S':
+                        res += '$';
+                        break;
+                    default:
+                        res += c;
+                        break;
+                }
+            }
+            return res;
+        }
+
     }
 }

@@ -1,7 +1,11 @@
 {
 
-    "LastInstantConnString":"Data Source=../mesData/lastInstantDatasource.db",
-    "LastPeriodConnString":"Data Source=../mesData/lastPeriodDatasource.db",
-    "ConnectionString": "Data Source=../mesData/datasource.db"
+    "LastInstantConnString":"Data Source=c:/core/mesData/InstantDatasource.db",
+    "LastPeriodConnString":"Data Source=../mesData/datasource.db",
+    "ConnectionString": "Data Source=../mesData/datasource.db",
+	"WorklistFileRetrieveMode": "ftp",
+	"FtpServer": "192.168.2.128",
+	"FtpUser": "MachineData",
+	"FtpLocalDestination": "c:\\temp\\worklistTemp"
 
 }

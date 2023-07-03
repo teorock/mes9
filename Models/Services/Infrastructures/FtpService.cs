@@ -74,6 +74,7 @@ namespace mes.Models.Services.Application
             return results;         
         }        
 
+
         //public List<FtpListItem> FtpRemoteDir(List<string> remoteFolder, bool getFiles)
         //{
         //    List<FtpListItem> remoteDir = new List<FtpListItem>();

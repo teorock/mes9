@@ -8,6 +8,7 @@ using System;
 using System.IO;
 using mes.Models.ControllersConfigModels;
 using Newtonsoft.Json;
+using mes.Models.Services.Application;
 
 namespace mes.Controllers
 {
@@ -143,6 +144,29 @@ namespace mes.Controllers
             //ultimi 5 movements?
                                     
             return View("GetMachineHistory", last);
+        }
+
+        public IActionResult WLDetails(string wldata)
+        {
+            //macchina-distinta-programma
+            string[] parts = wldata.Split('-');
+            //mi collego all'ftp
+            //cambio cartella con parts[0]
+            //copio il file part[1]
+            GeneralPurpose genP = new GeneralPurpose();
+            FtpService ftpService = new FtpService(config.FtpServer, config.FtpUser, genP.ImplicitPwd(config.FtpUser));
+            string remoteFile = $"/{parts[0]}/{parts[1]}.wlist";
+            string localFile = $"{Path.Combine(config.FtpLocalDestination, parts[1] + ".wlist")}";
+            ftpService.FtpDownloadFile(remoteFile,localFile );
+
+            WorklistService wlService = new WorklistService();
+            List<WorklistCounter> model = wlService.GetWorklistContent(localFile);
+
+            if(parts[2]!=null) ViewBag.actualProgram = parts[2];
+            ViewBag.machineName = parts[0];
+            ViewBag.worklistName = parts[1];
+
+            return View(model);
         }
 
         private List<KeyValuePair<string,string>> GetLastWeekProgs(string machineName, int range)

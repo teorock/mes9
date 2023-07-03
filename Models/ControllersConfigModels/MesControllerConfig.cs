@@ -10,5 +10,9 @@ namespace mes.Models.ControllersConfigModels
         public string LastInstantConnString {get; set; }
         public string LastPeriodConnString {get; set; }
         public string ConnectionString {get; set; }
+        public string WorklistFileRetrieveMode { get; set; }
+        public string FtpServer { get; set; }
+        public string FtpUser { get; set; }
+        public string FtpLocalDestination { get; set; }
     }
 }
