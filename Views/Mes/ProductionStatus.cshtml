@@ -8,6 +8,8 @@
     int manuali = ViewBag.manuali;
     int spente = ViewBag.spente;
     int emergenza = ViewBag.emergenza;
+
+    List<WorklistProgressViewmodel> wlProgress = ViewBag.wlProgress;
 }
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
@@ -131,37 +133,50 @@
                     <td style="font-size: 13px; font-style: italic;">programma</td>
                     <td style="font-size: 13px; font-style: italic; text-align: center;">contatore</td>
                     <td style="font-size: 13px; font-style: italic; text-align: center;">quantità</td>
-                    <td style="font-size: 13px; font-style: italic; text-align: center;">progresso</td>             
+                    <td style="font-size: 13px; font-style: italic; text-align: center;">progresso programma</td>
+                    <td style="font-size: 13px; font-style: italic; text-align: center;">progresso distinta</td>            
                   </tr>                                      
                   <tr>
-                    <td>@oneStatus.MachineName</td>
+                    <td style="width:10%;">@oneStatus.MachineName</td>
                     @switch(oneStatus.MachineState)
                     {
                       case "start - automatico":
-                        <td style="padding-bottom: 15px;"><h3><span class ="label label-success label-block" style="display: inline-block;width:90%;">@oneStatus.MachineState</span></h3></td>
+                        <td style="padding-bottom: 15px;width:12%;"><h3><span class ="label label-success label-block" style="display: inline-block;width:90%;">@oneStatus.MachineState</span></h3></td>
                         break;
                       case "in attesa":
-                        <td style="padding-bottom: 15px;"><h3><span class ="label label-info label-block" style="display: inline-block;width:90%;">@oneStatus.MachineState</span></h3></td>
+                        <td style="padding-bottom: 15px;width:12%;"><h3><span class ="label label-info label-block" style="display: inline-block;width:90%;">@oneStatus.MachineState</span></h3></td>
                         break;
                       case "mov.manuali":
-                        <td style="padding-bottom: 15px;"><h3><span class ="label label-warning" style="display: inline-block;width:90%;">@oneStatus.MachineState</span></h3></td>
+                        <td style="padding-bottom: 15px;width:12%;"><h3><span class ="label label-warning" style="display: inline-block;width:90%;">@oneStatus.MachineState</span></h3></td>
                         break;
                       case "non connessa":
-                        <td style="padding-bottom: 15px;"><h3><span class ="label label-default" style="display: inline-block;width:90%;">@oneStatus.MachineState</span></h3></td>
+                        <td style="padding-bottom: 15px;width:12%;"><h3><span class ="label label-default" style="display: inline-block;width:90%;">@oneStatus.MachineState</span></h3></td>
                         break;
                       case "emergenza":
-                        <td style="padding-bottom: 15px;"><h3><span class ="label label-danger" style="display: inline-block;width:90%;">@oneStatus.MachineState</span></h3></td>
+                        <td style="padding-bottom: 15px;width:12%;"><h3><span class ="label label-danger" style="display: inline-block;width:90%;">@oneStatus.MachineState</span></h3></td>
                         break;                                                                                            
                     }                    
-                    <td><a asp-controller="Mes" asp-action="WLDetails" asp-route-wldata="@oneStatus.MachineName-@oneStatus.WorklistName-@oneStatus.ProgramName">@oneStatus.WorklistName</a> </td>
-                    <td>@oneStatus.ProgramName</td>
-                    <td style="text-align: center;">@oneStatus.Counter</td>
-                    <td style="text-align: center;">@oneStatus.Quantity</td>
+                    <td style="width: 20%;"><a asp-controller="Mes" asp-action="WLDetails" asp-route-wldata="@oneStatus.MachineName-@oneStatus.WorklistName-@oneStatus.ProgramName">@oneStatus.WorklistName</a> </td>
+                    <td style="width: 20%;">@oneStatus.ProgramName</td>
+                    <td style="text-align: center; width=8%;">@oneStatus.Counter</td>
+                    <td style="text-align: center;width=8%;">@oneStatus.Quantity</td>
                     @{double counter = Convert.ToDouble(oneStatus.Counter);
                       double quantity = Convert.ToDouble(oneStatus.Quantity);
                       double barWidth = Math.Round((counter/quantity)*100,0);
                     }
-                    <td style="padding-top: 15px;"><div class="progress"><div class="progress-bar progress-bar-success" role="progressbar" style="width:@barWidth%; height: 26px;">@barWidth%</div></div></td>
+                    <td style="padding-top: 15px;padding-left:5px;padding-right:5px;"><div class="progress"><div class="progress-bar progress-bar-success" role="progressbar" style="width:@barWidth%; height: 26px;">@barWidth%</div></div></td>
+                    @{
+                        double totalCounter = Convert.ToDouble(wlProgress.Where(n=>n.MachineName == oneStatus.MachineName)
+                                              .Where(w=>w.WorklistName == oneStatus.WorklistName).Select(v=>v.TotalCounter).FirstOrDefault());
+
+                        double totalQuantity = Convert.ToDouble(wlProgress.Where(n=>n.MachineName == oneStatus.MachineName)
+                                              .Where(w=>w.WorklistName == oneStatus.WorklistName).Select(v=>v.TotalQuantity).FirstOrDefault());
+
+                        //double totalCounter = Convert.ToDouble(wlProgress.Where(n =>n.MachineName== oneStatus.MachineName).Select(v=>v.TotalCounter));
+                        //double totalQuantity = Convert.ToDouble(wlProgress.Where(n =>n.MachineName== oneStatus.MachineName).Select(v=>v.TotalQuantity));
+                        double totalBarWidth = Math.Round((totalCounter/totalQuantity)*100,0);
+                    }
+                    <td style="padding-top: 15px;padding-left:5px;padding-right:5px;"><div class="progress"><div class="progress-bar progress-bar-success" role="progressbar" style="width:@totalBarWidth%; height: 26px;">@totalCounter / @totalQuantity</div></div></td>                    
                   </tr>
               } //BIESSE1
                 if(oneStatus.MachineType=="INTERMAC1") 

@@ -21,6 +21,8 @@ namespace mes.Models.ViewModels
         public string TotalPanels { get; set; }
         public string Quantity { get; set; }
         public string Counter { get; set; }
+        public string TotalQuantity { get; set; }
+        public string TotalCounter { get; set; }
         public string EdgeName { get; set; }
         public string EdgeConsumption { get; set; }
         public string Thickness { get; set; }

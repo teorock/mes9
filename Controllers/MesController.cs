@@ -49,6 +49,7 @@ namespace mes.Controllers
 
             //devo creare una lista contenente solo lo stato più recente per ogni macchina
             List<string> allMachines = allMachineStatus.Select(x => x.MachineName).Distinct().ToList();
+            List<WorklistProgressViewmodel> wlProgress = new List<WorklistProgressViewmodel>();
 
             int automatico = 0;
             int attesa = 0;
@@ -58,13 +59,10 @@ namespace mes.Controllers
 
             foreach(string oneMachine in allMachines)
             {
-                List<MachineStatusPicker> oneMachineStatus = allMachineStatus.Where(x => x.MachineName == oneMachine).ToList();
-                
-                //elimino per velocizzare
-                //List<long>allIds = oneMachineStatus.Select(y => y.id).ToList();
-                //MachineStatusPicker last = oneMachineStatus.Where(z => z.id == allIds.Max()).FirstOrDefault();
+                List<MachineStatusPicker> oneMachineStatus = allMachineStatus.Where(x => x.MachineName == oneMachine).ToList();            
                 
                 MachineStatusPicker last = oneMachineStatus[oneMachineStatus.Count -1];
+                //last.
                 lastMachinesStatus.Add(last);
 
                 switch(last.MachineState)
@@ -88,6 +86,20 @@ namespace mes.Controllers
                         emergenza++;
                         break;                        
                 }
+                if(oneMachineStatus[0].MachineType=="BIESSE1")  
+                {
+                    string machineName = oneMachineStatus[oneMachineStatus.Count-1].MachineName;
+                    string worklistName = oneMachineStatus[oneMachineStatus.Count-1].WorklistName;
+
+                    WorklistProgressViewmodel oneProgress = new WorklistProgressViewmodel()
+                    {                        
+                        MachineName = machineName,
+                        WorklistName = worklistName,
+                        TotalQuantity = GetWorklistTotalProgress(worklistName, machineName).Key.ToString(),
+                        TotalCounter =  GetWorklistTotalProgress(worklistName, machineName).Value.ToString()                      
+                    };
+                    wlProgress.Add(oneProgress);
+                }           
             }
 
             ViewBag.automatico = automatico;
@@ -97,6 +109,9 @@ namespace mes.Controllers
             ViewBag.emergenza = emergenza;           
 
             ViewBag.allMachines = allMachines;
+
+            ViewBag.wlProgress = wlProgress;
+
             return View("ProductionStatus", lastMachinesStatus); 
         }
 
@@ -150,15 +165,10 @@ namespace mes.Controllers
         {
             //macchina-distinta-programma
             string[] parts = wldata.Split('-');
-            //mi collego all'ftp
-            //cambio cartella con parts[0]
-            //copio il file part[1]
-            GeneralPurpose genP = new GeneralPurpose();
-            FtpService ftpService = new FtpService(config.FtpServer, config.FtpUser, genP.ImplicitPwd(config.FtpUser));
-            string remoteFile = $"/{parts[0]}/{parts[1]}.wlist";
-            string localFile = $"{Path.Combine(config.FtpLocalDestination, parts[1] + ".wlist")}";
-            ftpService.FtpDownloadFile(remoteFile,localFile );
 
+            GetFtpWorklist(config.FtpServer, config.FtpUser, parts[1], parts[0], config.FtpLocalDestination);
+            
+            string localFile = $"{Path.Combine(config.FtpLocalDestination, parts[1] + ".wlist")}";
             WorklistService wlService = new WorklistService();
             List<WorklistCounter> model = wlService.GetWorklistContent(localFile);
 
@@ -167,6 +177,35 @@ namespace mes.Controllers
             ViewBag.worklistName = parts[1];
 
             return View(model);
+        }
+
+        private void GetFtpWorklist(string server, string userName, string worklistName, string machineName, string localFile)
+        {
+            GeneralPurpose genP = new GeneralPurpose();
+            FtpService ftpService = new FtpService(server, userName, genP.ImplicitPwd(userName));
+            string remoteFile = $"/{machineName}/{worklistName}.wlist";
+            //string localFile = $"{Path.Combine(localPath, worklistName + ".wlist")}";
+            ftpService.FtpDownloadFile(remoteFile,localFile );            
+        }
+
+        private KeyValuePair<int,int> GetWorklistTotalProgress(string worklistName, string machineName)
+        {
+            //KeyValuePair<int, int> totalProgress = new KeyValuePair<int, int>();
+
+            string localFile = $"{Path.Combine(config.FtpLocalDestination, worklistName + ".wlist")}"; 
+            GetFtpWorklist(config.FtpServer,config.FtpUser, worklistName, machineName, localFile);
+            
+            WorklistService wlService = new WorklistService();
+            List<WorklistCounter> model = wlService.GetWorklistContent(localFile);
+            
+            List<int> quantities = model.Select(q => Convert.ToInt32(q.Quantity)).ToList();
+            List<int> counters = model.Select(c => Convert.ToInt32(c.Counter)).ToList();
+            int totalQuantity = quantities.Take(quantities.Count()).Sum();
+            int totalCounter = counters.Take(counters.Count()).Sum();
+            
+            KeyValuePair<int,int> totalProgress = new KeyValuePair<int, int>(totalQuantity, totalCounter);
+
+            return totalProgress;
         }
 
         private List<KeyValuePair<string,string>> GetLastWeekProgs(string machineName, int range)
