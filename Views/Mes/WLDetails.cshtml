@@ -2,11 +2,28 @@
 @using mes.Models.ViewModels
 
 @model List<WorklistCounter>
+    @{
+        double totalCounter = Convert.ToDouble(ViewBag.totalCounter);
+        double totalQuantity = Convert.ToDouble(ViewBag.totalQuantity);
+
+        double totalBarWidth = Math.Round((totalCounter/totalQuantity)*100,0);
+    }
+
 
 <h2>dettaglio distinta</h2>
-<h3>@ViewBag.machineName - @ViewBag.worklistName</h3>
-<br>
 
+<div class="row">
+    <div class="col-md-4">
+        <h3>@ViewBag.machineName - @ViewBag.worklistName</h3>
+    </div>
+    <div class="col-md-4">
+        <div class="progress" style="height:30px;">
+            <div class="progress-bar bg-success" style="width:@totalBarWidth%;">@totalCounter / @totalQuantity</div>
+        </div>
+    </div>
+</div>
+
+<br>
 <div class="container">
     <div class="row">
         <div class="col-md-3">

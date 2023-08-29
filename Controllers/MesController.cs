@@ -95,8 +95,8 @@ namespace mes.Controllers
                     {                        
                         MachineName = machineName,
                         WorklistName = worklistName,
-                        TotalQuantity = GetWorklistTotalProgress(worklistName, machineName).Key.ToString(),
-                        TotalCounter =  GetWorklistTotalProgress(worklistName, machineName).Value.ToString()                      
+                        TotalQuantity = GetWorklistTotalProgress(worklistName, machineName, true).Key.ToString(),
+                        TotalCounter =  GetWorklistTotalProgress(worklistName, machineName, true).Value.ToString()                      
                     };
                     wlProgress.Add(oneProgress);
                 }           
@@ -166,15 +166,20 @@ namespace mes.Controllers
             //macchina-distinta-programma
             string[] parts = wldata.Split('-');
 
-            GetFtpWorklist(config.FtpServer, config.FtpUser, parts[1], parts[0], config.FtpLocalDestination);
-            
             string localFile = $"{Path.Combine(config.FtpLocalDestination, parts[1] + ".wlist")}";
+            GetFtpWorklist(config.FtpServer, config.FtpUser, parts[1], parts[0], localFile);
+                        
             WorklistService wlService = new WorklistService();
             List<WorklistCounter> model = wlService.GetWorklistContent(localFile);
+
+            List<int> quantities = model.Select(q => Convert.ToInt32(q.Quantity)).ToList();
+            List<int> counters = model.Select(c => Convert.ToInt32(c.Counter)).ToList();
 
             if(parts[2]!=null) ViewBag.actualProgram = parts[2];
             ViewBag.machineName = parts[0];
             ViewBag.worklistName = parts[1];
+            ViewBag.totalQuantity = quantities.Take(quantities.Count()).Sum();
+            ViewBag.totalCounter = counters.Take(counters.Count()).Sum();
 
             return View(model);
         }
@@ -184,16 +189,16 @@ namespace mes.Controllers
             GeneralPurpose genP = new GeneralPurpose();
             FtpService ftpService = new FtpService(server, userName, genP.ImplicitPwd(userName));
             string remoteFile = $"/{machineName}/{worklistName}.wlist";
-            //string localFile = $"{Path.Combine(localPath, worklistName + ".wlist")}";
             ftpService.FtpDownloadFile(remoteFile,localFile );            
         }
 
-        private KeyValuePair<int,int> GetWorklistTotalProgress(string worklistName, string machineName)
+        private KeyValuePair<int,int> GetWorklistTotalProgress(string worklistName, string machineName, bool remote)
         {
             //KeyValuePair<int, int> totalProgress = new KeyValuePair<int, int>();
 
             string localFile = $"{Path.Combine(config.FtpLocalDestination, worklistName + ".wlist")}"; 
-            GetFtpWorklist(config.FtpServer,config.FtpUser, worklistName, machineName, localFile);
+            
+            if(remote) GetFtpWorklist(config.FtpServer,config.FtpUser, worklistName, machineName, localFile);
             
             WorklistService wlService = new WorklistService();
             List<WorklistCounter> model = wlService.GetWorklistContent(localFile);

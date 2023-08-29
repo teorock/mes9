@@ -170,7 +170,7 @@ namespace mes.Models.Services.Infrastructures
 
         public string InputValidator(string inputString)
         {
-            List<char> unwanted = new List<char>(){';', '(', ')', '=', '*'};
+            List<char> unwanted = new List<char>(){';', '(', ')', '=', '*', '\''};
             List<string> toBeReplaced = new List<string>(){" OR", "1=1", "DROP", "SELECT", "INSERT", "INTO", "UPDATE", "DATABASE", "TABLE", "WHERE", "\"\""};
 
             string tempString="";

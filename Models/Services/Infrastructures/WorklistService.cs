@@ -29,6 +29,22 @@ namespace mes.Models.Services.Infrastructures
 
         public List<WorklistCounter> GetWorklistContent(string worklistFileName)
         {
+            if(!File.Exists(worklistFileName))
+            {
+                List<WorklistCounter> notFoundList = new List<WorklistCounter>()
+                {
+                    new WorklistCounter()
+                    {
+                        ProgramName =$"{worklistFileName} non trovata",
+                        Quantity = 1,
+                        Counter = 1,
+                        ProgramUri = @"c:\temp\"
+                    }
+                };
+                return notFoundList;
+
+            }
+
             XDocument xdoc = XDocument.Load(worklistFileName);
 
             IEnumerable<XElement> rows = xdoc.Descendants();
