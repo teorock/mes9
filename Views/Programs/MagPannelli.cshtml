@@ -7,6 +7,7 @@
     if(userRoles.Contains("PannelliScrivi")||userRoles.Contains("root")) authorize=true;
     List<MaterialiPannelli> allMateriali = ViewBag.NomiMateriali;
     string displayedMaterial = ViewBag.displayedMaterial;
+    //string debug = ViewBag.tipoMateriale;
 }
 
 <script>
@@ -101,21 +102,25 @@ function conferma()
 <br>
 <hr>
 <div class="row justify-content-center align-items-center g-2">
-    <div class="col"><h4>pannelli a magazzino</h4></div>
-        <div class="col">
-            <div class="dropdown">
-                <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
-                    filtra per materiale
-                </button>
-                <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" asp-controller="Programs" asp-action="MagPannelli" asp-route-nomeMateriale="">tutti</a></li>
-                    @foreach (var item in allMateriali)
-                    {
-                        <li><a class="dropdown-item" asp-controller="Programs" asp-action="MagPannelli" asp-route-tipoMateriale="@item.Nome">@item.Nome</a></li>
-                    }                    
-                </ul>
-            </div>        
+    <div class="col-md-4">
+        <h4>pannelli a magazzino</h4>
+    </div>
+    <div class="col">
+        <div class="dropdown">
+            <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+                filtra per materiale
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" asp-controller="Programs" asp-action="MagPannelli" asp-route-nomeMateriale="">tutti</a></li>
+                @foreach (var item in allMateriali)
+                {
+                    <li><a class="dropdown-item" asp-controller="Programs" asp-action="MagPannelli" asp-route-tipoMateriale="@item.Nome">@item.Nome</a></li>
+                }                    
+            </ul>
         </div>
+    </div>
+    <div class="col-md-4">
+        <a class="btn btn-outline-secondary btn-block" asp-controller="Programs" asp-action="ExportCsvPannelli" asp-route-tipoMateriale=@ViewBag.tipoMateriale>esporta .csv</a>
     </div>
     <hr>
 @using(Html.BeginForm("AggiornaPannello", "Programs", FormMethod.Post, new { name = "frmAggDati", id = "frmAggDati" }))

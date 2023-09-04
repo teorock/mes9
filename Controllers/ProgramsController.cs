@@ -186,6 +186,31 @@ namespace mes.Controllers
         {
             return true;
         }
+
+        public IActionResult ExportCsvBordi ()
+        {
+
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            List<BordoViewModel> bordi = (List<BordoViewModel>)dbAccessor.Queryer<BordoViewModel>(connectionString, "MagazzinoBordi")
+                                            .Where(x => x.Enabled =="1").ToList();
+
+            var configExp = new MapperConfiguration(cfg => cfg.CreateMap<BordoViewModel, BordoDTO>());
+            var mapper = new Mapper(configExp);
+            List<BordoDTO> exportBordi = new List<BordoDTO>();
+
+            mapper.Map(bordi, exportBordi);
+
+            //scrivi il csv localmente
+            GeneralPurpose genPurpose = new GeneralPurpose();
+            //List<string> rawCsv = genPurpose.ObjectList2Csv<SemilavoratoViewModel>(semilavorati);
+            string csv = CsvSerializer.SerializeToCsv(exportBordi);
+
+            string outputFile = "exportBordi.csv";
+            byte[] fileBytes = Encoding.ASCII.GetBytes(csv);
+
+            return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet, outputFile);             
+        }
+
         #endregion
 
         #region colla
@@ -315,6 +340,30 @@ namespace mes.Controllers
             return RedirectToAction("MagColle");
         }
 
+        public IActionResult ExportCsvColle ()
+        {
+
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            List<CollaViewModel> colle = (List<CollaViewModel>)dbAccessor.Queryer<CollaViewModel>(connectionString, "MagazzinoColle")
+                                            .Where(x => x.Enabled == "1").ToList();
+
+            var configExp = new MapperConfiguration(cfg => cfg.CreateMap<CollaViewModel, CollaDTO>());
+            var mapper = new Mapper(configExp);
+            List<CollaDTO> exportColle = new List<CollaDTO>();
+
+            mapper.Map(colle, exportColle);
+
+            //scrivi il csv localmente
+            GeneralPurpose genPurpose = new GeneralPurpose();
+            //List<string> rawCsv = genPurpose.ObjectList2Csv<SemilavoratoViewModel>(semilavorati);
+            string csv = CsvSerializer.SerializeToCsv(exportColle);
+
+            string outputFile = "exportColle.csv";
+            byte[] fileBytes = Encoding.ASCII.GetBytes(csv);
+
+            return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet, outputFile);             
+        }
+
         #endregion
 
         #region pannelli
@@ -328,7 +377,7 @@ namespace mes.Controllers
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<PannelloViewModel> pannelli = new List<PannelloViewModel>();
-                if(tipoMateriale == "" || tipoMateriale == null)
+                if(tipoMateriale == "" || tipoMateriale == null || tipoMateriale =="tutti")
                 {
                     pannelli = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
                                                     .Where(x => x.Enabled =="1").ToList();
@@ -342,6 +391,7 @@ namespace mes.Controllers
 
             ViewBag.NomiMateriali = (List<MaterialiPannelli>)dbAccessor.Queryer<MaterialiPannelli>(connectionString, "MaterialiPannelli");
             ViewBag.displayedMaterial = tipoMateriale;
+            ViewBag.tipoMateriale = tipoMateriale;
 
             return View(pannelli);
 
@@ -648,20 +698,57 @@ namespace mes.Controllers
             return RedirectToAction("MainMatPannelli");
         }        
 
-        [HttpGet]
-        [Authorize(Roles = "root, PannelliScrivi")]
-        public IActionResult CancMatPannello(long id)
+        //[HttpGet]
+        //[Authorize(Roles = "root, PannelliScrivi")]
+        //public IActionResult CancMatPannello(long id)
+        //{
+        //    DatabaseAccessor dbAccessor = new DatabaseAccessor();            
+//
+        //    MatPannelloViewModel bordo2disable = dbAccessor.Queryer<MatPannelloViewModel>(connectionString, "MaterialiPannelli").Where(x => x.id == id).FirstOrDefault();
+        //    bordo2disable.Enabled = "0";
+//
+        //    int result = dbAccessor.Updater<MatPannelloViewModel>(connectionString,"MaterialiPannelli", bordo2disable, id);
+        //    
+        //    Thread.Sleep(1000);
+        //    return RedirectToAction("MainMatPannelli");
+        //}
+
+        public IActionResult ExportCsvPannelli (string tipoMateriale)
         {
-            DatabaseAccessor dbAccessor = new DatabaseAccessor();            
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            List<PannelloViewModel> pannelli = new List<PannelloViewModel>();
 
-            MatPannelloViewModel bordo2disable = dbAccessor.Queryer<MatPannelloViewModel>(connectionString, "MaterialiPannelli").Where(x => x.id == id).FirstOrDefault();
-            bordo2disable.Enabled = "0";
+            if(tipoMateriale == "" || tipoMateriale == null || tipoMateriale=="tutti")
+            {
 
-            int result = dbAccessor.Updater<MatPannelloViewModel>(connectionString,"MaterialiPannelli", bordo2disable, id);
-            
-            Thread.Sleep(1000);
-            return RedirectToAction("MainMatPannelli");
+                pannelli = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
+                                                .Where(x => x.Enabled =="1").ToList();
+            }
+            else
+            {
+
+                pannelli = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
+                                                .Where(x => x.Enabled =="1")
+                                                .Where(y => y.Tipomateriale== tipoMateriale).ToList();
+            }     
+
+            var configExp = new MapperConfiguration(cfg => cfg.CreateMap<PannelloViewModel, PannelloDTO>());
+            var mapper = new Mapper(configExp);
+            List<PannelloDTO> exportPannelli = new List<PannelloDTO>();
+
+            mapper.Map(pannelli, exportPannelli);
+
+            //scrivi il csv localmente
+            GeneralPurpose genPurpose = new GeneralPurpose();
+            //List<string> rawCsv = genPurpose.ObjectList2Csv<SemilavoratoViewModel>(semilavorati);
+            string csv = CsvSerializer.SerializeToCsv(exportPannelli);
+
+            string outputFile = "exportPannelli.csv";
+            byte[] fileBytes = Encoding.ASCII.GetBytes(csv);
+
+            return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet, outputFile);             
         }
+
 
         #endregion
 
