@@ -17,6 +17,9 @@ using System.Drawing;
 using System.Windows;
 using System.Drawing.Imaging;
 using QRCoder;
+using ServiceStack.Text;
+using System.Text;
+using AutoMapper;
 
 namespace mes.Controllers
 {
@@ -673,7 +676,7 @@ namespace mes.Controllers
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<SemilavoratoViewModel> semilavorati = new List<SemilavoratoViewModel>();
-            if (cliente =="" || cliente == null)
+            if (cliente =="" || cliente == null || cliente == "tutti")
             {
                 semilavorati = (List<SemilavoratoViewModel>)dbAccessor.Queryer<SemilavoratoViewModel>(connectionString, "MagazzinoSemilavorati")
                                                 .Where(x => x.Enabled =="1").ToList();
@@ -687,8 +690,9 @@ namespace mes.Controllers
 
             aggiornaSemilavorati = true;
             ViewBag.Clienti = (List<ClienteViewModel>)dbAccessor.Queryer<ClienteViewModel>(mesConnectionString, "Clienti");
+            ViewBag.ClienteSelezionato = cliente;
+            
             return View(semilavorati);
-
         }
 
         [Authorize(Roles = "root, MagSemilavoratiScrivi")]
@@ -755,7 +759,7 @@ namespace mes.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "root, MagSemilavoratiScrivie")]
+        [Authorize(Roles = "root, MagSemilavoratiScrivi")]
         public IActionResult ModSemilavorato(long id)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
@@ -800,6 +804,42 @@ namespace mes.Controllers
             Thread.Sleep(1000);
             return RedirectToAction("MainSemilavorati");
         }
+
+        [Authorize(Roles = "root, MagSemilavoratiScrivi, MagSemilavoratiLeggi")]
+        public IActionResult ExportCsv(string cliente)
+        {
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            List<SemilavoratoViewModel> semilavorati = new List<SemilavoratoViewModel>();
+            if (cliente =="" || cliente == null || cliente == "tutti")
+            {
+                semilavorati = (List<SemilavoratoViewModel>)dbAccessor.Queryer<SemilavoratoViewModel>(connectionString, "MagazzinoSemilavorati")
+                                                .Where(x => x.Enabled =="1").ToList();
+            }
+            else
+                        {
+                semilavorati = (List<SemilavoratoViewModel>)dbAccessor.Queryer<SemilavoratoViewModel>(connectionString, "MagazzinoSemilavorati")
+                                                .Where(x => x.Enabled =="1")
+                                                .Where(y => y.Cliente== cliente).ToList();
+            }
+
+            var configExp = new MapperConfiguration(cfg => cfg.CreateMap<SemilavoratoViewModel, SemiLavoratoDTO>());
+            var mapper = new Mapper(configExp);
+            List<SemiLavoratoDTO> exportSemilavorati = new List<SemiLavoratoDTO>();
+
+            mapper.Map(semilavorati,exportSemilavorati);
+
+            //scrivi il csv localmente
+            GeneralPurpose genPurpose = new GeneralPurpose();
+            //List<string> rawCsv = genPurpose.ObjectList2Csv<SemilavoratoViewModel>(semilavorati);
+            string csv = CsvSerializer.SerializeToCsv(exportSemilavorati);
+
+            string outputFile = "exportSemilavorati.csv";
+            byte[] fileBytes = Encoding.ASCII.GetBytes(csv);
+
+            return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet, outputFile); 
+
+        }
+
 
         #endregion
 

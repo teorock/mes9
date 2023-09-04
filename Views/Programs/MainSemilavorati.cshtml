@@ -7,6 +7,7 @@
     bool authorize = false;
     if(userRoles.Contains("MagSemilavoratiScrivi")||userRoles.Contains("root")) authorize=true;
     List<ClienteViewModel> Clienti = ViewBag.Clienti;
+    string clienteSelezionato= ViewBag.clienteSelezionato;
 }
 
 <script>
@@ -91,27 +92,34 @@ function conferma()
 <hr>
 
 <div class="row justify-content-center align-items-center g-2">
-    <div class="col"><h4>semilavorati a magazzino</h4></div>
-    <div class="col">
-            <div class="dropdown">
-                <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
-                    filtra per cliente
-                </button>
-                <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" asp-controller="Programs" asp-action="MainSemilavorati" asp-route-cliente="">tutti</a></li>
-                    @foreach (var item in Clienti)
-                    {
-                        <li><a class="dropdown-item" asp-controller="Programs" asp-action="MainSemilavorati" asp-route-cliente="@item.Nome">@item.Nome</a></li>
-                    }
-                    
-                </ul>
-            </div>        
+    <div class="col-md-4"><h4>semilavorati a magazzino</h4></div>
+    <div class="col-md-4">
+        <div class="dropdown">
+            <button type="button" class="btn btn-outline-primary btn-block dropdown-toggle" data-bs-toggle="dropdown" id="selCliente">
+                @ViewBag.clienteSelezionato
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" asp-controller="Programs" asp-action="MainSemilavorati" asp-route-cliente="tutti">tutti</a></li>
+                @foreach (var item in Clienti)
+                {
+                    <li><a class="dropdown-item" asp-controller="Programs" asp-action="MainSemilavorati" asp-route-cliente="@item.Nome">@item.Nome</a></li>
+                }                    
+            </ul>
+        </div>     
+    </div>
+    <div class="col-md-4">
+        <a class="btn btn-outline-secondary btn-block" asp-controller="Programs" asp-action="ExportCsv" asp-route-cliente=@ViewBag.clienteSelezionato>esporta .csv</a>
     </div>
 </div>
 <hr>
+<!-- input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for names.." title="Type in a name" -->
+<!-- hr -->
+
+
 @using(Html.BeginForm("AggiornaSemilavorati", "Programs", FormMethod.Post, new { name = "frmAggSemilavorati", id = "frmAggSemilavorati" }))
 {
-    <table>
+    <table id="myTable">
+        <thead>
         <tr>
             <th style="text-align: center;">codice</th> 
             <th style="text-align: center;">nome articolo</th> 
@@ -125,8 +133,10 @@ function conferma()
             <th style="text-align: center;">quantita min</th> 
             <th style="text-align: center;">enabled</th> 
             <th> </th>
-            <th> </th>
+            <th> </th>            
         </tr>
+        </thead>
+        <tbody>
             @for(int x=0; x<Model.Count; x++)
             {
                 int quan = Convert.ToInt16(Model[x].Quantita);
@@ -169,8 +179,11 @@ function conferma()
                         <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].Enabled class="form-control" value=@Model[x].Enabled readonly/></td>
                     }                   
                 </tr>
-            }    
+            }
+            </tbody>
     </table>
+
+
     <br>
     <br>
     @if(authorize)
@@ -185,4 +198,14 @@ function conferma()
             </div>    
         </div>  
     }
+
 }
+
+
+<script>
+    $(document).ready(function(@clienteSelezionato)){
+        alert(@clienteSelezionato);
+        $("#selCliente").html();
+    });
+</script>
+

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace mes.Models.Services.Infrastructures
 {
@@ -162,6 +163,27 @@ namespace mes.Models.Services.Infrastructures
                 }
             }
             return res;
+        }
+
+        public List<string> ObjectList2Csv<T>(List<T> inputList)
+        {
+            List<string> result = new List<string>();
+            var properties = typeof(T).GetProperties();
+            List<string> allProperties = new List<string>();
+
+            string csvHead = String.Join(",", properties.Select(x => x.ToString()).ToArray());
+            result.Add(csvHead);
+
+            foreach(var oneLine in inputList)
+            {
+                foreach(var property in properties)
+                {
+                    allProperties.Add(property.Name);
+                    //allValues.Add(property.GetValue(inputList).ToString());   
+                }
+            }
+
+            return new List<string>();
         }
 
     }

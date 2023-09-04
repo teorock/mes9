@@ -10,6 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="12.0.1" />
     <PackageReference Include="Core.Renci.SshNet" Version="2021.10.2" />
     <PackageReference Include="FluentFTP" Version="41.0.0" />
     <PackageReference Include="iTextSharp" Version="5.5.13.3" />
@@ -21,6 +22,7 @@
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="5.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="QRCoder" Version="1.4.3" />
+    <PackageReference Include="ServiceStack.Text" Version="6.10.0" />
   </ItemGroup>
 
 </Project>
