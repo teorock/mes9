@@ -99,6 +99,7 @@
             <th style="text-align: center;">lunghezza</th> 
             <th style="text-align: center;">larghezza</th> 
             <th style="text-align: center;">spessore</th> 
+            <th style="text-align: center;">diametro</th> 
             <th style="text-align: center;">colore</th> 
             <th style="text-align: center;">cliente</th> 
             <th style="text-align: center;">tipoBordo</th> 
@@ -112,6 +113,7 @@
             <td><input style="width: 90px;" type="text" asp-for=@Model.Lunghezza class="form-control" id="Lunghezza" required/></td>
             <td><input style="width: 90px;" type="text" asp-for=@Model.Larghezza class="form-control" id="Larghezza" required/></td>
             <td><input style="width: 90px;" type="text" asp-for=@Model.Spessore class="form-control" id="Spessore" required/></td>
+            <td><input style="width: 90px;" type="text" asp-for=@Model.Diametro class="form-control" id="Diametro" required/></td>
             <td><input style="width: 130px; text-align:center;" type="text" asp-for=@Model.Colore class="form-control" id="Colore" required/></td>
             <td><input style="width: 120px;" type="text" asp-for=@Model.Cliente class="form-control" id="Cliente" required/></td>
             <td><input style="width: 190px;" type="text" asp-for=@Model.TipoBordo class="form-control" id="TipoBordo" required/></td>
@@ -130,7 +132,7 @@
         </button>            
         </div>
         <div class="col-md-3 d-grid">
-            <a class="btn btn-outline-secondary btn-block" asp-controller="Programs" asp-action="MainSemilavorati">annulla</a>
+            <a class="btn btn-outline-secondary btn-block" asp-controller="Programs" asp-action="MainSemilavorati" asp-route-cliente="tutti">annulla</a>
         </div>             
     </div>  
 }
@@ -144,7 +146,8 @@
             <th style="text-align: center;">nome articolo</th> 
             <th style="text-align: center;">lunghezza</th> 
             <th style="text-align: center;">larghezza</th> 
-            <th style="text-align: center;">spessore</th> 
+            <th style="text-align: center;">spessore</th>
+            <th style="text-align: center;">diametro</th> 
             <th style="text-align: center;">colore</th> 
             <th style="text-align: center;">cliente</th> 
             <th style="text-align: center;">tipo bordo</th> 
@@ -160,6 +163,7 @@
                 <td><input style="width: 90px;" type="text" asp-for=@oneModel.Lunghezza class="form-control" value=@oneModel.Lunghezza readonly /></td> 
                 <td><input style="width: 90px;" type="text" asp-for=@oneModel.Larghezza class="form-control" value=@oneModel.Larghezza readonly /></td> 
                 <td><input style="width: 90px;" type="text" asp-for=@oneModel.Spessore class="form-control" value=@oneModel.Spessore readonly /></td> 
+                <td><input style="width: 90px;" type="text" asp-for=@oneModel.Diametro class="form-control" value=@oneModel.Diametro readonly /></td> 
                 <td><input style="width: 130px; text-align:center;" type="text" asp-for=@oneModel.Colore class="form-control" value=@oneModel.Colore readonly /></td> 
                 <td><input style="width: 120px;" type="text" asp-for=@oneModel.Cliente class="form-control" value=@oneModel.Cliente readonly /></td> 
                 <td><input style="width: 190px;" type="text" asp-for=@oneModel.TipoBordo class="form-control" value=@oneModel.TipoBordo readonly /></td> 

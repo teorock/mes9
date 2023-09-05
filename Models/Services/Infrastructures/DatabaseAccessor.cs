@@ -133,7 +133,14 @@ namespace mes.Models.Services.Infrastructures
                 
                 foreach(var oneProp in properties)
                 {
-                    typeOfInstance.GetProperty(oneProp.Name).SetValue(instance, reader[oneProp.Name]);
+                    try
+                    {
+                        typeOfInstance.GetProperty(oneProp.Name).SetValue(instance, reader[oneProp.Name]);
+                    }
+                    catch (Exception excp)
+                    {
+                        
+                    }
                 }
                 results.Add((T)instance);
                 

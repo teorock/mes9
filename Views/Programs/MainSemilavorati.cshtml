@@ -126,6 +126,7 @@ function conferma()
             <th style="text-align: center;">lunghezza</th> 
             <th style="text-align: center;">larghezza</th> 
             <th style="text-align: center;">spessore</th> 
+            <th style="text-align: center;">diametro</th> 
             <th style="text-align: center;">colore</th> 
             <th style="text-align: center;">cliente</th> 
             <th style="text-align: center;">tipo bordo</th> 
@@ -150,6 +151,7 @@ function conferma()
                         <td><input readonly style="width: 90px;  background-color: @color;" type="text" asp-for=@Model[x].Lunghezza class="form-control" value=@Model[x].Lunghezza  /></td>
                         <td><input readonly style="width: 90px;  background-color: @color;" type="text" asp-for=@Model[x].Larghezza class="form-control" value=@Model[x].Larghezza  /></td>
                         <td><input readonly style="width: 90px;  background-color: @color;" type="text" asp-for=@Model[x].Spessore class="form-control" value=@Model[x].Spessore  /></td>
+                        <td><input readonly style="width: 90px;  background-color: @color;" type="text" asp-for=@Model[x].Diametro class="form-control" value=@Model[x].Diametro  /></td>
                         <td><input readonly style="width: 130px; background-color: @color;" type="text" asp-for=@Model[x].Colore class="form-control" value=@Model[x].Colore  /></td>
                         <td><input readonly style="width: 120px; background-color: @color;" type="text" asp-for=@Model[x].Cliente class="form-control" value=@Model[x].Cliente  /></td>
                         <td><input readonly style="width: 190px; background-color: @color;" type="text" asp-for=@Model[x].TipoBordo class="form-control" value=@Model[x].TipoBordo  /></td>
@@ -168,6 +170,7 @@ function conferma()
                         <td><input style="width: 90px;  background-color: @color;" type="text" asp-for=@Model[x].Lunghezza class="form-control" value=@Model[x].Lunghezza readonly /></td>
                         <td><input style="width: 90px;  background-color: @color;" type="text" asp-for=@Model[x].Larghezza class="form-control" value=@Model[x].Larghezza readonly /></td>
                         <td><input style="width: 90px;  background-color: @color;" type="text" asp-for=@Model[x].Spessore class="form-control" value=@Model[x].Spessore readonly /></td>
+                        <td><input style="width: 90px;  background-color: @color;" type="text" asp-for=@Model[x].Diametro class="form-control" value=@Model[x].Diametro readonly /></td>
                         <td><input style="width: 130px; background-color: @color; text-align:center;" type="text" asp-for=@Model[x].Colore class="form-control" value=@Model[x].Colore readonly /></td>
                         <td><input style="width: 120px; background-color: @color;" type="text" asp-for=@Model[x].Cliente class="form-control" value=@Model[x].Cliente readonly /></td>
                         <td><input style="width: 190px; background-color: @color;" type="text" asp-for=@Model[x].TipoBordo class="form-control" value=@Model[x].TipoBordo readonly /></td>

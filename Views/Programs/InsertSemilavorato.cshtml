@@ -42,6 +42,11 @@ function conferma() {
             $("#confirmationModal").modal('toggle');
             return;
         }
+        if(!$("#Diametro").val()) {
+            alert("campo 'Diametro' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }        
         if(!$("#Colore").val()) {
             alert("campo 'Colore' vuoto");
             $("#confirmationModal").modal('toggle');
@@ -113,6 +118,7 @@ function conferma() {
             <th style="text-align: center;">lunghezza</th>
             <th style="text-align: center;">larghezza</th>
             <th style="text-align: center;">spessore</th>
+            <th style="text-align: center;">diametro</th>
             <th style="text-align: center;">colore</th>
             <th style="text-align: center;">cliente</th>
             <th style="text-align: center;">tipo bordo</th>
@@ -125,6 +131,7 @@ function conferma() {
             <td><input id="Lunghezza" style="width: 90px;" type="text" asp-for=@Model.Lunghezza class="form-control" required/></td>
             <td><input id="Larghezza" style="width: 90px;" type="text" asp-for=@Model.Larghezza class="form-control" required/></td>
             <td><input id="Spessore" style="width: 90px;" type="text" asp-for=@Model.Spessore class="form-control" required/></td>
+            <td><input id="Spessore" style="width: 90px;" type="text" asp-for=@Model.Diametro class="form-control" required/></td>
             <td><input id="Colore" style="width: 130px; text-align:center;" type="text" asp-for=@Model.Colore class="form-control" required/></td>
             <td>
                 <div class="select-editeable">
@@ -151,7 +158,7 @@ function conferma() {
             <button type="button" class="btn btn-outline-primary btn-block" data-bs-toggle="modal" data-bs-target="#confirmationModal">salva</button>            
         </div>
         <div class="col-md-3 d-grid">
-            <a class="btn btn-outline-secondary  btn-block" asp-controller="Programs" asp-action="MainSemilavorati">annulla</a>
+            <a class="btn btn-outline-secondary  btn-block" asp-controller="Programs" asp-action="MainSemilavorati" asp-route-cliente="tutti">annulla</a>
         </div>             
     </div>  
 }
@@ -165,7 +172,8 @@ function conferma() {
             <th style="text-align: center;">nome articolo</th> 
             <th style="text-align: center;">lunghezza</th> 
             <th style="text-align: center;">larghezza</th> 
-            <th style="text-align: center;">spessore</th> 
+            <th style="text-align: center;">spessore</th>
+            <th style="text-align: center;">diametro</th>            
             <th style="text-align: center;">colore</th> 
             <th style="text-align: center;">cliente</th> 
             <th style="text-align: center;">tipo bordo</th> 
@@ -181,6 +189,7 @@ function conferma() {
                 <td><input style="width: 90px; " type="text" asp-for=@oneModel.Lunghezza class="form-control" value=@oneModel.Lunghezza readonly /></td> 
                 <td><input style="width: 90px; " type="text" asp-for=@oneModel.Larghezza class="form-control" value=@oneModel.Larghezza readonly /></td> 
                 <td><input style="width: 90px; " type="text" asp-for=@oneModel.Spessore class="form-control" value=@oneModel.Spessore readonly /></td> 
+                <td><input style="width: 90px; " type="text" asp-for=@oneModel.Diametro class="form-control" value=@oneModel.Diametro readonly /></td> 
                 <td><input style="width: 130px; text-align:center;" type="text" asp-for=@oneModel.Colore class="form-control" value=@oneModel.Colore readonly /></td> 
                 <td><input style="width: 120px;" type="text" asp-for=@oneModel.Cliente class="form-control" value=@oneModel.Cliente readonly /></td> 
                 <td><input style="width: 190px;" type="text" asp-for=@oneModel.TipoBordo class="form-control" value=@oneModel.TipoBordo readonly /></td> 

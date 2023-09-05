@@ -6,6 +6,7 @@ public class SemilavoratoViewModel
 	public string Lunghezza { get; set; }
 	public string Larghezza { get; set; }
 	public string Spessore { get; set; }
+	public string Diametro { get; set; }
 	public string Colore { get; set; }
 	public string Cliente { get; set; }
 	public string TipoBordo { get; set; }
