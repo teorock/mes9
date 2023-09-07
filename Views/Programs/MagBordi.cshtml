@@ -104,21 +104,34 @@ function conferma()
 </div>
 
 <hr>
+    <div class="row">
+        <div class="col-md-6">
+            <input class="form-control" id="myInput" type="text" placeholder="Search..">
+        </div>
+        <div class="col-md-3">
+            <a class="btn btn-outline-primary" asp-controller="Programs" asp-action="MagBordi" id="myLink">cerca</a>
+        </div>
+    </div>  
+<hr>
+
 @using(Html.BeginForm("AggiornaBordi", "Programs", FormMethod.Post, new { name = "frmAggBordi", id = "frmAggBordi" }))
 {
     <table>
-        <tr>
-            <th style="text-align: center;">codice</th> 
-            <th style="text-align: center;">nome bordo</th>            
-            <th style="text-align: center;">spessore</th>
-            <th style="text-align: center;">altezza</th>
-            <th style="text-align: center;">colore</th>
-            <th style="text-align: center;">quantità</th>
-            <th style="text-align: center;">quantità min</th>
-            <th style="text-align: center;">fornitore</th>            
-            <th> </th>
-            <th> </th>
-        </tr>
+        <thead>
+            <tr>
+                <th style="text-align: center;">codice</th> 
+                <th style="text-align: center;">nome bordo</th>            
+                <th style="text-align: center;">spessore</th>
+                <th style="text-align: center;">altezza</th>
+                <th style="text-align: center;">colore</th>
+                <th style="text-align: center;">quantità</th>
+                <th style="text-align: center;">quantità min</th>
+                <th style="text-align: center;">fornitore</th>            
+                <th> </th>
+                <th> </th>
+            </tr>
+        </thead>
+        <tbody id="myTable">
             @for(int x=0; x<Model.Count; x++)
             {
                 int quan = Convert.ToInt16(Model[x].Quantita);
@@ -156,7 +169,10 @@ function conferma()
                         <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].Enabled class="form-control" value=@Model[x].Enabled readonly/></td>
                     }                   
                 </tr>
-            }    
+            }               
+        </tbody>
+
+ 
     </table>
     <br>
     <br>
@@ -173,5 +189,30 @@ function conferma()
         </div>  
     }
 }
+
+<script>
+
+
+    document.getElementById('myInput').addEventListener('keyup', function() {
+        var inputValue = this.value;
+        var link = document.getElementById('myLink');
+        link.href = '/Programs/MagBordi?filter=' + inputValue;
+    });
+
+
+    //$(document).ready(function(){
+    //    alert("ready");
+    //    $("#myInput").on("keyup", function() {
+    //        var value = $(this).val();
+    //        $.ajax({
+    //            type:"GET",
+    //            url:"/Programs/MagBordi",
+    //            data: {filter: value},
+    //                contentType: "application/json; charset=utf-8",
+    //                dataType: "json"                
+    //        });
+    //    });
+    //});
+</script>
 
 

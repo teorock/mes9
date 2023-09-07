@@ -48,17 +48,35 @@ namespace mes.Controllers
 
         [HttpGet]
         [Authorize(Roles = "root, MagMaterialiLeggi, MagMaterialiScrivi")]
-        public IActionResult MagBordi()
+        public IActionResult MagBordi(string filter)
         {
             UserData userData = GetUserData();
             ViewBag.userRoles = userData.UserRoles;
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<BordoViewModel> bordi = (List<BordoViewModel>)dbAccessor.Queryer<BordoViewModel>(connectionString, "MagazzinoBordi")
-                                            .Where(x => x.Enabled =="1").ToList();
+            List<BordoViewModel> bordi = new List<BordoViewModel>();
+
+            List<BordoViewModel> tmpBordi = (List<BordoViewModel>)dbAccessor.Queryer<BordoViewModel>(connectionString, "MagazzinoBordi")
+                                            .Where(x => x.Enabled =="1").ToList();            
+            if(filter == null || filter== "")
+            {
+                bordi = tmpBordi;
+            } else {
+                //bool test = tmpBordi.Any(x => x.GetType()
+                //.GetProperties()
+                //.Any(p =>
+                //    {
+                //        var value = p.GetValue(x);
+                //        return value != null && value.ToString().Contains(filter);
+                //    }
+                //));
+
+                bordi = tmpBordi.Where(x => x.GetType().GetProperties().Any(p => {var value = p.GetValue(x); return value!=null && value.ToString().Contains(filter);})).ToList();
+            }
+
 
             aggiornaBordi = true;
-            return View(bordi);
+            return View("MagBordi", bordi);
 
         }
 
@@ -1397,12 +1415,12 @@ namespace mes.Controllers
             int collaLines = ((colle.Count() * 100) <= 400)?400: colle.Count()*100;
             int panLines = ((pannelli.Count() * 100) <= 400)?400: pannelli.Count()*100;
             int semiLines = ((semilavorati.Count() * 100) <= 400)?400: semilavorati.Count()*100;
-            int bordiLines = ((bordi.Count() * 100) <= 400)?400: bordi.Count()*100;
+            int bordiLines = ((bordi.Count() * 100) <= 400)?400: bordi.Count()*100;            
 
             ViewBag.semiLines = $"{semiLines}px";
             ViewBag.panelLines = $"{panLines}px";
             ViewBag.colleLines = $"{collaLines}px";
-            ViewBag.bordiLines = $"{bordiLines}px";
+            ViewBag.bordiLines = $"{bordiLines}px";            
 
             List<DashboardMaterialiViewModel> tempOrdered = alertMateriali.OrderByDescending(x => x.BackgroundColor == "alert-danger").ToList();
 

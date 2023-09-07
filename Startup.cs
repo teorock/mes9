@@ -65,7 +65,9 @@ namespace intranet
             //    options.Password.RequireDigit = false;
             //    options.Password.RequireNonAlphanumeric = false;
             //    options.Password.RequiredUniqueChars = 5;
-            //});                   
+            //});               
+
+            //services.AddControllersWithViews().AddRazorRuntimeCompilation();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
