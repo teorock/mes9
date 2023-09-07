@@ -1323,5 +1323,101 @@ namespace mes.Controllers
 
         #endregion
 
+        #region dashboardMateriali
+
+        public IActionResult DashboardMateriali()
+        {
+            
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+
+            List<PannelloViewModel> pannelli = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
+                                            .Where(x => x.Enabled =="1")
+                                            .Where( y => Convert.ToInt32(y.Quantita) <= Convert.ToInt32(y.QuantitaMin)).ToList();
+
+            List<CollaViewModel> colle = (List<CollaViewModel>)dbAccessor.Queryer<CollaViewModel>(connectionString, "MagazzinoColle")
+                                            .Where(x => x.Enabled == "1")
+                                            .Where( y => Convert.ToInt32(y.Quantita) <= Convert.ToInt32(y.QuantitaMin)).ToList();           
+
+            List<BordoViewModel> bordi = (List<BordoViewModel>)dbAccessor.Queryer<BordoViewModel>(connectionString, "MagazzinoBordi")
+                                            .Where(x => x.Enabled =="1")
+                                            .Where( y => Convert.ToInt32(y.Quantita) <= Convert.ToInt32(y.QuantitaMin)).ToList();                                            
+
+            List<SemilavoratoViewModel>semilavorati = (List<SemilavoratoViewModel>)dbAccessor.Queryer<SemilavoratoViewModel>(connectionString, "MagazzinoSemilavorati")
+                                                .Where(x => x.Enabled =="1")
+                                                .Where( y => Convert.ToInt32(y.Quantita) <= Convert.ToInt32(y.QuantitaMin)).ToList();
+
+            List<DashboardMaterialiViewModel> alertMateriali = new List<DashboardMaterialiViewModel>();
+
+            //--------------------------------------------
+            foreach(PannelloViewModel onePanel in pannelli)
+            {
+                DashboardMaterialiViewModel oneDash = new DashboardMaterialiViewModel(){
+                    Section = "pannelli",
+                    Message = $"{onePanel.Nome}, {onePanel.Lunghezza}x{onePanel.Larghezza}x{onePanel.Spessore}, cliente:{onePanel.Cliente}, locazione:{onePanel.Locazione}",
+                    BackgroundColor = (Convert.ToInt32(onePanel.Quantita) ==0) ? "alert-danger" : "alert-warning",
+                    PreMessage = (Convert.ToInt32(onePanel.Quantita) ==0) ? "ESAURITO " : $"in esaurimento {onePanel.Quantita}/{onePanel.QuantitaMin}"
+                };
+                alertMateriali.Add(oneDash);
+            }            
+
+            foreach(SemilavoratoViewModel oneSemi in semilavorati)
+            {
+                DashboardMaterialiViewModel oneDash = new DashboardMaterialiViewModel(){
+                    Section = "semilavorati",
+                    Message = $"{oneSemi.NomeArticolo}, {oneSemi.Lunghezza}x{oneSemi.Larghezza}x{oneSemi.Spessore}, cliente:{oneSemi.Cliente}, tipo bordo:{oneSemi.TipoBordo}",
+                    BackgroundColor = (Convert.ToInt32(oneSemi.Quantita) ==0) ? "alert-danger" : "alert-warning",
+                    PreMessage = (Convert.ToInt32(oneSemi.Quantita) ==0) ? "ESAURITO " : $"in esaurimento {oneSemi.Quantita}/{oneSemi.QuantitaMin}"
+                };
+                alertMateriali.Add(oneDash);
+            }            
+            
+            foreach(BordoViewModel oneBordo in bordi)
+            {
+                DashboardMaterialiViewModel oneDash = new DashboardMaterialiViewModel(){
+                    BackgroundColor = (Convert.ToInt32(oneBordo.Quantita) ==0) ? "alert-danger" : "alert-warning",
+                    Section = "bordi",
+                    Message = $"{oneBordo.Nome}, spessore:{oneBordo.Spessore}, altezza:{oneBordo.Altezza}, fornitore:{oneBordo.Fornitore}",
+                    PreMessage = (Convert.ToInt32(oneBordo.Quantita) ==0) ? "ESAURITO " : $"in esaurimento {oneBordo.Quantita}/{oneBordo.QuantitaMin}"
+                };
+                alertMateriali.Add(oneDash);
+            } 
+
+            foreach(CollaViewModel oneColla in colle)
+            {
+                DashboardMaterialiViewModel oneDash = new DashboardMaterialiViewModel(){
+                    Section = "colle",
+                    Message = $"{oneColla.Nome}, formato:{oneColla.FormatoColla}",
+                    BackgroundColor = (Convert.ToInt32(oneColla.Quantita) ==0) ? "alert-danger" : "alert-warning",
+                    PreMessage = (Convert.ToInt32(oneColla.Quantita) ==0) ? "ESAURITO " : $"in esaurimento {oneColla.Quantita}/{oneColla.QuantitaMin}"
+                };
+                alertMateriali.Add(oneDash);
+            }
+
+
+            int collaLines = ((colle.Count() * 100) <= 400)?400: colle.Count()*100;
+            int panLines = ((pannelli.Count() * 100) <= 400)?400: pannelli.Count()*100;
+            int semiLines = ((semilavorati.Count() * 100) <= 400)?400: semilavorati.Count()*100;
+            int bordiLines = ((bordi.Count() * 100) <= 400)?400: bordi.Count()*100;
+
+            ViewBag.semiLines = $"{semiLines}px";
+            ViewBag.panelLines = $"{panLines}px";
+            ViewBag.colleLines = $"{collaLines}px";
+            ViewBag.bordiLines = $"{bordiLines}px";
+
+            List<DashboardMaterialiViewModel> tempOrdered = alertMateriali.OrderByDescending(x => x.BackgroundColor == "alert-danger").ToList();
+
+            return View(tempOrdered);
+        }
+
+        private string GetDashMessageColor(string quantita, string quantitaMin)
+        {
+            int quan = Convert.ToInt32(quantita);
+            int quanMin = Convert.ToInt32(quantitaMin);
+
+            return (quan == 0)?"red":"orange";
+        }
+
+        #endregion
+
     }
 }
