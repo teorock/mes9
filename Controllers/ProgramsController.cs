@@ -61,23 +61,14 @@ namespace mes.Controllers
             if(filter == null || filter== "")
             {
                 bordi = tmpBordi;
-            } else {
-                //bool test = tmpBordi.Any(x => x.GetType()
-                //.GetProperties()
-                //.Any(p =>
-                //    {
-                //        var value = p.GetValue(x);
-                //        return value != null && value.ToString().Contains(filter);
-                //    }
-                //));
-
+            }
+            else
+            {
                 bordi = tmpBordi.Where(x => x.GetType().GetProperties().Any(p => {var value = p.GetValue(x); return value!=null && value.ToString().Contains(filter);})).ToList();
             }
 
-
             aggiornaBordi = true;
             return View("MagBordi", bordi);
-
         }
 
         [Authorize(Roles = "root, MagMaterialiScrivi")]
@@ -388,24 +379,36 @@ namespace mes.Controllers
 
         [HttpGet]
         [Authorize(Roles = "root, MagMaterialiLeggi, PannelliScrivi")]
-        public IActionResult MagPannelli(string tipoMateriale)
+        public IActionResult MagPannelli(string tipoMateriale, string filter)
         {
+            if(tipoMateriale=="" || tipoMateriale == null) tipoMateriale="tutti";
             UserData userData = GetUserData();
             ViewBag.userRoles = userData.UserRoles;
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<PannelloViewModel> pannelli = new List<PannelloViewModel>();
+            List<PannelloViewModel> tempPannelli = new List<PannelloViewModel>();
                 if(tipoMateriale == "" || tipoMateriale == null || tipoMateriale =="tutti")
                 {
-                    pannelli = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
+                    tempPannelli = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
                                                     .Where(x => x.Enabled =="1").ToList();
                 }
                 else
                 {
-                    pannelli = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
+                    tempPannelli = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
                                                     .Where(x => x.Enabled =="1")
                                                     .Where(y => y.Tipomateriale== tipoMateriale).ToList();
                 }
+
+                if(filter=="" || filter== null)
+                {
+                    pannelli = tempPannelli;
+                }
+                else
+                {
+                    pannelli = tempPannelli.Where(x => x.GetType().GetProperties().Any(p => {var value = p.GetValue(x); return value!=null && value.ToString().Contains(filter);})).ToList();
+                }
+
 
             ViewBag.NomiMateriali = (List<MaterialiPannelli>)dbAccessor.Queryer<MaterialiPannelli>(connectionString, "MaterialiPannelli");
             ViewBag.displayedMaterial = tipoMateriale;
@@ -774,24 +777,36 @@ namespace mes.Controllers
 
         [HttpGet]
         [Authorize(Roles = "root, MagSemilavoratiLeggi, MagSemilavoratiScrivi")]
-        public IActionResult MainSemilavorati(string cliente)
+        public IActionResult MainSemilavorati(string cliente, string filter)
         {
             UserData userData = GetUserData();
             ViewBag.userRoles = userData.UserRoles;
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<SemilavoratoViewModel> semilavorati = new List<SemilavoratoViewModel>();
+            List<SemilavoratoViewModel> tmpSemilavorati = new List<SemilavoratoViewModel>();
+
             if (cliente =="" || cliente == null || cliente == "tutti")
             {
-                semilavorati = (List<SemilavoratoViewModel>)dbAccessor.Queryer<SemilavoratoViewModel>(connectionString, "MagazzinoSemilavorati")
+                tmpSemilavorati = (List<SemilavoratoViewModel>)dbAccessor.Queryer<SemilavoratoViewModel>(connectionString, "MagazzinoSemilavorati")
                                                 .Where(x => x.Enabled =="1").ToList();
             }
             else
                         {
-                semilavorati = (List<SemilavoratoViewModel>)dbAccessor.Queryer<SemilavoratoViewModel>(connectionString, "MagazzinoSemilavorati")
+                tmpSemilavorati = (List<SemilavoratoViewModel>)dbAccessor.Queryer<SemilavoratoViewModel>(connectionString, "MagazzinoSemilavorati")
                                                 .Where(x => x.Enabled =="1")
                                                 .Where(y => y.Cliente== cliente).ToList();
             }
+
+            //filtro di ricerca
+            if(filter == null || filter== "")
+            {
+                semilavorati = tmpSemilavorati;
+            }
+            else
+            {
+                semilavorati = tmpSemilavorati.Where(x => x.GetType().GetProperties().Any(p => {var value = p.GetValue(x); return value!=null && value.ToString().Contains(filter);})).ToList();
+            }            
 
             aggiornaSemilavorati = true;
             ViewBag.Clienti = (List<ClienteViewModel>)dbAccessor.Queryer<ClienteViewModel>(mesConnectionString, "Clienti");

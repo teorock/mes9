@@ -94,24 +94,20 @@ function conferma()
 <br>
 <br>
 <hr>
-<div class="row">
-    <div class="col-md-8">
-        <h4>bordi a magazzino</h4>
-    </div>
-    <div class="col-md-4">        
-        <a class="btn btn-outline-secondary" asp-controller="Programs" asp-action="ExportCsvBordi">esporta .csv</a>
-    </div>
-</div>
-
-<hr>
     <div class="row">
-        <div class="col-md-6">
-            <input class="form-control" id="myInput" type="text" placeholder="Search..">
+        <div class="col-md-3">
+            <h4>bordi a magazzino</h4>
         </div>
+        <div class="col-md-4">
+            <input class="form-control" id="myInput" type="text" placeholder="Search..">
+        </div>        
         <div class="col-md-3">
             <a class="btn btn-outline-primary" asp-controller="Programs" asp-action="MagBordi" id="myLink">cerca</a>
+        </div>          
+        <div class="col-md-2">        
+            <a class="btn btn-outline-secondary" asp-controller="Programs" asp-action="ExportCsvBordi">esporta .csv</a>
         </div>
-    </div>  
+    </div>
 <hr>
 
 @using(Html.BeginForm("AggiornaBordi", "Programs", FormMethod.Post, new { name = "frmAggBordi", id = "frmAggBordi" }))

@@ -89,6 +89,7 @@ function conferma()
     }
 </style>
 
+<input type="hidden" id="displayedMaterial" value="@ViewBag.displayedMaterial" />
 
 <div class="row align-items-start">
     <div class="col-md-1" align="center">
@@ -102,13 +103,13 @@ function conferma()
 <br>
 <hr>
 <div class="row justify-content-center align-items-center g-2">
-    <div class="col-md-4">
-        <h4>pannelli a magazzino</h4>
+    <div class="col-md-3">
+        <h4>magazzino pannelli</h4>
     </div>
-    <div class="col">
+    <div class="col-md-2">
         <div class="dropdown">
             <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
-                filtra per materiale
+                @ViewBag.displayedMaterial
             </button>
             <ul class="dropdown-menu">
                 <li><a class="dropdown-item" asp-controller="Programs" asp-action="MagPannelli" asp-route-nomeMateriale="">tutti</a></li>
@@ -120,6 +121,12 @@ function conferma()
         </div>
     </div>
     <div class="col-md-4">
+        <input class="form-control" id="myInput" type="text" placeholder="ricerca..">
+    </div>        
+    <div class="col-md-1">
+        <a class="btn btn-outline-primary" asp-controller="Programs" asp-action="MagBordi" id="myLink">cerca</a>
+    </div>      
+    <div class="col-md-2">
         <a class="btn btn-outline-secondary btn-block" asp-controller="Programs" asp-action="ExportCsvPannelli" asp-route-tipoMateriale=@ViewBag.tipoMateriale>esporta .csv</a>
     </div>
     <hr>
@@ -213,3 +220,11 @@ function conferma()
 }
 
 
+<script>
+    document.getElementById('myInput').addEventListener('keyup', function() {
+        var materiale = document.getElementById('displayedMaterial').value;
+        var inputValue = this.value;
+        var link = document.getElementById('myLink');
+        link.href = '/Programs/MagPannelli?filter=' + inputValue + '&tipoMateriale=' + materiale;
+    });
+</script>

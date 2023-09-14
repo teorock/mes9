@@ -86,17 +86,21 @@ function conferma()
     } 
 </style>
 
+<input type="hidden" id="clienteSelezionato" value="@ViewBag.clienteSelezionato" />
+
 <h2>gestione magazzino semilavorati</h2>
 <br>
 <br>
 <hr>
 
 <div class="row justify-content-center align-items-center g-2">
-    <div class="col-md-4"><h4>semilavorati a magazzino</h4></div>
-    <div class="col-md-4">
+    <div class="col-md-3">
+        <h4>semilavorati a magazzino</h4>
+    </div>
+    <div class="col-md-2">
         <div class="dropdown">
             <button type="button" class="btn btn-outline-primary btn-block dropdown-toggle" data-bs-toggle="dropdown" id="selCliente">
-                @ViewBag.clienteSelezionato
+                cliente: @ViewBag.clienteSelezionato
             </button>
             <ul class="dropdown-menu">
                 <li><a class="dropdown-item" asp-controller="Programs" asp-action="MainSemilavorati" asp-route-cliente="tutti">tutti</a></li>
@@ -108,6 +112,12 @@ function conferma()
         </div>     
     </div>
     <div class="col-md-4">
+        <input class="form-control" id="myInput" type="text" placeholder="ricerca..">
+    </div>        
+    <div class="col-md-1">
+        <a class="btn btn-outline-primary" asp-controller="Programs" asp-action="MagSemilavorati" id="myLink">cerca</a>
+    </div>       
+    <div class="col-md-2">
         <a class="btn btn-outline-secondary btn-block" asp-controller="Programs" asp-action="ExportCsv" asp-route-cliente=@ViewBag.clienteSelezionato>esporta .csv</a>
     </div>
 </div>
@@ -206,9 +216,11 @@ function conferma()
 
 
 <script>
-    $(document).ready(function(@clienteSelezionato)){
-        alert(@clienteSelezionato);
-        $("#selCliente").html();
+    document.getElementById('myInput').addEventListener('keyup', function() {
+        var cliente = document.getElementById('clienteSelezionato').value;
+        var inputValue = this.value;
+        var link = document.getElementById('myLink');
+        link.href = '/Programs/MainSemilavorati?filter=' + inputValue + '&cliente=' + cliente;
     });
 </script>
 
