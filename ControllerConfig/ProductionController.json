@@ -1,0 +1,4 @@
+{
+    "ConnString":"Data Source=c:/core/mesData/Programs.db",
+    "DbTable":"ProductionRequest"
+}

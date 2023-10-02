@@ -14,9 +14,6 @@ using Newtonsoft.Json;
 using System.IO;
 using mes.Models.Services.Application;
 using System.Drawing;
-using System.Windows;
-using System.Drawing.Imaging;
-using QRCoder;
 using ServiceStack.Text;
 using System.Text;
 using AutoMapper;
@@ -64,7 +61,7 @@ namespace mes.Controllers
             }
             else
             {
-                bordi = tmpBordi.Where(x => x.GetType().GetProperties().Any(p => {var value = p.GetValue(x); return value!=null && value.ToString().Contains(filter);})).ToList();
+                bordi = tmpBordi.Where(x => x.GetType().GetProperties().Any(p => {var value = p.GetValue(x).ToString().ToLower(); return value!=null && value.ToString().Contains(filter.ToLower());})).ToList();
             }
 
             aggiornaBordi = true;
@@ -406,7 +403,7 @@ namespace mes.Controllers
                 }
                 else
                 {
-                    pannelli = tempPannelli.Where(x => x.GetType().GetProperties().Any(p => {var value = p.GetValue(x); return value!=null && value.ToString().Contains(filter);})).ToList();
+                    pannelli = tempPannelli.Where(x => x.GetType().GetProperties().Any(p => {var value = p.GetValue(x).ToString().ToLower(); return value!=null && value.ToString().Contains(filter.ToLower());})).ToList();
                 }
 
 
@@ -805,7 +802,7 @@ namespace mes.Controllers
             }
             else
             {
-                semilavorati = tmpSemilavorati.Where(x => x.GetType().GetProperties().Any(p => {var value = p.GetValue(x); return value!=null && value.ToString().Contains(filter);})).ToList();
+                semilavorati = tmpSemilavorati.Where(x => x.GetType().GetProperties().Any(p => {var value = p.GetValue(x).ToString().ToLower(); return value!=null && value.ToString().Contains(filter.ToLower());})).ToList();
             }            
 
             aggiornaSemilavorati = true;

@@ -1,0 +1,59 @@
+@using mes.Models.ViewModels
+@using System.Collections.Generic
+@model ProductionRequest
+
+<h3>inserisci nuova richiesta di produzione</h3>
+
+<!----modal starts here--->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="confirmationModal">Richiesta conferma</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <p>confermi creazione nuovo bordo?</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">annulla</button>
+            <button type="button" id="btnConfirm" class="btn btn-success" onclick="confirmLoadModal()">conferma</button>
+        </div>
+        </div>
+    </div>
+</div>
+<!--Modal ends here--->
+
+<hr>
+@using(Html.BeginForm("InsertProductionRequest", "Programs", FormMethod.Post, new { name = "frm", id = "frm" }))
+{
+    <table>
+        <tr>
+            <th style="text-align: center;">cliente</th> 
+            <th style="text-align: center;">modello</th>            
+            <th style="text-align: center;">consegna</th>
+            <th style="text-align: center;">diametro</th>
+            <th style="text-align: center;">spessore</th>
+            <th style="text-align: center;">richiesti</th>
+        </tr>
+        <tr>
+            <td><input style="width: 160px;" type="text" asp-for=@Model.Cliente class="form-control" id="cliente" required/></td>                   
+            <td><input style="width: 260px;" type="text" asp-for=@Model.Modello class="form-control" id="modello" required/></td>            
+            <td><input style="width: 160px; font-align: center;" type="date" asp-for=@Model.DataCons class="form-control" id="datacons" required/></td>
+            <td><input style="width: 160px; font-align: center;" type="text" asp-for=@Model.Diametro class="form-control" id="diametro" required/></td>
+            <td><input type="text" asp-for=@Model.Spessore class="form-control" id="spessore" required/></td>
+            <td><input style="width: 90px; font-align: center;" type="text" asp-for=@Model.Richiesti class="form-control" id="richiesti" required/></td>            
+        </tr> 
+    </table>
+    <br>
+    <br>
+
+    <div class="row">
+        <div class="col-md-3 d-grid">
+        <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#confirmationModal">conferma</button>            
+        </div>
+        <div class="col-md-3 d-grid">
+            <a class="btn btn-outline-secondary btn-block" asp-controller="Production" asp-action="Index">annulla</a>
+        </div>             
+    </div>  
+}
