@@ -63,6 +63,16 @@
 				"AssignmentName": "Incollaggio",
 				"BackgroundColor": "#ffccff",
 				"BorderColor": "#cc00cc"
+			},
+			{
+				"AssignmentName": "MontaffioEsterno",
+				"BackgroundColor": "#ffccff",
+				"BorderColor": "#cc00cc"
+			},
+						{
+				"AssignmentName": "UfficioTecnico",
+				"BackgroundColor": "#ffccff",
+				"BorderColor": "#cc00cc"
 			}
 		]
 }
