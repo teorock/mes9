@@ -11,6 +11,8 @@ using Newtonsoft.Json;
 using Microsoft.AspNetCore.Authorization;
 using mes.Models.ControllersConfig;
 using System.IO;
+using mes.Models.ControllersConfigModels;
+using ServiceStack;
 
 namespace mes.Controllers
 {
@@ -31,9 +33,8 @@ namespace mes.Controllers
             config = JsonConvert.DeserializeObject<TestControllerConfig>(rawConf);    
         }
 
-        //[Authorize(Roles = "root, MagMaterialiScrivi")]
-        [HttpGet]
         //[Authorize(Roles = "root, CalendarOperator, User")]
+        [HttpGet]        
         public IActionResult Index(string eventFilter)
         {
             //leggo configurazione da file e la passo
@@ -47,6 +48,7 @@ namespace mes.Controllers
             config = JsonConvert.DeserializeObject<TestControllerConfig>(rawConf);
 
             UserData userData = GetUserData();
+            
             ViewBag.authorize = ((userData.UserRoles.Contains("root")|userData.UserRoles.Contains("CalendarOperator"))?true:false).ToString().ToLower();
             ViewBag.defaultView = (userData.UserRoles.Contains("root")|userData.UserRoles.Contains("CalendarOperator"))?"dayGridMonth":"dayGridWeek";
 
@@ -62,6 +64,17 @@ namespace mes.Controllers
             {
                 ViewBag.eventSourceUrl = $"{config.EventSourceUrl}{eventFilter}";
             }
+            
+            //lista dei ruoli di quest'utente
+            List<string>tempRoles = userData.UserRoles.Split(',').ToList();
+            List<string> userRoles = tempRoles.Where(s => !string.IsNullOrWhiteSpace(s)).Select(x =>x.Trim()).Distinct().ToList();
+            //prelevo la lista di tutti i CalendarAssignments
+            List<CalendarAssignment> assignments = config.CalendarAssignments;
+            //la filtro a seconda del ruolo
+            //List<CalendarAssignment> userAssignments = assignments.Where(x => userRoles.Contains(x.AuthorizedRole)).ToList();
+            List<string> userAssignments = assignments.Where(x => userRoles.Contains(x.AuthorizedRole)).Select(x => x.AssignmentName).ToList();
+            //la passo come ViewBag alla View
+            ViewBag.userAssignments = userAssignments;
 
             return View();
         }
