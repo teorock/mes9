@@ -21,6 +21,7 @@ namespace mes.Controllers
     {
         TestControllerConfig config = new TestControllerConfig();
         const string testControllerConfigPath = @"c:\core\mes\ControllerConfig\TestController.json";
+        string authorized = "";
 
         public TestController()
         {
@@ -30,7 +31,8 @@ namespace mes.Controllers
             {
                 rawConf = sr.ReadToEnd();
             }
-            config = JsonConvert.DeserializeObject<TestControllerConfig>(rawConf);    
+            config = JsonConvert.DeserializeObject<TestControllerConfig>(rawConf);
+            authorized = config.Authorized;   
         }
 
         //[Authorize(Roles = "root, CalendarOperator, User")]
@@ -49,8 +51,13 @@ namespace mes.Controllers
 
             UserData userData = GetUserData();
             
-            ViewBag.authorize = ((userData.UserRoles.Contains("root")|userData.UserRoles.Contains("CalendarOperator"))?true:false).ToString().ToLower();
-            ViewBag.defaultView = (userData.UserRoles.Contains("root")|userData.UserRoles.Contains("CalendarOperator"))?"dayGridMonth":"dayGridWeek";
+            ViewBag.authorize = ((userData.UserRoles.Contains("root")
+                                    |userData.UserRoles.Contains("CalendarOperator")
+                                    |userData.UserRoles.Contains("CalendarOutdoor"))?true:false).ToString().ToLower();
+
+            ViewBag.defaultView = (userData.UserRoles.Contains("root")
+                                    |userData.UserRoles.Contains("CalendarOperator")
+                                    |userData.UserRoles.Contains("CalendarOutdoor"))?"dayGridMonth":"dayGridWeek";
 
             ViewBag.dbContactListener = config.DbContactListener;                
             ViewBag.baseAddress = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
@@ -79,7 +86,7 @@ namespace mes.Controllers
             return View();
         }
 
-        [Authorize(Roles = "root, CalendarOperator")]
+        [Authorize(Roles = "root, CalendarOperator, CalendarOutdoor")]
         [HttpPost]
         public IActionResult InsertEvent(string jsonString)
         {
