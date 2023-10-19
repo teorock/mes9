@@ -1,0 +1,207 @@
+@using mes.Models.ViewModels
+@using System.Collections.Generic
+@model ArticoloViewModel
+@{
+    List<ArticoloViewModel> ArticoliList = ViewBag.ArticoliList;
+    List<string> customers = ViewBag.customers;
+    List<string> panels = ViewBag.panelsCodes;
+    List<string> semilavs = ViewBag.semilavs;
+
+    int selectedCustomer = ViewBag.selectedCustomer;
+    int selectedPanel = ViewBag.selectedPanel;
+    int selectedSemilav = ViewBag.selectedSemilav;
+}
+
+<style>     
+    select {
+        border-radius: 0.25em;
+        border-color: rgb(196, 196, 196);
+        width: 120px;
+        height: 38px;
+    }
+
+    table, th {
+        font-size: 14px;        
+    }
+    th {
+        font-family: Arial, Helvetica, sans-serif;
+    }
+    input, td {
+        font-size: 14px;
+    }
+    input:hover {
+        background-color: gold;
+    }
+    input:focus {
+        background-color: lightyellow;
+    }  
+</style>
+
+<script>
+
+   function confirmLoadModal(){
+        if(!$("#Codice").val()) {
+            alert("campo 'Codice' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#Descrizione").val()) {
+            alert("campo 'Descrizione' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#Cliente").val()) {
+            alert("campo 'Cliente' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#CodSemilavorato").val()) {
+            alert("campo 'CodSemilavorato' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#CodLastra").val()) {
+            alert("campo 'CodLastra' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#Note").val()) {
+            alert("campo 'Note' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+
+        $("#frmCreateArticolo").submit();
+   }
+
+</script>
+
+<!-- modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="confirmationModal">Richiesta conferma</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <p>confermi modifica Articolo?</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">annulla</button>
+            <button type="button" id="btnConfirm" class="btn btn-success" onclick="confirmLoadModal()">conferma</button>
+        </div>
+        </div>
+    </div>
+</div>
+<!-- Modal end -->
+
+<h2>modifica articolo esistente</h2>
+<br>
+<br>
+@using(Html.BeginForm("ModArticolo", "DataInput", FormMethod.Post, new { name = "frmCreateArticolo", id = "frmCreateArticolo" }))
+{
+    <table>
+        <tr>
+            <th style="text-align: center;">codice</th> 
+            <th style="text-align: center;">descrizione</th> 
+            <th style="text-align: center;">cliente</th> 
+            <th style="text-align: center;">cod.semilavorato</th> 
+            <th style="text-align: center;">cod.lastra</th> 
+            <th style="text-align: center;">note</th> 
+        </tr>
+        <tr>
+            <td><input style="width: 160px;" type="text" asp-for=@Model.Codice class="form-control" id="Codice" required/></td>
+            <td><input style="width: 260px;" type="text" asp-for=@Model.Descrizione class="form-control" id="Descrizione" required/></td>
+            <td>
+                <div class="select-editeable">
+                    <select id="sel-cliente" style="width: 160px;">
+                        @foreach (var customer in customers)
+                        {
+                            <option value=@customer>@customer</option>
+                        }
+                    </select>
+                    <input id="Cliente" style="width: 150px;" type="hidden" asp-for=@Model.Cliente class="form-control" required/>
+                </div>
+            </td>
+            <td>
+                <div class="select-editeable">
+                    <select id="sel-semilav" style="width: 230px;">
+                        @foreach (var semilav in semilavs)
+                        {
+                            <option value=@semilav>@semilav</option>
+                        }
+                    </select>                
+                    <input id="CodSemilavorato" style="width: 260px;" type="hidden" asp-for=@Model.CodSemilavorato class="form-control" required/>
+                </div>
+            </td>
+            <td>
+                <div class="select-editeable">
+                    <select id="sel-panel" style="width: 160px;">
+                        @foreach (var panel in panels)
+                        {
+                            <option value=@panel>@panel</option>
+                        }
+                    </select>
+                    <input id="CodLastra" style="width: 160px;" type="hidden" asp-for=@Model.CodLastra class="form-control" required/>
+                </div> 
+            </td>
+            <td><input style="width: 260px;" type="text" asp-for=@Model.Note class="form-control" id="Note" required/></td>
+        </tr> 
+    </table>
+    <br>
+    <br>
+
+    <div class="row">
+        <div class="col-md-3 d-grid">
+        <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#confirmationModal">
+        conferma
+        </button>            
+        </div>
+        <div class="col-md-3 d-grid">
+            <a class="btn btn-outline-secondary btn-block" asp-controller="DataInput" asp-action="MainArticoli">annulla</a>
+        </div>             
+    </div>  
+}
+<hr>
+<br>
+<h4>lista articoli presenti</h4>
+<br>
+<table>
+        <tr>
+            <th style="text-align: center;">codice</th> 
+            <th style="text-align: center;">descrizione</th> 
+            <th style="text-align: center;">cliente</th> 
+            <th style="text-align: center;">cod.semilavorato</th> 
+            <th style="text-align: center;">cod.lastra</th> 
+            <th style="text-align: center;">note</th> 
+        </tr>
+        @foreach (ArticoloViewModel oneModel in ArticoliList)
+        {
+            <tr>
+                <td><input style="width: 160px;" type="text" asp-for=@oneModel.Codice class="form-control" value=@oneModel.Codice readonly /></td> 
+                <td><input style="width: 260px;" type="text" asp-for=@oneModel.Descrizione class="form-control" value=@oneModel.Descrizione readonly /></td> 
+                <td><input style="width: 160px;" type="text" asp-for=@oneModel.Cliente class="form-control" value=@oneModel.Cliente readonly /></td> 
+                <td><input style="width: 230px;" type="text" asp-for=@oneModel.CodSemilavorato class="form-control" value=@oneModel.CodSemilavorato readonly /></td> 
+                <td><input style="width: 160px;" type="text" asp-for=@oneModel.CodLastra class="form-control" value=@oneModel.CodLastra readonly /></td> 
+                <td><input style="width: 260px;" type="text" asp-for=@oneModel.Note class="form-control" value=@oneModel.Note readonly /></td> 
+            </tr>
+        }
+</table>
+
+<script>
+    $("#sel-cliente").on('change', function() {
+        $("#Cliente").val(this.value);
+    });
+    $("#sel-semilav").on('change', function() {
+        $("#CodSemilavorato").val(this.value);
+    });
+    $("#sel-panel").on('change', function() {
+        $("#CodLastra").val(this.value);
+    });    
+
+    $("#sel-cliente").prop("selectedIndex",@selectedCustomer);
+    $("#sel-panel").prop("selectedIndex",@selectedPanel);
+    $("#sel-semilav").prop("selectedIndex",@selectedSemilav);    
+
+</script>

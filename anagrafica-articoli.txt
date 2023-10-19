@@ -1,0 +1,19 @@
+Anagrafica articoli
+
+creare tabella in datasource.db
+
+CREATE TABLE "Articoli" (
+	"id"	INTEGER NOT NULL UNIQUE,
+	"Codice"	TEXT NOT NULL,
+	"Descrizione"	TEXT,
+	"Cliente"	TEXT NOT NULL,
+	"CodSemilavorato"	TEXT,
+	"CodLastra"	TEXT,
+	"Note"	TEXT,
+	"Enabled"	TEXT NOT NULL,
+	"CreatedOn"	TEXT NOT NULL,
+	"CreatedBy"	TEXT NOT NULL,
+	PRIMARY KEY("id" AUTOINCREMENT)
+);
+
+fare prove con programs.db da ambiente production

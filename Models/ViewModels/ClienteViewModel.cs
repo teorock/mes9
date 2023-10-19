@@ -16,6 +16,7 @@ namespace mes.Models.ViewModels
         public string TelReferente1 { get; set; }
         public string Referente2 { get; set; }
         public string TelReferente2 { get; set; }
+        public string Enabled { get; set; }                
         public string CreatedOn { get; set; }
         public string CreatedBy { get; set; }
     }

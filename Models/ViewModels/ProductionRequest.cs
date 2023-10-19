@@ -10,7 +10,7 @@ namespace mes.Models.ViewModels
         public string Spessore { get; set; }
         public string Richiesti { get; set; }
         public string Disponibili { get; set; }
-        public string Semilavorati { get; set; }
+        public string CodSemilavorati { get; set; }
         public string Lastre { get; set; }
         public string Enabled { get; set; }
         public string CreatedBy { get; set; }

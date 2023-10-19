@@ -507,14 +507,14 @@ namespace mes.Controllers
         public IActionResult ModPannello(long id)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<PannelloViewModel> pannelli = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
+            List<PannelloViewModel> pannelli = dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
                                         .Where(x => x.Enabled=="1").ToList(); 
             ViewBag.panelsList = pannelli;
             PannelloViewModel oneModel = pannelli.Where(x => x.id == id).FirstOrDefault();
 
              
             ViewBag.Customers = GetCustomers();
-            List<MaterialiPannelli> allMaterials = (List<MaterialiPannelli>)dbAccessor.Queryer<MaterialiPannelli>(connectionString, "MaterialiPannelli");
+            List<MaterialiPannelli> allMaterials = dbAccessor.Queryer<MaterialiPannelli>(connectionString, "MaterialiPannelli");
             ViewBag.NomiMateriali = allMaterials;
 
             //---------------------------------

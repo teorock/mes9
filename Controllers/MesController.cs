@@ -39,6 +39,8 @@ namespace mes.Controllers
             return View();
         }
         
+    #region ProductionStatus
+
         [HttpGet]
         [Route("ProductionStatus")]
         public IActionResult ProductionStatus()
@@ -340,6 +342,11 @@ namespace mes.Controllers
             
             return barWidth;
         }        
+
+    #endregion
+
+
+
 
 
     }
