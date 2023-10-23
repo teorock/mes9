@@ -1,0 +1,182 @@
+@using mes.Models.ViewModels
+@using System.Collections.Generic
+@using Newtonsoft.Json
+
+@model ProdFinitiViewModel
+
+@{    
+    string userRoles = ViewBag.userRoles;
+    bool authorize = false;
+    if(userRoles.Contains("PannelliScrivi")||userRoles.Contains("root")) authorize=true;
+
+    List<ProdFinitiViewModel> allItems = ViewBag.allItems;
+
+    string jsonAllItems = JsonConvert.SerializeObject(allItems);
+}
+
+<style>     
+    select {
+        border-radius: 0.25em;
+        border-color: rgb(196, 196, 196);
+        width: 120px;
+        height: 38px;
+    }
+
+    table, th {
+        font-size: 14px;
+    }
+    th {
+        font-family: Arial, Helvetica, sans-serif;
+    }
+    input, td {
+        font-size: 14px;
+    }
+    input:hover {
+        background-color: gold;
+    }
+    input:focus {
+        background-color: lightyellow;
+    }  
+</style>
+
+
+<script>
+
+function conferma()
+{
+    if(!$("#quantita").val()) {
+        alert("campo 'quantita' vuoto");
+        $("#confirmationModal").modal('toggle');
+        return;
+        }
+
+    var inputs = $("[id=quantita]");
+    var validChars = /^[0-9.]+$/;
+    var isIvalid = true;
+
+    inputs.each(function() {
+        var inputVal = $(this).val();
+        if(!validChars.test(inputVal)) {
+            $(this).css({
+                'border-color': 'red',
+                'border-width': '3px'
+                });
+                isIvalid = false;
+            } else {
+            $(this).css({
+                'border-color': '',
+                'border-width': ''
+                });                
+            }
+        });
+
+    if(!isIvalid) {
+        alert("correggere i campi evidenziati");
+        $("#confirmationModal").modal('toggle');
+        return;   
+    }
+
+    $("#frmAggDati").submit();
+        
+}
+
+</script>
+
+<!-- Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Aggiornamento dati</h5>
+      </div>
+      <div class="modal-body">
+        <p>confermi aggiornamento ?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">annulla</button>
+        <button type="button" class="btn btn-outline-success" onclick="conferma()">aggiorna</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal end -->
+
+<div class="row align-items-start">
+    <div class="col-md-1" align="center">
+        <i class="fa fa-check" style="font-size:36px"></i>
+    </div>
+    <div class="col-md-4">
+        <h3>inserisci prodotto finito a magazzino</h3>
+    </div>
+</div>
+<br>
+<br>
+<hr>
+<div class="row">
+    <div class="col-md-2">
+        <h5>seleziona il prodotto</h5>
+    </div>
+    <div class="col-md-5">
+        <div class="select-editeable">
+            <select id="sel-codice" style="width:200px;">
+                <option value="" selected> </option>
+                @foreach (var item in allItems)
+                {
+                    <option value=@item.Codice>@item.Codice</option>
+                }
+            </select>
+        </div>
+    </div>
+</div>
+
+<hr>
+@using(Html.BeginForm("InsertFiniti", "Programs", FormMethod.Post, new { name = "frm", id = "frm" }))
+{
+    <table>
+        <tr>
+            <th style="text-align: center;">codice articolo</th>
+            <th style="text-align: center;">descrizione</th>
+            <th style="text-align: center;">cliente</th>
+            <th style="text-align: center;">note</th>
+            <th style="text-align: center;">quantita</th>
+            <th style="text-align: center;">quantita min.</th>
+        </tr>
+        <tr>
+            <td><input id="codice" style="width: 160px;" type="text" asp-for=@Model.Codice class="form-control" disabled /></td>
+            <td><input id="descrizione" style="width: 160px;" type="text" asp-for=@Model.Descrizione class="form-control" disabled /></td>
+            <td><input id="cliente" style="width: 160px;" type="text" asp-for=@Model.Cliente class="form-control" disabled /></td>
+            <td><input id="note" style="width: 160px;" type="text" asp-for=@Model.Note class="form-control" disabled /></td>
+            <td><input id="quantita" style="width: 160px;" type="text" asp-for=@Model.Quantita class="form-control" /></td>
+            <td><input id="quantitamin" style="width: 160px;" type="text" asp-for=@Model.QuantitaMin class="form-control" /></td>
+        </tr>
+    </table>
+<br>
+<br>
+    <div class="row">
+        <div class="col-md-3 d-grid">
+            <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#confirmationModal">
+                conferma
+            </button>            
+        </div>
+        <div class="col-md-3 d-grid">
+            <a class="btn btn-outline-secondary btn-block" asp-controller="Programs" asp-action="MainFiniti">annulla</a>
+        </div>        
+    </div>
+}
+
+<script>
+    var objectList = @Html.Raw(jsonAllItems);
+
+    $("#sel-codice").on('change', function() {
+        var selectedProdCode = $(this).val();
+        var selectedObject = objectList.find(obj => obj.Codice == selectedProdCode);
+
+        if(selectedObject)
+        {
+            $('#codice').val(selectedObject.Codice);
+            $('#descrizione').val(selectedObject.Descrizione);
+            $('#cliente').val(selectedObject.Cliente);
+            $('#note').val(selectedObject.Note);
+        }
+    });
+</script>

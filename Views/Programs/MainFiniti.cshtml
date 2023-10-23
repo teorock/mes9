@@ -1,0 +1,164 @@
+@using mes.Models.ViewModels
+@using System.Collections.Generic
+
+@model List<ProdFinitiViewModel>
+
+@{    
+    string userRoles = ViewBag.userRoles;
+    bool authorize = false;
+    if(userRoles.Contains("PannelliScrivi")||userRoles.Contains("root")) authorize=true;     
+}
+
+<style>
+    table, th {
+        font-size: 14px;        
+    }
+    th {
+        font-family: Arial, Helvetica, sans-serif;
+    }
+    input, td {
+        font-size: 14px;
+    }
+    input:hover {
+        background-color: gold;
+    }
+    input:focus {
+        background-color: lightyellow;
+    }
+</style>
+
+<script>
+function conferma()
+{
+    if(!$("#quantita").val()) {
+        alert("campo 'quantita' vuoto");
+        $("#confirmationModal").modal('toggle');
+        return;
+        }
+
+    var inputs = $("[id=quantita]");
+    var validChars = /^[0-9.]+$/;
+    var isIvalid = true;
+
+    inputs.each(function() {
+        var inputVal = $(this).val();
+        if(!validChars.test(inputVal)) {
+            $(this).css({
+                'border-color': 'red',
+                'border-width': '3px'
+                });
+                isIvalid = false;
+            } else {
+            $(this).css({
+                'border-color': '',
+                'border-width': ''
+                });                
+            }
+        });
+
+    if(!isIvalid) {
+        alert("correggere i campi evidenziati");
+        $("#confirmationModal").modal('toggle');
+        return;   
+    }
+
+    $("#frmAggDati").submit();
+        
+}    
+</script>
+
+<!-- Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Aggiornamento dati</h5>
+      </div>
+      <div class="modal-body">
+        <p>confermi aggiornamento ?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">annulla</button>
+        <button type="button" class="btn btn-outline-success" onclick="conferma()">aggiorna</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal end -->
+
+
+<div class="row align-items-start">
+    <div class="col-md-1" align="center">
+        <i class="fa fa-check" style="font-size:36px"></i>
+    </div>
+    <div class="col-md-4">
+        <h3>gestione magazzino prodotti finiti</h3>
+    </div>
+</div>
+<br>
+<br>
+<hr>
+
+
+
+@using(Html.BeginForm("AggiornaProdFinito", "Programs", FormMethod.Post, new { name = "frmAggDati", id = "frmAggDati" }))
+{
+    <table>
+        <tr>
+            <th style="text-align: center;">codice articolo</th>
+            <th style="text-align: center;">descrizione</th>
+            <th style="text-align: center;">cliente</th> 
+            <th style="text-align: center;">note</th>
+            <th style="text-align: center;">quantità</th>
+            <th style="text-align: center;">quantità min</th>       
+            <th> </th>
+            <th> </th>
+        </tr>
+            @for(int x=0; x<Model.Count; x++)
+            {
+                int quan = Convert.ToInt16(Model[x].Quantita);
+                int qMin = Convert.ToInt16(Model[x].QuantitaMin);
+                string color = (quan > qMin)? "none" : "orange";
+                //PannelloViewModel printModel = Model[x];
+                <tr>
+                    @if(!authorize)
+                    {
+                        <td><input readonly style="width: 200px; background-color: @color;" type="text" asp-for=@Model[x].Codice class="form-control" value=@Model[x].Codice  readonly/></td>
+                        <td><input readonly style="width: 300px; background-color: @color;" type="text" asp-for=@Model[x].Descrizione class="form-control" value=@Model[x].Descrizione  readonly/></td>
+                        <td><input readonly style="width: 200px; background-color: @color;" type="text" asp-for=@Model[x].Cliente class="form-control" value=@Model[x].Cliente  readonly/></td>
+                        <td><input readonly style="width: 300px; background-color: @color;" type="text" asp-for=@Model[x].Note class="form-control" value=@Model[x].Note  readonly/></td>
+                        <td><input readonly style="width: 60px; text-align:center; background-color: @color;" type="text" asp-for=@Model[x].Quantita class="form-control" value=@Model[x].Quantita  readonly/></td>
+                        <td><input readonly style="width: 60px; text-align:center; background-color: @color;" type="text" asp-for=@Model[x].QuantitaMin class="form-control" value=@Model[x].QuantitaMin  readonly/></td>
+                        <td> </td>
+                        <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].id class="form-control" value=@Model[x].id readonly /></td>
+                        <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].Enabled class="form-control" value=@Model[x].Enabled readonly/></td>
+                    }
+                    else
+                    {
+                        <td><input readonly style="width: 200px; background-color: @color;" type="text" asp-for=@Model[x].Codice class="form-control" value=@Model[x].Codice  readonly/></td>
+                        <td><input readonly style="width: 300px; background-color: @color;" type="text" asp-for=@Model[x].Descrizione class="form-control" value=@Model[x].Descrizione  readonly/></td>
+                        <td><input readonly style="width: 200px; background-color: @color;" type="text" asp-for=@Model[x].Cliente class="form-control" value=@Model[x].Cliente  readonly/></td>
+                        <td><input readonly style="width: 300px; background-color: @color;" type="text" asp-for=@Model[x].Note class="form-control" value=@Model[x].Note  readonly/></td>
+                        <td><input style="width: 60px; text-align:center; background-color: @color;" type="text" asp-for=@Model[x].Quantita class="form-control" value=@Model[x].Quantita /></td>
+                        <td><input readonly style="width: 60px; text-align:center; background-color: @color;" type="text" asp-for=@Model[x].QuantitaMin class="form-control" value=@Model[x].QuantitaMin  readonly/></td>
+                        <td style="padding-left: 10px;"><a asp-controller="Programs" asp-action="ModPannello" asp-route-id="@Model[x].id"><i class="material-icons text-warning">&#xE254;</i></a></td>
+                        <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].id class="form-control" value=@Model[x].id /></td>                         
+                        <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].Enabled class="form-control" value=@Model[x].Enabled readonly/></td>
+                    }                   
+                </tr>
+            }    
+    </table>
+    <br>
+    <br>
+    @if(authorize)
+    {
+        <div class="row">
+            <div class="col-md-3 d-grid">
+                <button type="button" class="btn btn-outline-primary btn-block" data-bs-toggle="modal" data-bs-target="#confirmationModal">aggiorna</button>          
+            </div>
+            <div class="col-md-3 d-grid">
+                <a class="btn btn-outline-success btn-block" asp-controller="Programs" asp-action="InsertFiniti" >inserisci prodotto finito</a>
+            </div>          
+        </div>  
+    }
+}

@@ -17,6 +17,7 @@ using System.Drawing;
 using ServiceStack.Text;
 using System.Text;
 using AutoMapper;
+using mes.Models.ControllersConfigModels;
 
 namespace mes.Controllers
 {
@@ -24,8 +25,9 @@ namespace mes.Controllers
     public class ProgramsController : Controller
     {
         private readonly ILogger<ProgramsController> _logger;
-        private readonly string connectionString ="Data Source=../mesData/programs.db";
-        private readonly string mesConnectionString ="Data Source=../mesData/datasource.db";
+        private string programsControllerConfigPath = @"c:\core\mes\ControllerConfig\ProgramsController.json";
+
+        ProgramsControllerConfig config = new ProgramsControllerConfig();
         private bool aggiornaBordi = true;
         private bool aggiornaColle = true;
         private bool aggiornaSemilavorati = true;
@@ -33,7 +35,15 @@ namespace mes.Controllers
 
         public ProgramsController(ILogger<ProgramsController> logger)
         {
-            _logger = logger;          
+            _logger = logger;
+
+            string rawConf = "";
+
+            using (StreamReader sr = new StreamReader(programsControllerConfigPath))
+            {
+                rawConf = sr.ReadToEnd();
+            }
+            config = JsonConvert.DeserializeObject<ProgramsControllerConfig>(rawConf);                    
         }
 
         public IActionResult Index()
@@ -53,7 +63,7 @@ namespace mes.Controllers
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<BordoViewModel> bordi = new List<BordoViewModel>();
 
-            List<BordoViewModel> tmpBordi = (List<BordoViewModel>)dbAccessor.Queryer<BordoViewModel>(connectionString, "MagazzinoBordi")
+            List<BordoViewModel> tmpBordi = (List<BordoViewModel>)dbAccessor.Queryer<BordoViewModel>(config.ConnectionString, config.BordiDbTable)
                                             .Where(x => x.Enabled =="1").ToList();            
             if(filter == null || filter== "")
             {
@@ -76,7 +86,7 @@ namespace mes.Controllers
                 UserData userData = GetUserData();
                 DatabaseAccessor dbAccessor = new DatabaseAccessor();
 
-                List<BordoViewModel> actualValues = dbAccessor.Queryer<BordoViewModel>(connectionString, "MagazzinoBordi");
+                List<BordoViewModel> actualValues = dbAccessor.Queryer<BordoViewModel>(config.ConnectionString, config.BordiDbTable);
 
                 for(int x=0; x<bordi.Count; x++)
                 {                    
@@ -86,7 +96,7 @@ namespace mes.Controllers
 
                         oneModel.CreatedBy = userData.UserName;
                         oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
-                        int result = dbAccessor.Updater<BordoViewModel>(connectionString, "MagazzinoBordi", oneModel, oneModel.id);
+                        int result = dbAccessor.Updater<BordoViewModel>(config.ConnectionString, config.BordiDbTable, oneModel, oneModel.id);
                     }
                 }
             }       
@@ -99,7 +109,7 @@ namespace mes.Controllers
         public IActionResult InsertBordo()
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<BordoViewModel> bordi = (List<BordoViewModel>)dbAccessor.Queryer<BordoViewModel>(connectionString, "MagazzinoBordi")
+            List<BordoViewModel> bordi = (List<BordoViewModel>)dbAccessor.Queryer<BordoViewModel>(config.ConnectionString, config.BordiDbTable)
                                         .Where(x => x.Enabled=="1").ToList();            
             
             ViewBag.BordersList = bordi;
@@ -119,7 +129,7 @@ namespace mes.Controllers
             newBordo.Enabled = "1";            
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<BordoViewModel> checkBordo = (List<BordoViewModel>)dbAccessor.Queryer<BordoViewModel>(connectionString, "MagazzinoBordi")
+            List<BordoViewModel> checkBordo = (List<BordoViewModel>)dbAccessor.Queryer<BordoViewModel>(config.ConnectionString, config.BordiDbTable)
                                                 .Where(x => x.Codice ==newBordo.Codice).ToList();
             if(checkBordo.Count > 0)
             {
@@ -128,13 +138,13 @@ namespace mes.Controllers
                 return Redirect(Url.Action("InsertBordo", "Programs"));
             }
 
-            List<BordoViewModel> bordi = (List<BordoViewModel>)dbAccessor.Queryer<BordoViewModel>(connectionString, "MagazzinoBordi");      
+            List<BordoViewModel> bordi = (List<BordoViewModel>)dbAccessor.Queryer<BordoViewModel>(config.ConnectionString, config.BordiDbTable);      
 
             long max = (from l in bordi select l.id).Max();
 
             newBordo.id = max + 1;
 
-            int result = dbAccessor.Insertor<BordoViewModel>(connectionString, "MagazzinoBordi", newBordo);
+            int result = dbAccessor.Insertor<BordoViewModel>(config.ConnectionString, config.BordiDbTable, newBordo);
 
             return RedirectToAction("MagBordi");
         }
@@ -144,7 +154,7 @@ namespace mes.Controllers
         public IActionResult ModBordo(long id)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<BordoViewModel> bordi = (List<BordoViewModel>)dbAccessor.Queryer<BordoViewModel>(connectionString, "MagazzinoBordi")
+            List<BordoViewModel> bordi = (List<BordoViewModel>)dbAccessor.Queryer<BordoViewModel>(config.ConnectionString, config.BordiDbTable)
                                         .Where(x => x.Enabled=="1").ToList(); 
             ViewBag.bordersList = bordi;
             BordoViewModel oneModel = bordi.Where(x => x.id == id).FirstOrDefault();
@@ -164,27 +174,27 @@ namespace mes.Controllers
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
 
-            int result = dbAccessor.Updater<BordoViewModel>(connectionString,"MagazzinoBordi", oneModel, oneModel.id);
+            int result = dbAccessor.Updater<BordoViewModel>(config.ConnectionString, config.BordiDbTable, oneModel, oneModel.id);
 
             return RedirectToAction("MagBordi");
         }        
 
-        [HttpGet]
-        [Authorize(Roles = "root, MagMaterialiScrivi")]
-        public IActionResult CancBordo(long id)
-        {
-            aggiornaBordi = false;
-            DatabaseAccessor dbAccessor = new DatabaseAccessor();            
-            //int result = dbAccessor.Delete(connectionString, "MagazzinoBordi", id);
-
-            BordoViewModel bordo2disable = dbAccessor.Queryer<BordoViewModel>(connectionString, "MagazzinoBordi").Where(x => x.id == id).FirstOrDefault();
-            bordo2disable.Enabled = "0";
-
-            int result = dbAccessor.Updater<BordoViewModel>(connectionString,"MagazzinoBordi", bordo2disable, id);
-            
-            Thread.Sleep(1000);
-            return RedirectToAction("MagBordi");
-        }
+        //[HttpGet]
+        //[Authorize(Roles = "root, MagMaterialiScrivi")]
+        //public IActionResult CancBordo(long id)
+        //{
+        //    aggiornaBordi = false;
+        //    DatabaseAccessor dbAccessor = new DatabaseAccessor();            
+        //    //int result = dbAccessor.Delete(connectionString, "MagazzinoBordi", id);
+//
+        //    BordoViewModel bordo2disable = dbAccessor.Queryer<BordoViewModel>(config.connectionString, config.BordiDbTable.Where(x => x.id == id).FirstOrDefault();
+        //    bordo2disable.Enabled = "0";
+//
+        //    int result = dbAccessor.Updater<BordoViewModel>(config.connectionString, config.BordiDbTable, bordo2disable, id);
+        //    
+        //    Thread.Sleep(1000);
+        //    return RedirectToAction("MagBordi");
+        //}
 
         [HttpPost]
         [Authorize(Roles = "root, MagMaterialiScrivi")]
@@ -197,7 +207,7 @@ namespace mes.Controllers
         {
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<BordoViewModel> bordi = (List<BordoViewModel>)dbAccessor.Queryer<BordoViewModel>(connectionString, "MagazzinoBordi")
+            List<BordoViewModel> bordi = (List<BordoViewModel>)dbAccessor.Queryer<BordoViewModel>(config.ConnectionString, config.BordiDbTable)
                                             .Where(x => x.Enabled =="1").ToList();
 
             var configExp = new MapperConfiguration(cfg => cfg.CreateMap<BordoViewModel, BordoDTO>());
@@ -229,7 +239,7 @@ namespace mes.Controllers
             ViewBag.userRoles = userData.UserRoles;
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<CollaViewModel> colle = (List<CollaViewModel>)dbAccessor.Queryer<CollaViewModel>(connectionString, "MagazzinoColle")
+            List<CollaViewModel> colle = (List<CollaViewModel>)dbAccessor.Queryer<CollaViewModel>(config.ConnectionString, config.ColleDbTable)
                                             .Where(x => x.Enabled == "1").ToList();
                         
             aggiornaColle = true;
@@ -248,7 +258,7 @@ namespace mes.Controllers
                     oneModel.CreatedBy = userData.UserName;
                     oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
                     oneModel.Enabled ="1";
-                    int result = dbAccessor.Updater<CollaViewModel>(connectionString, "MagazzinoColle", oneModel, oneModel.id);
+                    int result = dbAccessor.Updater<CollaViewModel>(config.ConnectionString, config.ColleDbTable, oneModel, oneModel.id);
                 }
             }            
             return RedirectToAction("MagColle");            
@@ -259,7 +269,7 @@ namespace mes.Controllers
         public IActionResult InsertColla()
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<CollaViewModel> colle = (List<CollaViewModel>)dbAccessor.Queryer<CollaViewModel>(connectionString, "MagazzinoColle")
+            List<CollaViewModel> colle = (List<CollaViewModel>)dbAccessor.Queryer<CollaViewModel>(config.ConnectionString, config.ColleDbTable)
                                             .Where(x => x.Enabled=="1").ToList();            
             
             ViewBag.GluesList = colle;
@@ -280,7 +290,7 @@ namespace mes.Controllers
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             //controllo che il codice prodotto non sia già inserito
-            List<CollaViewModel> checkColla = (List<CollaViewModel>)dbAccessor.Queryer<CollaViewModel>(connectionString, "MagazzinoColle")
+            List<CollaViewModel> checkColla = (List<CollaViewModel>)dbAccessor.Queryer<CollaViewModel>(config.ConnectionString, config.ColleDbTable)
                                                 .Where(x => x.Codice ==newColla.Codice).ToList();
             if(checkColla.Count > 0)
             {
@@ -290,13 +300,13 @@ namespace mes.Controllers
             }
 
 
-            List<CollaViewModel> colle = (List<CollaViewModel>)dbAccessor.Queryer<CollaViewModel>(connectionString, "MagazzinoColle");             
+            List<CollaViewModel> colle = (List<CollaViewModel>)dbAccessor.Queryer<CollaViewModel>(config.ConnectionString, config.ColleDbTable);             
 
             long max = (from l in colle select l.id).Max();
 
             newColla.id=max+1;
 
-            int result = dbAccessor.Insertor<CollaViewModel>(connectionString, "MagazzinoColle", newColla);
+            int result = dbAccessor.Insertor<CollaViewModel>(config.ConnectionString, config.ColleDbTable, newColla);
 
             return RedirectToAction("MagColle");
         }
@@ -306,7 +316,7 @@ namespace mes.Controllers
         public IActionResult ModColla(long id)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<CollaViewModel> colle = (List<CollaViewModel>)dbAccessor.Queryer<CollaViewModel>(connectionString, "MagazzinoColle")
+            List<CollaViewModel> colle = (List<CollaViewModel>)dbAccessor.Queryer<CollaViewModel>(config.ConnectionString, config.ColleDbTable)
                                     .Where(x => x.Enabled=="1").ToList(); 
             ViewBag.gluesList = colle;
             CollaViewModel oneModel = colle.Where(x => x.id == id).FirstOrDefault();
@@ -326,7 +336,7 @@ namespace mes.Controllers
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
 
-            int result = dbAccessor.Updater<CollaViewModel>(connectionString,"MagazzinoColle", oneModel, oneModel.id);
+            int result = dbAccessor.Updater<CollaViewModel>(config.ConnectionString, config.ColleDbTable, oneModel, oneModel.id);
 
             return RedirectToAction("MagColle");
         }        
@@ -338,10 +348,10 @@ namespace mes.Controllers
             aggiornaColle = false;
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
 
-            CollaViewModel colla2disable = dbAccessor.Queryer<CollaViewModel>(connectionString, "MagazzinoColle").Where(X => X.id == id).FirstOrDefault();
+            CollaViewModel colla2disable = dbAccessor.Queryer<CollaViewModel>(config.ConnectionString, config.ColleDbTable).Where(X => X.id == id).FirstOrDefault();
             colla2disable.Enabled = "0";
 
-            int result = dbAccessor.Updater<CollaViewModel>(connectionString,"MagazzinoColle", colla2disable, id);
+            int result = dbAccessor.Updater<CollaViewModel>(config.ConnectionString, config.ColleDbTable, colla2disable, id);
 
             return RedirectToAction("MagColle");
         }
@@ -350,7 +360,7 @@ namespace mes.Controllers
         {
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<CollaViewModel> colle = (List<CollaViewModel>)dbAccessor.Queryer<CollaViewModel>(connectionString, "MagazzinoColle")
+            List<CollaViewModel> colle = (List<CollaViewModel>)dbAccessor.Queryer<CollaViewModel>(config.ConnectionString, config.ColleDbTable)
                                             .Where(x => x.Enabled == "1").ToList();
 
             var configExp = new MapperConfiguration(cfg => cfg.CreateMap<CollaViewModel, CollaDTO>());
@@ -387,12 +397,12 @@ namespace mes.Controllers
             List<PannelloViewModel> tempPannelli = new List<PannelloViewModel>();
                 if(tipoMateriale == "" || tipoMateriale == null || tipoMateriale =="tutti")
                 {
-                    tempPannelli = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
+                    tempPannelli = dbAccessor.Queryer<PannelloViewModel>(config.ConnectionString, config.PannelliDbTable)
                                                     .Where(x => x.Enabled =="1").ToList();
                 }
                 else
                 {
-                    tempPannelli = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
+                    tempPannelli = dbAccessor.Queryer<PannelloViewModel>(config.ConnectionString, config.PannelliDbTable)
                                                     .Where(x => x.Enabled =="1")
                                                     .Where(y => y.Tipomateriale== tipoMateriale).ToList();
                 }
@@ -407,7 +417,7 @@ namespace mes.Controllers
                 }
 
 
-            ViewBag.NomiMateriali = (List<MaterialiPannelli>)dbAccessor.Queryer<MaterialiPannelli>(connectionString, "MaterialiPannelli");
+            ViewBag.NomiMateriali = dbAccessor.Queryer<MaterialiPannelli>(config.ConnectionString, config.MatPannelliDbTable);
             ViewBag.displayedMaterial = tipoMateriale;
             ViewBag.tipoMateriale = tipoMateriale;
 
@@ -425,7 +435,7 @@ namespace mes.Controllers
             {
                 oneModel.CreatedBy = userData.UserName;
                 oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
-                int result = dbAccessor.Updater<PannelloViewModel>(connectionString, "MagazzinoPannelli", oneModel, oneModel.id);
+                int result = dbAccessor.Updater<PannelloViewModel>(config.ConnectionString, config.PannelliDbTable, oneModel, oneModel.id);
             }
   
             return RedirectToAction("MagPannelli");
@@ -444,13 +454,13 @@ namespace mes.Controllers
             if(tipoMateriale == "" || tipoMateriale == null)
             {
 
-                pannelli = dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
+                pannelli = dbAccessor.Queryer<PannelloViewModel>(config.ConnectionString, config.PannelliDbTable)
                                         .Where(x => x.Enabled =="1").ToList();
             }
             else
             {
 
-                pannelli = dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
+                pannelli = dbAccessor.Queryer<PannelloViewModel>(config.ConnectionString, config.PannelliDbTable)
                                         .Where(x => x.Enabled =="1")
                                         .Where(y => y.Tipomateriale== tipoMateriale).ToList();
             }         
@@ -459,7 +469,7 @@ namespace mes.Controllers
             ViewBag.errorMessage = TempData["errorMessage"];
 
             ViewBag.Customers = GetCustomers();
-            ViewBag.NomiMateriali = dbAccessor.Queryer<MaterialiPannelli>(connectionString, "MaterialiPannelli");
+            ViewBag.NomiMateriali = dbAccessor.Queryer<MaterialiPannelli>(config.ConnectionString, config.PannelliDbTable);
             ViewBag.defaultDate = DateTime.Now.ToString("yyyy-MM-dd");
 
             ViewBag.codPannEsistenti = pannelli.Select(c => c.Codice).ToList();
@@ -480,26 +490,22 @@ namespace mes.Controllers
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
 
             //controllo che il codice prodotto non sia già inserito
-            List<PannelloViewModel> checkPannello = dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
+            List<PannelloViewModel> checkPannello = dbAccessor.Queryer<PannelloViewModel>(config.ConnectionString, config.PannelliDbTable)
                                                     .Where(x => x.Codice ==newPannello.Codice).ToList();
             if(checkPannello.Count > 0)
             {
-                //return RedirectToAction("InsertBordo", "Programs", new {errorMessage ="codice già presente}");
                 TempData["errorMessage"] = "codice pannello gia' presente";
                 return Redirect(Url.Action("InsertPannello", "Programs"));
             }
             
 
-            List<PannelloViewModel> pannelli = dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli");
+            List<PannelloViewModel> pannelli = dbAccessor.Queryer<PannelloViewModel>(config.ConnectionString, config.PannelliDbTable);
 
             long max = (from l in pannelli select l.id).Max();
 
             newPannello.id = max + 1;
 
-            //verifica se il record è già presente
-            //bool isInputPresent = dbAccessor.CheckDoubleRecord(pannelli, newPannello);
-
-            int result = dbAccessor.Insertor<PannelloViewModel>(connectionString, "MagazzinoPannelli", newPannello);
+            int result = dbAccessor.Insertor<PannelloViewModel>(config.ConnectionString, config.PannelliDbTable, newPannello);
 
             return RedirectToAction("MagPannelli");
         }
@@ -509,14 +515,14 @@ namespace mes.Controllers
         public IActionResult ModPannello(long id)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<PannelloViewModel> pannelli = dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
+            List<PannelloViewModel> pannelli = dbAccessor.Queryer<PannelloViewModel>(config.ConnectionString, config.PannelliDbTable)
                                         .Where(x => x.Enabled=="1").ToList(); 
             ViewBag.panelsList = pannelli;
             PannelloViewModel oneModel = pannelli.Where(x => x.id == id).FirstOrDefault();
 
              
             ViewBag.Customers = GetCustomers();
-            List<MaterialiPannelli> allMaterials = dbAccessor.Queryer<MaterialiPannelli>(connectionString, "MaterialiPannelli");
+            List<MaterialiPannelli> allMaterials = dbAccessor.Queryer<MaterialiPannelli>(config.ConnectionString, config.MatPannelliDbTable);
             ViewBag.NomiMateriali = allMaterials;
 
             //---------------------------------
@@ -542,32 +548,32 @@ namespace mes.Controllers
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
 
-            int result = dbAccessor.Updater<PannelloViewModel>(connectionString, "MagazzinoPannelli", oneModel, oneModel.id);
+            int result = dbAccessor.Updater<PannelloViewModel>(config.ConnectionString, config.PannelliDbTable, oneModel, oneModel.id);
 
             return RedirectToAction("MagPannelli");
         }        
 
-        [HttpGet]
-        [Authorize(Roles = "root, PannelliScrivi")]
-        public IActionResult CancPannello(long id)
-        {
-            DatabaseAccessor dbAccessor = new DatabaseAccessor();            
-
-            PannelloViewModel bordo2disable = dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli").Where(x => x.id == id).FirstOrDefault();
-            bordo2disable.Enabled = "0";
-
-            int result = dbAccessor.Updater<PannelloViewModel>(connectionString, "MagazzinoPannelli", bordo2disable, id);
-            
-            Thread.Sleep(1000);
-            return RedirectToAction("MagPannelli");
-        }
+        //[HttpGet]
+        //[Authorize(Roles = "root, PannelliScrivi")]
+        //public IActionResult CancPannello(long id)
+        //{
+        //    DatabaseAccessor dbAccessor = new DatabaseAccessor();            
+//
+        //    PannelloViewModel bordo2disable = dbAccessor.Queryer<PannelloViewModel>(config.connectionString, config.PannelliDbTable).Where(x => x.id == id).FirstOrDefault();
+        //    bordo2disable.Enabled = "0";
+//
+        //    int result = dbAccessor.Updater<PannelloViewModel>(config.connectionString, config.PannelliDbTable, bordo2disable, id);
+        //    
+        //    Thread.Sleep(1000);
+        //    return RedirectToAction("MagPannelli");
+        //}
 
         [HttpGet]
         [Authorize(Roles = "root, PannelliScrivi, MagMaterialiLeggi")]
         public IActionResult StampaEtichetta(long id)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<PannelloViewModel> pannelli = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
+            List<PannelloViewModel> pannelli = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(config.ConnectionString, config.PannelliDbTable)
                                         .Where(x => x.Enabled=="1").ToList(); 
 
             PannelloViewModel oneModel = pannelli.Where(x => x.id == id).FirstOrDefault();
@@ -581,7 +587,7 @@ namespace mes.Controllers
         {
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<PannelloViewModel> pannelli = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
+            List<PannelloViewModel> pannelli = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(config.ConnectionString, config.PannelliDbTable)
                                         .Where(x => x.Enabled=="1").ToList(); 
 
             PannelloViewModel oneModel = pannelli.Where(x => x.id == id).FirstOrDefault();
@@ -618,7 +624,7 @@ namespace mes.Controllers
             ViewBag.userRoles = userData.UserRoles;
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<MatPannelloViewModel> MatPannelli = (List<MatPannelloViewModel>)dbAccessor.Queryer<MatPannelloViewModel>(connectionString, "MaterialiPannelli")
+            List<MatPannelloViewModel> MatPannelli = dbAccessor.Queryer<MatPannelloViewModel>(config.ConnectionString, config.MatPannelliDbTable)
                                             .Where(x => x.Enabled =="1").ToList();
 
             return View(MatPannelli);
@@ -634,7 +640,7 @@ namespace mes.Controllers
             {
                 oneModel.CreatedBy = userData.UserName;
                 oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
-                int result = dbAccessor.Updater<MatPannelloViewModel>(connectionString, "MaterialiPannelli", oneModel, oneModel.id);
+                int result = dbAccessor.Updater<MatPannelloViewModel>(config.ConnectionString, config.MatPannelliDbTable, oneModel, oneModel.id);
             }       
             return RedirectToAction("MainMatPannelli");
         }
@@ -647,7 +653,7 @@ namespace mes.Controllers
             ViewBag.userRoles = userData.UserRoles;
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<MatPannelloViewModel> MatPannelli = (List<MatPannelloViewModel>)dbAccessor.Queryer<MatPannelloViewModel>(connectionString, "MaterialiPannelli")
+            List<MatPannelloViewModel> MatPannelli = dbAccessor.Queryer<MatPannelloViewModel>(config.ConnectionString, config.MatPannelliDbTable)
                                         .Where(x => x.Enabled=="1").ToList();            
             
             ViewBag.MatPannelliList = MatPannelli;
@@ -668,7 +674,7 @@ namespace mes.Controllers
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             //controllo che il codice prodotto non sia già inserito
-            List<CollaViewModel> checkMateriale = (List<CollaViewModel>)dbAccessor.Queryer<CollaViewModel>(connectionString, "MaterialiPannelli")
+            List<CollaViewModel> checkMateriale = dbAccessor.Queryer<CollaViewModel>(config.ConnectionString, config.MatPannelliDbTable)
                                                 .Where(x => x.Codice ==newMatPannello.Nome).ToList();
             if(checkMateriale.Count > 0)
             {
@@ -677,13 +683,13 @@ namespace mes.Controllers
             }
 
 
-            List<MatPannelloViewModel> MatPannelli = (List<MatPannelloViewModel>)dbAccessor.Queryer<MatPannelloViewModel>(connectionString, "MaterialiPannelli");
+            List<MatPannelloViewModel> MatPannelli = dbAccessor.Queryer<MatPannelloViewModel>(config.ConnectionString, config.MatPannelliDbTable);
 
             long max = (from l in MatPannelli select l.id).Max();
 
             newMatPannello.id = max + 1;
 
-            int result = dbAccessor.Insertor<MatPannelloViewModel>(connectionString, "MaterialiPannelli", newMatPannello);
+            int result = dbAccessor.Insertor<MatPannelloViewModel>(config.ConnectionString, config.MatPannelliDbTable, newMatPannello);
 
             return RedirectToAction("MainMatPannelli");
         }
@@ -693,7 +699,7 @@ namespace mes.Controllers
         public IActionResult ModMatPannello(long id)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<MatPannelloViewModel> MatPannelli = (List<MatPannelloViewModel>)dbAccessor.Queryer<MatPannelloViewModel>(connectionString, "MaterialiPannelli")
+            List<MatPannelloViewModel> MatPannelli = dbAccessor.Queryer<MatPannelloViewModel>(config.ConnectionString, config.MatPannelliDbTable)
                                         .Where(x => x.Enabled=="1").ToList(); 
             ViewBag.MatPannelliList = MatPannelli;
             MatPannelloViewModel oneModel = MatPannelli.Where(x => x.id == id).FirstOrDefault();
@@ -713,7 +719,7 @@ namespace mes.Controllers
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
 
-            int result = dbAccessor.Updater<MatPannelloViewModel>(connectionString,"MaterialiPannelli", oneModel, oneModel.id);
+            int result = dbAccessor.Updater<MatPannelloViewModel>(config.ConnectionString, config.MatPannelliDbTable, oneModel, oneModel.id);
 
             return RedirectToAction("MainMatPannelli");
         }        
@@ -741,13 +747,13 @@ namespace mes.Controllers
             if(tipoMateriale == "" || tipoMateriale == null || tipoMateriale=="tutti")
             {
 
-                pannelli = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
+                pannelli = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(config.ConnectionString, config.PannelliDbTable)
                                                 .Where(x => x.Enabled =="1").ToList();
             }
             else
             {
 
-                pannelli = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
+                pannelli = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(config.ConnectionString, config.PannelliDbTable)
                                                 .Where(x => x.Enabled =="1")
                                                 .Where(y => y.Tipomateriale== tipoMateriale).ToList();
             }     
@@ -787,12 +793,12 @@ namespace mes.Controllers
 
             if (cliente =="" || cliente == null || cliente == "tutti")
             {
-                tmpSemilavorati = dbAccessor.Queryer<SemilavoratoViewModel>(connectionString, "MagazzinoSemilavorati")
+                tmpSemilavorati = dbAccessor.Queryer<SemilavoratoViewModel>(config.ConnectionString, config.SemilavDbTable)
                                                 .Where(x => x.Enabled =="1").ToList();
             }
             else
                         {
-                tmpSemilavorati = dbAccessor.Queryer<SemilavoratoViewModel>(connectionString, "MagazzinoSemilavorati")
+                tmpSemilavorati = dbAccessor.Queryer<SemilavoratoViewModel>(config.ConnectionString, config.SemilavDbTable)
                                                 .Where(x => x.Enabled =="1")
                                                 .Where(y => y.Cliente== cliente).ToList();
             }
@@ -808,7 +814,7 @@ namespace mes.Controllers
             }            
 
             aggiornaSemilavorati = true;
-            ViewBag.Clienti = dbAccessor.Queryer<ClienteViewModel>(mesConnectionString, "Clienti");
+            ViewBag.Clienti = dbAccessor.Queryer<ClienteViewModel>(config.MesConnectionString, config.ClientiDbTable);
             ViewBag.ClienteSelezionato = cliente;
             
             return View(semilavorati);
@@ -825,7 +831,7 @@ namespace mes.Controllers
                 {
                     oneModel.CreatedBy = userData.UserName;
                     oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
-                    int result = dbAccessor.Updater<SemilavoratoViewModel>(connectionString, "MagazzinoSemilavorati", oneModel, oneModel.id);
+                    int result = dbAccessor.Updater<SemilavoratoViewModel>(config.ConnectionString, config.SemilavDbTable, oneModel, oneModel.id);
                 }
             }       
             return RedirectToAction("MainSemilavorati");
@@ -836,11 +842,11 @@ namespace mes.Controllers
         public IActionResult InsertSemilavorato()
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<SemilavoratoViewModel> Semilavorati = (List<SemilavoratoViewModel>)dbAccessor.Queryer<SemilavoratoViewModel>(connectionString, "MagazzinoSemilavorati")
+            List<SemilavoratoViewModel> Semilavorati = dbAccessor.Queryer<SemilavoratoViewModel>(config.ConnectionString, config.SemilavDbTable)
                                         .Where(x => x.Enabled=="1").ToList();            
             
             ViewBag.SemilavoratiList = Semilavorati;
-            ViewBag.Clienti = (List<ClienteViewModel>)dbAccessor.Queryer<ClienteViewModel>(mesConnectionString, "Clienti");
+            ViewBag.Clienti = dbAccessor.Queryer<ClienteViewModel>(config.MesConnectionString, config.ClientiDbTable);
             ViewBag.errorMessage = TempData["errorMessage"];
             return View();
         }
@@ -858,7 +864,7 @@ namespace mes.Controllers
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
 
             //controllo che il codice prodotto non sia già inserito
-            List<SemilavoratoViewModel> checkMateriale = (List<SemilavoratoViewModel>)dbAccessor.Queryer<SemilavoratoViewModel>(connectionString, "MagazzinoSemilavorati")
+            List<SemilavoratoViewModel> checkMateriale = dbAccessor.Queryer<SemilavoratoViewModel>(config.ConnectionString, config.SemilavDbTable)
                                                 .Where(x => x.Codice ==newSemilavorato.Codice).ToList();
             if(checkMateriale.Count > 0)
             {
@@ -866,13 +872,13 @@ namespace mes.Controllers
                 return Redirect(Url.Action("InsertSemilavorato", "Programs"));
             }
 
-            List<SemilavoratoViewModel> Semilavorati = (List<SemilavoratoViewModel>)dbAccessor.Queryer<SemilavoratoViewModel>(connectionString, "MagazzinoSemilavorati");
+            List<SemilavoratoViewModel> Semilavorati = dbAccessor.Queryer<SemilavoratoViewModel>(config.ConnectionString, config.SemilavDbTable);
 
             long max = (from l in Semilavorati select l.id).Max();
 
             newSemilavorato.id = max + 1;
 
-            int result = dbAccessor.Insertor<SemilavoratoViewModel>(connectionString, "MagazzinoSemilavorati", newSemilavorato);
+            int result = dbAccessor.Insertor<SemilavoratoViewModel>(config.ConnectionString, config.SemilavDbTable, newSemilavorato);
 
             return RedirectToAction("MainSemilavorati");
         }
@@ -882,7 +888,7 @@ namespace mes.Controllers
         public IActionResult ModSemilavorato(long id)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<SemilavoratoViewModel> Semilavorati = (List<SemilavoratoViewModel>)dbAccessor.Queryer<SemilavoratoViewModel>(connectionString, "MagazzinoSemilavorati")
+            List<SemilavoratoViewModel> Semilavorati = dbAccessor.Queryer<SemilavoratoViewModel>(config.ConnectionString, config.SemilavDbTable)
                                         .Where(x => x.Enabled=="1").ToList(); 
             ViewBag.SemilavoratiList = Semilavorati;
             SemilavoratoViewModel oneModel = Semilavorati.Where(x => x.id == id).FirstOrDefault();
@@ -902,7 +908,7 @@ namespace mes.Controllers
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
 
-            int result = dbAccessor.Updater<SemilavoratoViewModel>(connectionString,"MagazzinoSemilavorati", oneModel, oneModel.id);
+            int result = dbAccessor.Updater<SemilavoratoViewModel>(config.ConnectionString, config.SemilavDbTable, oneModel, oneModel.id);
 
             return RedirectToAction("MainSemilavorati");
         }        
@@ -915,10 +921,11 @@ namespace mes.Controllers
             DatabaseAccessor dbAccessor = new DatabaseAccessor();            
             //int result = dbAccessor.Delete(connectionString, "MagazzinoSemilavorati", id);
 
-            SemilavoratoViewModel Semilavorato2disable = dbAccessor.Queryer<SemilavoratoViewModel>(connectionString, "MagazzinoSemilavorati").Where(x => x.id == id).FirstOrDefault();
+            SemilavoratoViewModel Semilavorato2disable = dbAccessor.Queryer<SemilavoratoViewModel>(config.ConnectionString, config.SemilavDbTable)
+                                                                    .Where(x => x.id == id).FirstOrDefault();
             Semilavorato2disable.Enabled = "0";
 
-            int result = dbAccessor.Updater<SemilavoratoViewModel>(connectionString,"MagazzinoSemilavorati", Semilavorato2disable, id);
+            int result = dbAccessor.Updater<SemilavoratoViewModel>(config.ConnectionString, config.SemilavDbTable, Semilavorato2disable, id);
             
             Thread.Sleep(1000);
             return RedirectToAction("MainSemilavorati");
@@ -931,14 +938,14 @@ namespace mes.Controllers
             List<SemilavoratoViewModel> semilavorati = new List<SemilavoratoViewModel>();
             if (cliente =="" || cliente == null || cliente == "tutti")
             {
-                semilavorati = (List<SemilavoratoViewModel>)dbAccessor.Queryer<SemilavoratoViewModel>(connectionString, "MagazzinoSemilavorati")
-                                                .Where(x => x.Enabled =="1").ToList();
+                semilavorati = dbAccessor.Queryer<SemilavoratoViewModel>(config.ConnectionString, config.SemilavDbTable)
+                                            .Where(x => x.Enabled =="1").ToList();
             }
             else
                         {
-                semilavorati = (List<SemilavoratoViewModel>)dbAccessor.Queryer<SemilavoratoViewModel>(connectionString, "MagazzinoSemilavorati")
-                                                .Where(x => x.Enabled =="1")
-                                                .Where(y => y.Cliente== cliente).ToList();
+                semilavorati = dbAccessor.Queryer<SemilavoratoViewModel>(config.ConnectionString, config.SemilavDbTable)
+                                            .Where(x => x.Enabled =="1")
+                                            .Where(y => y.Cliente== cliente).ToList();
             }
 
             var configExp = new MapperConfiguration(cfg => cfg.CreateMap<SemilavoratoViewModel, SemiLavoratoDTO>());
@@ -977,9 +984,9 @@ namespace mes.Controllers
             ViewBag.userRoles = userData.UserRoles;
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<ProductionCalendar> calendar = (List<ProductionCalendar>)dbAccessor.Queryer<ProductionCalendar>(connectionString, "CalendarioGantt")
-                                            .Where(x => x.Enabled =="1")
-                                            .Where(y=> y.WeekNumber == weekNumber.ToString()).ToList();
+            List<ProductionCalendar> calendar = dbAccessor.Queryer<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable)
+                                                        .Where(x => x.Enabled =="1")
+                                                        .Where(y=> y.WeekNumber == weekNumber.ToString()).ToList();
 
             ViewBag.ProductionList = calendar;
             ViewBag.AssignedTo = GetGanttAssignementList();
@@ -991,7 +998,7 @@ namespace mes.Controllers
         public IActionResult ProductionCalendar(ProductionCalendar inputModel)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<ProductionCalendar> calendar = (List<ProductionCalendar>)dbAccessor.Queryer<ProductionCalendar>(connectionString, "CalendarioGantt")
+            List<ProductionCalendar> calendar = dbAccessor.Queryer<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable)
                                             .Where(x => x.Enabled =="1").ToList();            
             return View();
         }
@@ -1011,13 +1018,13 @@ namespace mes.Controllers
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
 
-            List<ProductionCalendar> tasks = (List<ProductionCalendar>)dbAccessor.Queryer<ProductionCalendar>(connectionString, "CalendarioGantt");      
+            List<ProductionCalendar> tasks = dbAccessor.Queryer<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable);      
 
             long max = (from l in tasks select l.id).Max();
 
             inputModel.id = max + 1;
 
-            int result = dbAccessor.Insertor<ProductionCalendar>(connectionString, "CalendarioGantt", inputModel);
+            int result = dbAccessor.Insertor<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable, inputModel);
 
             return RedirectToAction("ProductionCalendar");
         }
@@ -1029,7 +1036,7 @@ namespace mes.Controllers
             int weekNumber = GetWeekNumber(); 
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<ProductionCalendar> calendar = (List<ProductionCalendar>)dbAccessor.Queryer<ProductionCalendar>(connectionString, "CalendarioGantt")
+            List<ProductionCalendar> calendar = dbAccessor.Queryer<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable)
                                         .Where(x => x.Enabled=="1")
                                         .Where(y=> y.WeekNumber == weekNumber.ToString()).ToList();
                                         
@@ -1037,7 +1044,7 @@ namespace mes.Controllers
             
             ProductionCalendar oneModel = calendar.Where(x => x.id == id).FirstOrDefault();
 
-            List<string> assignments = dbAccessor.Queryer<ProductionCalendarAssignment>(connectionString, "AssegnaGantt").Select(x => x.AssignedTo).ToList();
+            List<string> assignments = dbAccessor.Queryer<ProductionCalendarAssignment>(config.ConnectionString, config.AssegnaDbTable).Select(x => x.AssignedTo).ToList();
 
             ViewBag.AssignedTo = assignments;
             ViewBag.AssignedToIndex = assignments.IndexOf(oneModel.AssignedTo);
@@ -1070,7 +1077,7 @@ namespace mes.Controllers
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
 
-            int result = dbAccessor.Updater<ProductionCalendar>(connectionString,"CalendarioGantt", oneModel, oneModel.id);
+            int result = dbAccessor.Updater<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable, oneModel, oneModel.id);
 
             return RedirectToAction("ProductionCalendar");
         }
@@ -1085,7 +1092,7 @@ namespace mes.Controllers
             //--------------------            
             //estrai tutti i dati di quella settimana
             DatabaseAccessor dbAccessor = new DatabaseAccessor();  
-            List<ProductionCalendar> allTasks = (List<ProductionCalendar>)dbAccessor.Queryer<ProductionCalendar>(connectionString, "CalendarioGantt")
+            List<ProductionCalendar> allTasks = dbAccessor.Queryer<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable)
                                                 .Where(y => y.Enabled =="1")
                                                 .Where(x => x.WeekNumber == actualWeek.ToString()).ToList();   
             //compili il file
@@ -1280,7 +1287,7 @@ namespace mes.Controllers
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
 
-            List<ProductionCalendarAssignment> assigned = (List<ProductionCalendarAssignment>)dbAccessor.Queryer<ProductionCalendarAssignment>(connectionString, "AssegnaGantt")
+            List<ProductionCalendarAssignment> assigned = dbAccessor.Queryer<ProductionCalendarAssignment>(config.ConnectionString, config.AssegnaDbTable)
                                                             .Where( x=> x.Enabled =="1").ToList();
 
             List<string> result = assigned.Select(y => y.AssignedTo).ToList();
@@ -1326,7 +1333,7 @@ namespace mes.Controllers
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
 
-            List<ClienteViewModel> customers = dbAccessor.Queryer<ClienteViewModel>(mesConnectionString, "Clienti");
+            List<ClienteViewModel> customers = dbAccessor.Queryer<ClienteViewModel>(config.MesConnectionString, config.ClientiDbTable);
 
             return customers;
         }
@@ -1362,21 +1369,21 @@ namespace mes.Controllers
             
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
 
-            List<PannelloViewModel> pannelli = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
-                                            .Where(x => x.Enabled =="1")
-                                            .Where( y => Convert.ToInt32(y.Quantita) <= Convert.ToInt32(y.QuantitaMin)).ToList();
+            List<PannelloViewModel> pannelli = dbAccessor.Queryer<PannelloViewModel>(config.ConnectionString, config.PannelliDbTable)
+                                                            .Where(x => x.Enabled =="1")
+                                                            .Where( y => Convert.ToInt32(y.Quantita) <= Convert.ToInt32(y.QuantitaMin)).ToList();
 
-            List<CollaViewModel> colle = (List<CollaViewModel>)dbAccessor.Queryer<CollaViewModel>(connectionString, "MagazzinoColle")
-                                            .Where(x => x.Enabled == "1")
-                                            .Where( y => Convert.ToInt32(y.Quantita) <= Convert.ToInt32(y.QuantitaMin)).ToList();           
+            List<CollaViewModel> colle = dbAccessor.Queryer<CollaViewModel>(config.ConnectionString, config.ColleDbTable)
+                                                    .Where(x => x.Enabled == "1")
+                                                    .Where( y => Convert.ToInt32(y.Quantita) <= Convert.ToInt32(y.QuantitaMin)).ToList();           
 
-            List<BordoViewModel> bordi = (List<BordoViewModel>)dbAccessor.Queryer<BordoViewModel>(connectionString, "MagazzinoBordi")
-                                            .Where(x => x.Enabled =="1")
-                                            .Where( y => Convert.ToInt32(y.Quantita) <= Convert.ToInt32(y.QuantitaMin)).ToList();                                            
+            List<BordoViewModel> bordi = dbAccessor.Queryer<BordoViewModel>(config.ConnectionString, config.BordiDbTable)
+                                                    .Where(x => x.Enabled =="1")
+                                                    .Where( y => Convert.ToInt32(y.Quantita) <= Convert.ToInt32(y.QuantitaMin)).ToList();                                            
 
-            List<SemilavoratoViewModel>semilavorati = (List<SemilavoratoViewModel>)dbAccessor.Queryer<SemilavoratoViewModel>(connectionString, "MagazzinoSemilavorati")
-                                                .Where(x => x.Enabled =="1")
-                                                .Where( y => Convert.ToInt32(y.Quantita) <= Convert.ToInt32(y.QuantitaMin)).ToList();
+            List<SemilavoratoViewModel>semilavorati = dbAccessor.Queryer<SemilavoratoViewModel>(config.ConnectionString, config.SemilavDbTable)
+                                                                .Where(x => x.Enabled =="1")
+                                                                .Where( y => Convert.ToInt32(y.Quantita) <= Convert.ToInt32(y.QuantitaMin)).ToList();
 
             List<DashboardMaterialiViewModel> alertMateriali = new List<DashboardMaterialiViewModel>();
 
@@ -1447,6 +1454,59 @@ namespace mes.Controllers
             int quanMin = Convert.ToInt32(quantitaMin);
 
             return (quan == 0)?"red":"orange";
+        }
+
+        #endregion
+
+        #region ProdottiFiniti
+
+        [HttpGet]
+        [Authorize(Roles = "root, MagMaterialiLeggi, PannelliScrivi")]
+        public IActionResult MainFiniti()
+        {
+            UserData userData = GetUserData();
+            ViewBag.userRoles = userData.UserRoles;            
+
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            List<ProdFinitiViewModel> allItems = dbAccessor.Queryer<ProdFinitiViewModel>(config.ConnectionString, config.MagProdFinitiDbTable).ToList();
+
+            return View(allItems);
+        }
+
+        [HttpPost]
+        public IActionResult AggiornaProdFinito(List<ProdFinitiViewModel> prodFiniti)
+        {
+            UserData userData = GetUserData();
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            foreach(ProdFinitiViewModel oneProd in prodFiniti)
+            {
+                oneProd.CreatedBy = userData.UserName;
+                oneProd.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
+                int result = dbAccessor.Updater<ProdFinitiViewModel>(config.ConnectionString, config.MagProdFinitiDbTable, oneProd, oneProd.id);
+            }
+
+            return View("MainFiniti");
+        }
+
+        [HttpGet]
+        public IActionResult InsertFiniti()
+        {
+            UserData userData = GetUserData();
+            ViewBag.userRoles = userData.UserRoles; 
+
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            List<ProdFinitiViewModel> allItems = dbAccessor.Queryer<ProdFinitiViewModel>(config.MesConnectionString, config.ArticoliDbTable)
+                                                            .ToList();
+
+            ViewBag.allItems = allItems;
+
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult InsertFiniti(ProdFinitiViewModel input)
+        {
+            return View();
         }
 
         #endregion
