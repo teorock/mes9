@@ -8,6 +8,7 @@
     List<string> customers = ViewBag.customers;
     List<string> panels = ViewBag.panels;
     List<string> semilavs = ViewBag.semilavs;
+    List<string> articoliEsistenti = ViewBag.articoliEsistenti;
 }
 
 
@@ -198,5 +199,13 @@ function conferma() {
     });
     $("#sel-panel").on('change', function() {
         $("#CodLastra").val(this.value);
+    });
+    $("#Codice").on('focusout', function(){
+        var typedValue = $(this).val();
+        var articles = @Html.Raw(Json.Serialize(@articoliEsistenti));
+        if (articles.includes(typedValue)) {
+            alert('Codice articolo già esistente');
+            $(this).val("");
+        }
     });            
 </script>

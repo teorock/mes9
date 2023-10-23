@@ -8,6 +8,7 @@
     string userRoles = ViewBag.userRoles;
     string defaultDate = ViewBag.defaultDate;
     string errorMessage = ViewBag.errorMessage;
+    List<string> codPanEsistenti = ViewBag.codPanEsistenti;
 }
 
 
@@ -278,5 +279,13 @@
     $("#sel-cliente").on('change', function() {
         //alert( this.value );
         $("#cliente").val(this.value);
-    });    
+    });
+    $("#codice").on('focusout', function(){
+        var typedValue = $(this).val();
+        var articles = @Html.Raw(Json.Serialize(@codPanEsistenti));
+        if (articles.includes(typedValue)) {
+            alert('Codice pannello già esistente');
+            $(this).val("");
+        }
+    });     
 </script>

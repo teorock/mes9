@@ -444,23 +444,25 @@ namespace mes.Controllers
             if(tipoMateriale == "" || tipoMateriale == null)
             {
 
-                pannelli = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
-                                                .Where(x => x.Enabled =="1").ToList();
+                pannelli = dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
+                                        .Where(x => x.Enabled =="1").ToList();
             }
             else
             {
 
-                pannelli = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
-                                                .Where(x => x.Enabled =="1")
-                                                .Where(y => y.Tipomateriale== tipoMateriale).ToList();
+                pannelli = dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
+                                        .Where(x => x.Enabled =="1")
+                                        .Where(y => y.Tipomateriale== tipoMateriale).ToList();
             }         
             
             ViewBag.panelsList = pannelli;
             ViewBag.errorMessage = TempData["errorMessage"];
 
             ViewBag.Customers = GetCustomers();
-            ViewBag.NomiMateriali = (List<MaterialiPannelli>)dbAccessor.Queryer<MaterialiPannelli>(connectionString, "MaterialiPannelli");
+            ViewBag.NomiMateriali = dbAccessor.Queryer<MaterialiPannelli>(connectionString, "MaterialiPannelli");
             ViewBag.defaultDate = DateTime.Now.ToString("yyyy-MM-dd");
+
+            ViewBag.codPannEsistenti = pannelli.Select(c => c.Codice).ToList();
             
             return View();
         }
@@ -478,8 +480,8 @@ namespace mes.Controllers
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
 
             //controllo che il codice prodotto non sia già inserito
-            List<PannelloViewModel> checkPannello = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
-                                                .Where(x => x.Codice ==newPannello.Codice).ToList();
+            List<PannelloViewModel> checkPannello = dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli")
+                                                    .Where(x => x.Codice ==newPannello.Codice).ToList();
             if(checkPannello.Count > 0)
             {
                 //return RedirectToAction("InsertBordo", "Programs", new {errorMessage ="codice già presente}");
@@ -488,7 +490,7 @@ namespace mes.Controllers
             }
             
 
-            List<PannelloViewModel> pannelli = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli");
+            List<PannelloViewModel> pannelli = dbAccessor.Queryer<PannelloViewModel>(connectionString, "MagazzinoPannelli");
 
             long max = (from l in pannelli select l.id).Max();
 
@@ -785,12 +787,12 @@ namespace mes.Controllers
 
             if (cliente =="" || cliente == null || cliente == "tutti")
             {
-                tmpSemilavorati = (List<SemilavoratoViewModel>)dbAccessor.Queryer<SemilavoratoViewModel>(connectionString, "MagazzinoSemilavorati")
+                tmpSemilavorati = dbAccessor.Queryer<SemilavoratoViewModel>(connectionString, "MagazzinoSemilavorati")
                                                 .Where(x => x.Enabled =="1").ToList();
             }
             else
                         {
-                tmpSemilavorati = (List<SemilavoratoViewModel>)dbAccessor.Queryer<SemilavoratoViewModel>(connectionString, "MagazzinoSemilavorati")
+                tmpSemilavorati = dbAccessor.Queryer<SemilavoratoViewModel>(connectionString, "MagazzinoSemilavorati")
                                                 .Where(x => x.Enabled =="1")
                                                 .Where(y => y.Cliente== cliente).ToList();
             }
@@ -806,7 +808,7 @@ namespace mes.Controllers
             }            
 
             aggiornaSemilavorati = true;
-            ViewBag.Clienti = (List<ClienteViewModel>)dbAccessor.Queryer<ClienteViewModel>(mesConnectionString, "Clienti");
+            ViewBag.Clienti = dbAccessor.Queryer<ClienteViewModel>(mesConnectionString, "Clienti");
             ViewBag.ClienteSelezionato = cliente;
             
             return View(semilavorati);

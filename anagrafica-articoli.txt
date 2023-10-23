@@ -17,3 +17,5 @@ CREATE TABLE "Articoli" (
 );
 
 fare prove con programs.db da ambiente production
+
+in tab clienti è stata aggiunto field Enabled

@@ -129,7 +129,7 @@ namespace intranet.Controllers
     #region Articoli
 
         [HttpGet]
-        [Authorize(Roles = "root")]
+        [Authorize(Roles = "root, ArticoliScrivi, ArticoliLeggi")]
         public IActionResult MainArticoli()
         {
             UserData userData = GetUserData();
@@ -137,13 +137,12 @@ namespace intranet.Controllers
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<ArticoloViewModel> Articoli = dbAccessor.Queryer<ArticoloViewModel>(config.ConnString, config.ArticlesDbTable)
-                                                        .Where(x => x.Enabled =="1").ToList();
-
+                                                        .Where(x => x.Enabled =="1").ToList();            
+            
             return View(Articoli);
-
         }
 
-        [Authorize(Roles = "root")]
+        [Authorize(Roles = "root, ArticoliScrivi, ArticoliLeggi")]
         public IActionResult AggiornaArticoli(List<ArticoloViewModel> Articoli)
         {
                 UserData userData = GetUserData();
@@ -158,7 +157,7 @@ namespace intranet.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "root")]
+        [Authorize(Roles = "root, ArticoliScrivi, ArticoliLeggi")]
         public IActionResult InsertArticolo()
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
@@ -170,11 +169,13 @@ namespace intranet.Controllers
             ViewBag.panels = GetPanelsCodes();
             ViewBag.semilavs = GetSemilavCodes();
 
+            ViewBag.articoliEsistenti = Articoli.Select(a => a.Codice).ToList();            
+
             return View();
         }
 
         [HttpPost]
-        [Authorize(Roles = "root")]
+        [Authorize(Roles = "root, ArticoliScrivi, ArticoliLeggi")]
         public IActionResult InsertArticolo(ArticoloViewModel newArticolo)
         {
             UserData userData = GetUserData();
@@ -186,6 +187,7 @@ namespace intranet.Controllers
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<ArticoloViewModel> Articoli = (List<ArticoloViewModel>)dbAccessor.Queryer<ArticoloViewModel>(config.ConnString, config.ArticlesDbTable);
 
+            //verifica se Articoli = null
             long max = (from l in Articoli select l.id).Max();
 
             newArticolo.id = max + 1;
@@ -196,7 +198,7 @@ namespace intranet.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "root")]
+        [Authorize(Roles = "root, ArticoliScrivi, ArticoliLeggi")]
         public IActionResult ModArticolo(long id)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
@@ -219,7 +221,7 @@ namespace intranet.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "root")]
+        [Authorize(Roles = "root, ArticoliScrivi, ArticoliLeggi")]
         public IActionResult ModArticolo(ArticoloViewModel oneModel)
         {
             UserData userData = GetUserData();
