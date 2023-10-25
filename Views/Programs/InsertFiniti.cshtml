@@ -9,9 +9,10 @@
     bool authorize = false;
     if(userRoles.Contains("PannelliScrivi")||userRoles.Contains("root")) authorize=true;
 
-    List<ProdFinitiViewModel> allItems = ViewBag.allItems;
+    List<ArticoloViewModel> allArticles = ViewBag.allArticles;
+    string jsonAllItems = JsonConvert.SerializeObject(allArticles);
 
-    string jsonAllItems = JsonConvert.SerializeObject(allItems);
+    List<string> itemsInStock = ViewBag.itemsInStock;
 }
 
 <style>     
@@ -36,49 +37,31 @@
     }
     input:focus {
         background-color: lightyellow;
-    }  
+    }
+    select option:disabled {
+        background-color: #c7c7c7;
+        font-style: italic;
+}
 </style>
 
 
 <script>
 
-function conferma()
-{
-    if(!$("#quantita").val()) {
-        alert("campo 'quantita' vuoto");
-        $("#confirmationModal").modal('toggle');
-        return;
-        }
+   function confirmLoadModal(){
 
-    var inputs = $("[id=quantita]");
-    var validChars = /^[0-9.]+$/;
-    var isIvalid = true;
-
-    inputs.each(function() {
-        var inputVal = $(this).val();
-        if(!validChars.test(inputVal)) {
-            $(this).css({
-                'border-color': 'red',
-                'border-width': '3px'
-                });
-                isIvalid = false;
-            } else {
-            $(this).css({
-                'border-color': '',
-                'border-width': ''
-                });                
-            }
-        });
-
-    if(!isIvalid) {
-        alert("correggere i campi evidenziati");
-        $("#confirmationModal").modal('toggle');
-        return;   
-    }
-
-    $("#frmAggDati").submit();
-        
-}
+        if(!$("#quantita").val()) {
+            alert("campo 'quantità' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }        
+        if(!$("#quantitamin").val()) {
+            alert("campo 'quantità minima' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }                                                                 
+        $("#frm").submit();
+        //alert("confermato");
+   }
 
 </script>
 
@@ -94,7 +77,7 @@ function conferma()
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">annulla</button>
-        <button type="button" class="btn btn-outline-success" onclick="conferma()">aggiorna</button>
+        <button type="button" class="btn btn-outline-success" onclick="confirmLoadModal()">aggiorna</button>
       </div>
     </div>
   </div>
@@ -120,9 +103,14 @@ function conferma()
         <div class="select-editeable">
             <select id="sel-codice" style="width:200px;">
                 <option value="" selected> </option>
-                @foreach (var item in allItems)
+                @foreach (ArticoloViewModel article in allArticles)
                 {
-                    <option value=@item.Codice>@item.Codice</option>
+                    if(itemsInStock.Contains(article.Codice))
+                    {
+                        <option value=@article.Codice disabled>@article.Codice</option>
+                    } else {
+                        <option value=@article.Codice>@article.Codice</option>
+                    }                                        
                 }
             </select>
         </div>
@@ -142,10 +130,10 @@ function conferma()
             <th style="text-align: center;">quantita min.</th>
         </tr>
         <tr>
-            <td><input id="codice" style="width: 160px;" type="text" asp-for=@Model.Codice class="form-control" disabled /></td>
-            <td><input id="descrizione" style="width: 160px;" type="text" asp-for=@Model.Descrizione class="form-control" disabled /></td>
-            <td><input id="cliente" style="width: 160px;" type="text" asp-for=@Model.Cliente class="form-control" disabled /></td>
-            <td><input id="note" style="width: 160px;" type="text" asp-for=@Model.Note class="form-control" disabled /></td>
+            <td><input id="codice" style="width: 160px;" type="text" asp-for=@Model.Codice class="form-control" readonly /></td>
+            <td><input id="descrizione" style="width: 160px;" type="text" asp-for=@Model.Descrizione class="form-control" readonly /></td>
+            <td><input id="cliente" style="width: 160px;" type="text" asp-for=@Model.Cliente class="form-control" readonly /></td>
+            <td><input id="note" style="width: 160px;" type="text" asp-for=@Model.Note class="form-control" readonly /></td>
             <td><input id="quantita" style="width: 160px;" type="text" asp-for=@Model.Quantita class="form-control" /></td>
             <td><input id="quantitamin" style="width: 160px;" type="text" asp-for=@Model.QuantitaMin class="form-control" /></td>
         </tr>

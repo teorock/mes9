@@ -28,43 +28,27 @@
 </style>
 
 <script>
-function conferma()
-{
-    if(!$("#quantita").val()) {
-        alert("campo 'quantita' vuoto");
-        $("#confirmationModal").modal('toggle');
-        return;
+    function conferma()
+    {
+        if(!$("#quantita").val()) {
+            alert("campo 'quantita' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
         }
+        if(isNaN($("#quantita").val())) {
+            alert("campo 'quantita' accetta solo valori numerici");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(($("#quantita").val()).includes("-")) {
+            alert("campo 'quantita' non sono ammessi valori negativi");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }        
 
-    var inputs = $("[id=quantita]");
-    var validChars = /^[0-9.]+$/;
-    var isIvalid = true;
-
-    inputs.each(function() {
-        var inputVal = $(this).val();
-        if(!validChars.test(inputVal)) {
-            $(this).css({
-                'border-color': 'red',
-                'border-width': '3px'
-                });
-                isIvalid = false;
-            } else {
-            $(this).css({
-                'border-color': '',
-                'border-width': ''
-                });                
-            }
-        });
-
-    if(!isIvalid) {
-        alert("correggere i campi evidenziati");
-        $("#confirmationModal").modal('toggle');
-        return;   
-    }
-
-    $("#frmAggDati").submit();
-        
-}    
+        $("#frmAggDati").submit();
+            
+    }    
 </script>
 
 <!-- Modal -->
@@ -86,7 +70,6 @@ function conferma()
 </div>
 <!-- Modal end -->
 
-
 <div class="row align-items-start">
     <div class="col-md-1" align="center">
         <i class="fa fa-check" style="font-size:36px"></i>
@@ -98,8 +81,6 @@ function conferma()
 <br>
 <br>
 <hr>
-
-
 
 @using(Html.BeginForm("AggiornaProdFinito", "Programs", FormMethod.Post, new { name = "frmAggDati", id = "frmAggDati" }))
 {
@@ -127,7 +108,7 @@ function conferma()
                         <td><input readonly style="width: 300px; background-color: @color;" type="text" asp-for=@Model[x].Descrizione class="form-control" value=@Model[x].Descrizione  readonly/></td>
                         <td><input readonly style="width: 200px; background-color: @color;" type="text" asp-for=@Model[x].Cliente class="form-control" value=@Model[x].Cliente  readonly/></td>
                         <td><input readonly style="width: 300px; background-color: @color;" type="text" asp-for=@Model[x].Note class="form-control" value=@Model[x].Note  readonly/></td>
-                        <td><input readonly style="width: 60px; text-align:center; background-color: @color;" type="text" asp-for=@Model[x].Quantita class="form-control" value=@Model[x].Quantita  readonly/></td>
+                        <td><input readonly id="quanita" style="width: 60px; text-align:center; background-color: @color;" type="text" asp-for=@Model[x].Quantita class="form-control" value=@Model[x].Quantita  readonly/></td>
                         <td><input readonly style="width: 60px; text-align:center; background-color: @color;" type="text" asp-for=@Model[x].QuantitaMin class="form-control" value=@Model[x].QuantitaMin  readonly/></td>
                         <td> </td>
                         <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].id class="form-control" value=@Model[x].id readonly /></td>
@@ -139,7 +120,7 @@ function conferma()
                         <td><input readonly style="width: 300px; background-color: @color;" type="text" asp-for=@Model[x].Descrizione class="form-control" value=@Model[x].Descrizione  readonly/></td>
                         <td><input readonly style="width: 200px; background-color: @color;" type="text" asp-for=@Model[x].Cliente class="form-control" value=@Model[x].Cliente  readonly/></td>
                         <td><input readonly style="width: 300px; background-color: @color;" type="text" asp-for=@Model[x].Note class="form-control" value=@Model[x].Note  readonly/></td>
-                        <td><input style="width: 60px; text-align:center; background-color: @color;" type="text" asp-for=@Model[x].Quantita class="form-control" value=@Model[x].Quantita /></td>
+                        <td><input id="quantita" style="width: 60px; text-align:center; background-color: @color;" type="text" asp-for=@Model[x].Quantita class="form-control" value=@Model[x].Quantita /></td>
                         <td><input readonly style="width: 60px; text-align:center; background-color: @color;" type="text" asp-for=@Model[x].QuantitaMin class="form-control" value=@Model[x].QuantitaMin  readonly/></td>
                         <td style="padding-left: 10px;"><a asp-controller="Programs" asp-action="ModPannello" asp-route-id="@Model[x].id"><i class="material-icons text-warning">&#xE254;</i></a></td>
                         <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].id class="form-control" value=@Model[x].id /></td>                         

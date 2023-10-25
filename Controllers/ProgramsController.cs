@@ -1485,7 +1485,7 @@ namespace mes.Controllers
                 int result = dbAccessor.Updater<ProdFinitiViewModel>(config.ConnectionString, config.MagProdFinitiDbTable, oneProd, oneProd.id);
             }
 
-            return View("MainFiniti");
+            return RedirectToAction("MainFiniti");
         }
 
         [HttpGet]
@@ -1495,18 +1495,41 @@ namespace mes.Controllers
             ViewBag.userRoles = userData.UserRoles; 
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<ProdFinitiViewModel> allItems = dbAccessor.Queryer<ProdFinitiViewModel>(config.MesConnectionString, config.ArticoliDbTable)
+            List<ArticoloViewModel> allArticles = dbAccessor.Queryer<ArticoloViewModel>(config.MesConnectionString, config.ArticoliDbTable)
                                                             .ToList();
 
-            ViewBag.allItems = allItems;
+            ViewBag.allArticles = allArticles;
+            //
+            List<string> itemsInStock = dbAccessor.Queryer<ProdFinitiViewModel>(config.ConnectionString, config.MagProdFinitiDbTable)
+                                                    .Select(c => c.Codice).ToList();
 
+            ViewBag.itemsInStock = itemsInStock;
             return View();
         }
 
         [HttpPost]
         public IActionResult InsertFiniti(ProdFinitiViewModel input)
         {
-            return View();
+            UserData userData = GetUserData();
+            input.CreatedBy = userData.UserName;
+            input.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
+            input.Enabled = "1";            
+
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+
+            List<ProdFinitiViewModel> prodotti = dbAccessor.Queryer<ProdFinitiViewModel>(config.ConnectionString, config.MagProdFinitiDbTable);
+            long max = 0;
+            if(prodotti.Count!=0)
+            {
+                max = (from l in prodotti select l.id).Max();
+            }
+             
+            input.id = max + 1;
+
+            int result = dbAccessor.Insertor<ProdFinitiViewModel>(config.ConnectionString, config.MagProdFinitiDbTable, input);
+
+
+            return View("MainFiniti");
         }
 
         #endregion
