@@ -104,15 +104,15 @@
                 <tr>
                     @if(!authorize)
                     {
-                        <td><input readonly style="width: 200px; background-color: @color;" type="text" asp-for=@Model[x].Codice class="form-control" value=@Model[x].Codice  readonly/></td>
-                        <td><input readonly style="width: 300px; background-color: @color;" type="text" asp-for=@Model[x].Descrizione class="form-control" value=@Model[x].Descrizione  readonly/></td>
-                        <td><input readonly style="width: 200px; background-color: @color;" type="text" asp-for=@Model[x].Cliente class="form-control" value=@Model[x].Cliente  readonly/></td>
-                        <td><input readonly style="width: 300px; background-color: @color;" type="text" asp-for=@Model[x].Note class="form-control" value=@Model[x].Note  readonly/></td>
-                        <td><input readonly id="quanita" style="width: 60px; text-align:center; background-color: @color;" type="text" asp-for=@Model[x].Quantita class="form-control" value=@Model[x].Quantita  readonly/></td>
-                        <td><input readonly style="width: 60px; text-align:center; background-color: @color;" type="text" asp-for=@Model[x].QuantitaMin class="form-control" value=@Model[x].QuantitaMin  readonly/></td>
+                        <td><input readonly style="width: 200px; background-color: @color;" type="text" asp-for=@Model[x].Codice class="form-control" value=@Model[x].Codice  /></td>
+                        <td><input readonly style="width: 300px; background-color: @color;" type="text" asp-for=@Model[x].Descrizione class="form-control" value=@Model[x].Descrizione  /></td>
+                        <td><input readonly style="width: 200px; background-color: @color;" type="text" asp-for=@Model[x].Cliente class="form-control" value=@Model[x].Cliente  /></td>
+                        <td><input readonly style="width: 300px; background-color: @color;" type="text" asp-for=@Model[x].Note class="form-control" value=@Model[x].Note  /></td>
+                        <td><input readonly id="quanita" style="width: 60px; text-align:center; background-color: @color;" type="text" asp-for=@Model[x].Quantita class="form-control" value=@Model[x].Quantita  /></td>
+                        <td><input readonly style="width: 60px; text-align:center; background-color: @color;" type="text" asp-for=@Model[x].QuantitaMin class="form-control" value=@Model[x].QuantitaMin  /></td>
                         <td> </td>
-                        <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].id class="form-control" value=@Model[x].id readonly /></td>
-                        <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].Enabled class="form-control" value=@Model[x].Enabled readonly/></td>
+                        <td readonly style="width: 10px;"><input type="hidden" asp-for=@Model[x].id class="form-control" value=@Model[x].id  /></td>
+                        <td readonly style="width: 10px;"><input type="hidden" asp-for=@Model[x].Enabled class="form-control" value=@Model[x].Enabled /></td>
                     }
                     else
                     {
@@ -122,9 +122,9 @@
                         <td><input readonly style="width: 300px; background-color: @color;" type="text" asp-for=@Model[x].Note class="form-control" value=@Model[x].Note  readonly/></td>
                         <td><input id="quantita" style="width: 60px; text-align:center; background-color: @color;" type="text" asp-for=@Model[x].Quantita class="form-control" value=@Model[x].Quantita /></td>
                         <td><input readonly style="width: 60px; text-align:center; background-color: @color;" type="text" asp-for=@Model[x].QuantitaMin class="form-control" value=@Model[x].QuantitaMin  readonly/></td>
-                        <td style="padding-left: 10px;"><a asp-controller="Programs" asp-action="ModPannello" asp-route-id="@Model[x].id"><i class="material-icons text-warning">&#xE254;</i></a></td>
+                        <td> </td>
                         <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].id class="form-control" value=@Model[x].id /></td>                         
-                        <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].Enabled class="form-control" value=@Model[x].Enabled readonly/></td>
+                        <td readonly style="width: 10px;"><input type="hidden" asp-for=@Model[x].Enabled class="form-control" value=@Model[x].Enabled readonly/></td>
                     }                   
                 </tr>
             }    

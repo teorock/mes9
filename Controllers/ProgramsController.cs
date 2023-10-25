@@ -1529,7 +1529,7 @@ namespace mes.Controllers
             int result = dbAccessor.Insertor<ProdFinitiViewModel>(config.ConnectionString, config.MagProdFinitiDbTable, input);
 
 
-            return View("MainFiniti");
+            return RedirectToAction("MainFiniti");
         }
 
         #endregion
