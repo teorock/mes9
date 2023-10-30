@@ -33,7 +33,7 @@
     select option:disabled {
         background-color: #c7c7c7;
         font-style: italic;
-}
+    }
 </style>
 
 <script>
@@ -126,6 +126,7 @@ function conferma() {
             <td>
                 <div class="select-editeable">
                     <select id="sel-materiale">
+                        <option value="" selected="selected"></option>
                         @foreach (var materiale in allMaterials)
                         {
                             <option value=@materiale.Nome>@materiale.Nome</option>
@@ -142,7 +143,7 @@ function conferma() {
             <td>
                 <div class="select-editeable">
                     <select id="sel-cliente">
-
+                        <option value="" selected="selected"></option>
                         @foreach (var customer in allCustomers)
                         {
                             <option value=@customer.Nome>@customer.Nome</option>
@@ -199,9 +200,10 @@ function conferma() {
 </table>
 
 <script>
+    $('#sel-materiale').val($("#sel-materiale option:first").val());
     //al cambiamento di sel-materiale, assegna il valore alla input type=hidden
     $("#sel-materiale").on('change', function() {
-        alert(this.value);
+        //alert(this.value);
         $("#Materiale").val(this.value);
     });
 

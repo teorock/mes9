@@ -134,7 +134,7 @@
             <td><input style="width: 160px;" type="text" asp-for=@Model.Codice class="form-control" id="Codice" required/></td>
             <td>
                 <div class="select-editeable">
-                    <select id="sel-materiale">
+                    <select id="sel-materiale">                        
                         @foreach (var materiale in allMaterials)
                         {
                             <option value=@materiale.Nome>@materiale.Nome</option>
