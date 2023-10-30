@@ -1030,9 +1030,13 @@ namespace mes.Controllers
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<RestoViewModel> Resti = dbAccessor.Queryer<RestoViewModel>(config.ConnectionString, config.RestiDbTable);
 
-            long max = (from l in Resti select l.id).Max();
-
-            newResto.id = max + 1;
+            if(Resti.Count() > 0)
+            {
+                long max = (from l in Resti select l.id).Max();
+                newResto.id = max + 1;
+            } else {
+                newResto.id = 0;
+            }
 
             int result = dbAccessor.Insertor<RestoViewModel>(config.ConnectionString, config.RestiDbTable, newResto);
 
