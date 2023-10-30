@@ -1,0 +1,120 @@
+@using mes.Models.ViewModels
+@using System.Collections.Generic
+@model List<RestoViewModel>
+@{
+    string userRoles = ViewBag.userRoles;
+    bool authorize = false;
+    if(userRoles.Contains("NuovoRuolo")||userRoles.Contains("root")) authorize=true;
+}
+
+<script>
+    function conferma() {
+            $("#frmAggResti").submit();
+        }
+
+</script>
+
+<!-- Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Aggiornamento dati</h5>
+      </div>
+      <div class="modal-body">
+        <p>confermi aggiornamento ?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">annulla</button>
+        <button type="button" class="btn btn-outline-success" onclick="conferma()">aggiorna</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal end -->
+
+<style>
+    table, th {
+        font-size: 16px;
+    }
+    input, td {
+        font-size: 14px;
+    }
+    input:hover {
+        background-color: gold;
+    }
+    input:focus {
+        background-color: lightyellow;
+    } 
+</style>
+
+<h2>gestione magazzino resti</h2>
+<br>
+<br>
+<h4>resti a magazzino</h4>
+<hr>
+@using(Html.BeginForm("AggiornaResti", "Programs", FormMethod.Post, new { name = "frmAggResti", id = "frmAggResti" }))
+{
+    <table>
+        <tr>
+            <th style="text-align: center;">codice</th> 
+            <th style="text-align: center;">materiale</th> 
+            <th style="text-align: center;">colore</th> 
+            <th style="text-align: center;">lunghezza</th> 
+            <th style="text-align: center;">larghezza</th> 
+            <th style="text-align: center;">spessore</th>
+            <th style="text-align: center;">quantità</th> 
+            <th style="text-align: center;">cliente</th> 
+            <th> </th>
+            <th> </th>
+        </tr>
+            @for(int x=0; x<Model.Count; x++)
+            {
+
+                <tr>
+                    @if(!authorize)
+                    {
+                        <td><input readonly style="width: 160px;" type="text" asp-for=@Model[x].Codice class="form-control" value=@Model[x].Codice  /></td>
+                        <td><input readonly style="width: 160px;" type="text" asp-for=@Model[x].Materiale class="form-control" value=@Model[x].Materiale  /></td>
+                        <td><input readonly style="width: 130px;" type="text" asp-for=@Model[x].Colore class="form-control" value=@Model[x].Colore  /></td>
+                        <td><input readonly style="width: 110px;" type="text" asp-for=@Model[x].Lunghezza class="form-control" value=@Model[x].Lunghezza  /></td>
+                        <td><input readonly style="width: 110px;" type="text" asp-for=@Model[x].Larghezza class="form-control" value=@Model[x].Larghezza  /></td>
+                        <td><input readonly style="width: 110px;" type="text" asp-for=@Model[x].Spessore class="form-control" value=@Model[x].Spessore  /></td>
+                        <td><input readonly style="width: 130px;" type="text" asp-for=@Model[x].Quantita class="form-control" value=@Model[x].Quantita  /></td>
+                        <td><input readonly style="width: 130px;" type="text" asp-for=@Model[x].Cliente class="form-control" value=@Model[x].Cliente  /></td>
+                        <td> </td>
+                        <td> </td>
+                        <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].id class="form-control" value=@Model[x].id readonly /></td>
+                        <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].Enabled class="form-control" value=@Model[x].Enabled readonly/></td>
+                    }
+                    else
+                    {
+                        <td><input style="width: 160px;" type="text" asp-for=@Model[x].Codice class="form-control" value=@Model[x].Codice readonly /></td>
+                        <td><input style="width: 160px;" type="text" asp-for=@Model[x].Materiale class="form-control" value=@Model[x].Materiale readonly /></td>
+                        <td><input style="width: 130px;" type="text" asp-for=@Model[x].Colore class="form-control" value=@Model[x].Colore readonly /></td>
+                        <td><input style="width: 110px;" type="text" asp-for=@Model[x].Lunghezza class="form-control" value=@Model[x].Lunghezza readonly /></td>
+                        <td><input style="width: 110px;" type="text" asp-for=@Model[x].Larghezza class="form-control" value=@Model[x].Larghezza readonly /></td>
+                        <td><input style="width: 110px;" type="text" asp-for=@Model[x].Spessore class="form-control" value=@Model[x].Spessore readonly /></td>
+                        <td><input style="width: 130px;" type="text" asp-for=@Model[x].Quantita class="form-control" value=@Model[x].Quantita  /></td>
+                        <td><input style="width: 130px;" type="text" asp-for=@Model[x].Cliente class="form-control" value=@Model[x].Cliente readonly /></td>
+                        <td style="padding-left: 25px;"><a asp-controller="Programs" asp-action="ModResto" asp-route-id="@Model[x].id"><i class="material-icons text-warning">&#xE254;</i></a></td>
+                        <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].id class="form-control" value=@Model[x].id /></td>
+                        <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].Enabled class="form-control" value=@Model[x].Enabled readonly/></td>                        
+                    }                   
+                </tr>
+            }    
+    </table>
+    <br>
+    <br>
+    @if(authorize)
+    {
+        <div class="row">
+            <div class="col-md-3 d-grid">
+                <button type="button" class="btn btn-outline-primary btn-block" data-bs-toggle="modal" data-bs-target="#confirmationModal">aggiorna</button>          
+            </div>
+            <div class="col-md-3 d-grid">
+                <a class="btn btn-outline-success btn-block" asp-controller="Programs" asp-action="InsertResto">crea nuovo resto</a>
+            </div>    
+        </div>  
+    }
+}

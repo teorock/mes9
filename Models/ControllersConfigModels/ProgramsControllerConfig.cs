@@ -19,5 +19,6 @@ namespace mes.Models.ControllersConfigModels
         public string AssegnaDbTable { get; set; }
         public string ClientiDbTable { get; set; }
         public string ArticoliDbTable { get; set; }
+        public string RestiDbTable { get; set; }
     }
 }

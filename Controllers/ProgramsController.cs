@@ -969,374 +969,447 @@ namespace mes.Controllers
 
         #endregion
 
-        #region ProductionCalendar
+        #region MagResti
 
         [HttpGet]
-        [Authorize(Roles = "root, CreaGantt")]
-        public IActionResult ProductionCalendar()
+        [Authorize(Roles = "root, PannelliScrivi, PannelliLeggi")]
+        public IActionResult MainResti()
         {
-            //calcola il nmero della settimanar;
-            int weekNumber = GetWeekNumber();          
-            ViewBag.WeekNumber = weekNumber;
-            //--------------------
-
             UserData userData = GetUserData();
             ViewBag.userRoles = userData.UserRoles;
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<ProductionCalendar> calendar = dbAccessor.Queryer<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable)
-                                                        .Where(x => x.Enabled =="1")
-                                                        .Where(y=> y.WeekNumber == weekNumber.ToString()).ToList();
+            List<RestoViewModel> Resti = dbAccessor.Queryer<RestoViewModel>(config.ConnectionString, config.RestiDbTable)
+                                            .Where(x => x.Enabled =="1").ToList();
 
-            ViewBag.ProductionList = calendar;
-            ViewBag.AssignedTo = GetGanttAssignementList();
+            return View(Resti);
 
-            return View();
-        }
-        [HttpPost]
-        [Authorize(Roles = "root, CreaGantt")]
-        public IActionResult ProductionCalendar(ProductionCalendar inputModel)
-        {
-            DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<ProductionCalendar> calendar = dbAccessor.Queryer<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable)
-                                            .Where(x => x.Enabled =="1").ToList();            
-            return View();
         }
 
-        [HttpPost]
-        [Authorize(Roles = "root, CreaGantt")]
-        public IActionResult InsertGanttTask(ProductionCalendar inputModel)
+        [Authorize(Roles = "root, PannelliScrivi")]
+        public IActionResult AggiornaResti(List<RestoViewModel> Resti)
         {
-            UserData userData = GetUserData();
-
-            inputModel.CreatedBy = userData.UserName;
-            inputModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
-            inputModel.Enabled = "1";
-            inputModel.CompletionPerc ="0";
-            inputModel.StartDate = ChangeDateFormat(inputModel.StartDate);
-            inputModel.EndDate = ChangeDateFormat(inputModel.EndDate);
-
-            DatabaseAccessor dbAccessor = new DatabaseAccessor();
-
-            List<ProductionCalendar> tasks = dbAccessor.Queryer<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable);      
-
-            long max = (from l in tasks select l.id).Max();
-
-            inputModel.id = max + 1;
-
-            int result = dbAccessor.Insertor<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable, inputModel);
-
-            return RedirectToAction("ProductionCalendar");
+                UserData userData = GetUserData();
+                DatabaseAccessor dbAccessor = new DatabaseAccessor();
+                foreach(RestoViewModel oneModel in Resti)
+                {
+                    oneModel.CreatedBy = userData.UserName;
+                    oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
+                    int result = dbAccessor.Updater<RestoViewModel>(config.ConnectionString, config.RestiDbTable, oneModel, oneModel.id);
+                }
+            return RedirectToAction("MainResti");
         }
 
         [HttpGet]
-        [Authorize(Roles = "root, CreaGantt")]
-        public IActionResult ModProdCalendar(long id)
+        [Authorize(Roles = "root, PannelliScrivi")]
+        public IActionResult InsertResto()
         {
-            int weekNumber = GetWeekNumber(); 
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            List<RestoViewModel> Resti = dbAccessor.Queryer<RestoViewModel>(config.ConnectionString, config.RestiDbTable)
+                                        .Where(x => x.Enabled=="1").ToList();            
+            ViewBag.RestiList = Resti;
+
+            ViewBag.allCustomers = GetCustomers();
+            
+            List<MaterialiPannelli> allMaterials = dbAccessor.Queryer<MaterialiPannelli>(config.ConnectionString, config.MatPannelliDbTable).ToList();
+            ViewBag.allMaterials = allMaterials;            
+
+            return View();
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "root, PannelliScrivi")]
+        public IActionResult InsertResto(RestoViewModel newResto)
+        {
+            UserData userData = GetUserData();
+
+            newResto.CreatedBy = userData.UserName;
+            newResto.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
+            newResto.Enabled = "1";            
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<ProductionCalendar> calendar = dbAccessor.Queryer<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable)
-                                        .Where(x => x.Enabled=="1")
-                                        .Where(y=> y.WeekNumber == weekNumber.ToString()).ToList();
-                                        
-            ViewBag.ProductionList = calendar;
-            
-            ProductionCalendar oneModel = calendar.Where(x => x.id == id).FirstOrDefault();
+            List<RestoViewModel> Resti = dbAccessor.Queryer<RestoViewModel>(config.ConnectionString, config.RestiDbTable);
 
-            List<string> assignments = dbAccessor.Queryer<ProductionCalendarAssignment>(config.ConnectionString, config.AssegnaDbTable).Select(x => x.AssignedTo).ToList();
+            long max = (from l in Resti select l.id).Max();
 
-            ViewBag.AssignedTo = assignments;
-            ViewBag.AssignedToIndex = assignments.IndexOf(oneModel.AssignedTo);
-            ViewBag.StartDate = ReverseDate(oneModel.StartDate); 
-            ViewBag.EndDate = ReverseDate(oneModel.EndDate);
+            newResto.id = max + 1;
+
+            int result = dbAccessor.Insertor<RestoViewModel>(config.ConnectionString, config.RestiDbTable, newResto);
+
+            return RedirectToAction("MainResti");
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "root, PannelliScrivi")]
+        public IActionResult ModResto(long id)
+        {
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            List<RestoViewModel> Resti = dbAccessor.Queryer<RestoViewModel>(config.ConnectionString, config.RestiDbTable)
+                                        .Where(x => x.Enabled=="1").ToList(); 
+            ViewBag.RestiList = Resti;
+            RestoViewModel oneModel = Resti.Where(x => x.id == id).FirstOrDefault();
+
+            ViewBag.allCustomers = GetCustomers();
+
+            List<MaterialiPannelli> allMaterials = dbAccessor.Queryer<MaterialiPannelli>(config.ConnectionString, config.MatPannelliDbTable)
+                                                            .ToList();
+            ViewBag.allMaterials = allMaterials;
+
+            //---------------------------------
+            List<string> materiali = allMaterials.Select(x=> x.Nome).ToList<string>();
+            List<string> customers = GetCustomers().Select(x => x.Nome).ToList<string>();
+
+            ViewBag.selectedMaterial = materiali.IndexOf(oneModel.Materiale);
+            ViewBag.selectedCustomer = customers.IndexOf(oneModel.Cliente);
 
             return View(oneModel);
         }
 
         [HttpPost]
-        [Authorize(Roles = "root, CreaGantt")]
-        private string ReverseDate(string inputDate)
+        [Authorize(Roles = "root, PannelliScrivi")]
+        public IActionResult ModResto(RestoViewModel oneModel)
         {
-            DateTime dateTime = Convert.ToDateTime(inputDate);
-
-            return $"{dateTime.Year}-{dateTime.Month}-{dateTime.Day}";
-        }
-
-        [HttpPost]
-        [Authorize(Roles = "root, CreaGantt")]
-        public IActionResult ModProdCalendar(ProductionCalendar oneModel)
-        {
-           ////write
             UserData userData = GetUserData();
 
             oneModel.CreatedBy = userData.UserName;
             oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
             //oneModel.Enabled = "1";
-            oneModel.CompletionPerc = "0";
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
 
-            int result = dbAccessor.Updater<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable, oneModel, oneModel.id);
+            int result = dbAccessor.Updater<RestoViewModel>(config.ConnectionString, config.RestiDbTable, oneModel, oneModel.id);
 
-            return RedirectToAction("ProductionCalendar");
-        }
-
-        [HttpGet]
-        [Authorize(Roles = "root, CreaGantt")]
-        public IActionResult DeliverGanttWeek(int week)
-        {
-            //che settimana è
-            //calcola il nmero della settimana          
-            int actualWeek = GetWeekNumber();
-            //--------------------            
-            //estrai tutti i dati di quella settimana
-            DatabaseAccessor dbAccessor = new DatabaseAccessor();  
-            List<ProductionCalendar> allTasks = dbAccessor.Queryer<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable)
-                                                .Where(y => y.Enabled =="1")
-                                                .Where(x => x.WeekNumber == actualWeek.ToString()).ToList();   
-            //compili il file
-            //string json2write = GanttCoreCompiler(allTasks);       
-
-            string destFile = @"c:\temp\master.json";
-            
-            GeneralPurpose genPurpose = new GeneralPurpose();
-            genPurpose.BackupCalendarFile(destFile);
-
-            WriteString2Disk(GanttCoreCompiler(allTasks), destFile);
-
-            //lo copi in zona pubblica
-
-            string server = "192.168.2.128";
-            string user = "Calendario";
-            string pwd = "C4l3nd4r10";
-
-            FtpService ftpService = new FtpService(server, user, pwd);
-
-            string res = ftpService.FtpUploadFile(destFile, Path.GetFileName(destFile));
-
-            return View();
-        }
-
-
-        private int GetWeekNumber()
-        {
-            DateTime dt = DateTime.Now;
-            Calendar cal = new CultureInfo("it-IT").Calendar;            
-            
-            return cal.GetWeekOfYear(dt, CalendarWeekRule.FirstDay, DayOfWeek.Monday) - 1;
-        }
-
-
-        public string GanttCoreCompiler(List<ProductionCalendar> inputList)
-        {       
-            List<Task> taskList = new List<Task>();
-            List<string> emptyAssigns = new List<string>();
-            
-            for(int x=0; x<inputList.Count; x++)
-            {
-                ProductionCalendar oneTask = inputList[x];
-                Task singleTask = new Task(){
-                    id=IdGenerator(x),
-                    name = oneTask.TaskName,
-                    progress = Convert.ToInt32(oneTask.CompletionPerc),
-                    progressByWorklog = false,
-                    description = oneTask.Description,
-                    code = oneTask.AssignedTo,
-                    level = 0,
-                    status = AssignColor(oneTask.AssignedTo),
-                    depends = "",
-                    start = DateConverter(oneTask.StartDate),
-                    duration =TaskDuration(oneTask.StartDate, oneTask.EndDate),
-                    end = DateConverter(oneTask.EndDate),
-                    startIsMilestone = false,
-                    endIsMilestone = false,
-                    collapsed = false,
-                    canWrite = false,
-                    canAdd=false,
-                    canDelete=false,
-                    canAddIssue=false,
-                    assigs=emptyAssigns             
-                };
-
-                taskList.Add(singleTask);
-            }
-                                    
-            string jsonString = JsonConvert.SerializeObject(taskList);
-            string head = "{\"tasks\":";
-            //string tail = ",\"selectedRow\":0,\"deletedTaskIds\":[],\"resources\":[{\"id\":\"tmp_1\",\"name\":\"RvB PLAST\"},{\"id\":\"tmp_2\",\"name\":\"RvB 1836\"},{\"id\":\"tmp_3\",\"name\":\"RvB 1536\"},{\"id\":\"tmp_4\",\"name\":\"Akron\"},{\"id\":\"tmp_5\",\"name\":\"EasyJet 512\"},{\"id\":\"tmp_6\",\"name\":\"EasyJet 480\"},{\"id\":\"tmp_7\",\"name\":\"SCM Record 100\"},{\"id\":\"tmp_8\",\"name\":\"Waterjet\"},{\"id\":\"tmp_9\",\"name\":\"Akron\"},{\"id\":\"tmp_10\",\"name\":\"Incollaggio\"},{\"id\":\"tmp_11\",\"name\":\"Montaggio\"}],\"roles\":[{\"id\":\"tmp_1\",\"name\":\"Project Manager\"},{\"id\":\"tmp_2\",\"name\":\"Worker\"},{\"id\":\"tmp_3\",\"name\":\"Stakeholder\"},{\"id\":\"tmp_4\",\"name\":\"Customer\"}],\"canAdd\":false,\"canWrite\":false,\"canWriteOnParent\":false,\"zoom\":\"1w\"}";
-            string tail = ",\"selectedRow\":0,\"deletedTaskIds\":[],\"resources\":[{\"id\":\"tmp_1\",\"name\":\"RvB PLAST\"},{\"id\":\"tmp_2\",\"name\":\"RvB 1836\"},{\"id\":\"tmp_3\",\"name\":\"RvB 1536\"},{\"id\":\"tmp_4\",\"name\":\"Akron\"},{\"id\":\"tmp_5\",\"name\":\"EasyJet 512\"},{\"id\":\"tmp_6\",\"name\":\"EasyJet 480\"},{\"id\":\"tmp_7\",\"name\":\"SCM Record 100\"},{\"id\":\"tmp_8\",\"name\":\"Waterjet\"},{\"id\":\"tmp_9\",\"name\":\"Akron\"},{\"id\":\"tmp_10\",\"name\":\"Incollaggio\"},{\"id\":\"tmp_11\",\"name\":\"Montaggio\"},{\"id\":\"tmp_12\",\"name\":\"Stefani X\"},{\"id\":\"tmp_13\",\"name\":\"Ufficio tecnico\"}],\"roles\":[{\"id\":\"tmp_1\",\"name\":\"Project Manager\"},{\"id\":\"tmp_2\",\"name\":\"Worker\"},{\"id\":\"tmp_3\",\"name\":\"Stakeholder\"},{\"id\":\"tmp_4\",\"name\":\"Customer\"}],\"canAdd\":false,\"canWrite\":false,\"canWriteOnParent\":false,\"zoom\":\"1w\"}";
-            
-            return head + jsonString + tail;
-        }
-
-
-        private double TaskDuration(string startDate, string endDate)
-        {
-            DateTime selectedStartDate = Convert.ToDateTime(startDate);
-            DateTime selectedEndDate = Convert.ToDateTime(endDate);
-
-            double dayLong = ((selectedEndDate - selectedStartDate).TotalDays + 1);
-
-            return dayLong;           
-        }
-
-        private double DateConverter(string inputDate)        
-        {
-            DateTime baseDate = new DateTime(1970, 1, 1);
-            DateTime selectedDate = Convert.ToDateTime(inputDate);
-
-            TimeSpan elapsedDate = selectedDate - baseDate;
-
-            double millisecDate = elapsedDate.TotalMilliseconds;
-
-            return millisecDate;     
-        }
-
-        private string AssignColor(string assigned2)
-        {
-            string status = "";
-
-            switch (assigned2)
-            {
-                case "RvB PLAST":
-                    status = "STATUS_SUSPENDED";
-                    break;
-
-                case "RvB 1536":
-                    status = "STATUS_ACTIVE";
-                    break;
-
-                case "RvB 1836":
-                    status = "STATUS_DONE";
-                    break;
-
-                case "WaterJet":
-                    status = "STATUS_UNDEFINED";
-                    break;
-
-                case "EasyJet 4.80":
-                    status = "STATUS_4";
-                    break;
-
-                case "Scm Record 100":
-                    status = "STATUS_2";
-                    break;
-
-                case "EasyJet 5.12":
-                    status = "STATUS_FAILED";
-                    break;
-
-                case "Akron":
-                    status = "STATUS_3";
-                    break;
-
-                case "Montaggio":
-                    status = "STATUS_1";
-                    break;
-
-                case "Incollaggio":
-                    status = "STATUS_WAITING";
-                    break;
-
-                case "Stefani X":
-                    status = "STATUS_5";
-                    break;
-
-                case "Ufficio tecnico":
-                    status = "STATUS_6";
-                    break;                    
-            }
-
-            return status;
-        }
-
-        private string IdGenerator(int x)
-        {
-            DateTime baseDate = new DateTime(1970, 1, 1);
-            DateTime dateTime = Convert.ToDateTime(DateTime.Now.ToShortDateString());
-
-            TimeSpan tempStartDate = dateTime - baseDate;
-
-            string startDate = tempStartDate.TotalMilliseconds.ToString();
-
-            return $"tmp_fk{startDate}_{x}";
-        }        
-
+            return RedirectToAction("MainResti");
+        }    
 
         #endregion
 
-        #region utilities
+        #region ProductionCalendar
 
-        private void WriteString2Disk (string inputString, string filename2Write)
-        {
-            using (StreamWriter sw = new StreamWriter(filename2Write))
-            {
-                sw.WriteLine(inputString);
-            }
-        }
+        //[HttpGet]
+        //[Authorize(Roles = "root, CreaGantt")]
+        //public IActionResult ProductionCalendar()
+        //{
+        //    //calcola il nmero della settimanar;
+        //    int weekNumber = GetWeekNumber();          
+        //    ViewBag.WeekNumber = weekNumber;
+        //    //--------------------
+//
+        //    UserData userData = GetUserData();
+        //    ViewBag.userRoles = userData.UserRoles;
+//
+        //    DatabaseAccessor dbAccessor = new DatabaseAccessor();
+        //    List<ProductionCalendar> calendar = dbAccessor.Queryer<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable)
+        //                                                .Where(x => x.Enabled =="1")
+        //                                                .Where(y=> y.WeekNumber == weekNumber.ToString()).ToList();
+//
+        //    ViewBag.ProductionList = calendar;
+        //    ViewBag.AssignedTo = GetGanttAssignementList();
+//
+        //    return View();
+        //}
+        //[HttpPost]
+        //[Authorize(Roles = "root, CreaGantt")]
+        //public IActionResult ProductionCalendar(ProductionCalendar inputModel)
+        //{
+        //    DatabaseAccessor dbAccessor = new DatabaseAccessor();
+        //    List<ProductionCalendar> calendar = dbAccessor.Queryer<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable)
+        //                                    .Where(x => x.Enabled =="1").ToList();            
+        //    return View();
+        //}
+//
+        //[HttpPost]
+        //[Authorize(Roles = "root, CreaGantt")]
+        //public IActionResult InsertGanttTask(ProductionCalendar inputModel)
+        //{
+        //    UserData userData = GetUserData();
+//
+        //    inputModel.CreatedBy = userData.UserName;
+        //    inputModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
+        //    inputModel.Enabled = "1";
+        //    inputModel.CompletionPerc ="0";
+        //    inputModel.StartDate = ChangeDateFormat(inputModel.StartDate);
+        //    inputModel.EndDate = ChangeDateFormat(inputModel.EndDate);
+//
+        //    DatabaseAccessor dbAccessor = new DatabaseAccessor();
+//
+        //    List<ProductionCalendar> tasks = dbAccessor.Queryer<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable);      
+//
+        //    long max = (from l in tasks select l.id).Max();
+//
+        //    inputModel.id = max + 1;
+//
+        //    int result = dbAccessor.Insertor<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable, inputModel);
+//
+        //    return RedirectToAction("ProductionCalendar");
+        //}
+//
+        //[HttpGet]
+        //[Authorize(Roles = "root, CreaGantt")]
+        //public IActionResult ModProdCalendar(long id)
+        //{
+        //    int weekNumber = GetWeekNumber(); 
+//
+        //    DatabaseAccessor dbAccessor = new DatabaseAccessor();
+        //    List<ProductionCalendar> calendar = dbAccessor.Queryer<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable)
+        //                                .Where(x => x.Enabled=="1")
+        //                                .Where(y=> y.WeekNumber == weekNumber.ToString()).ToList();
+        //                                
+        //    ViewBag.ProductionList = calendar;
+        //    
+        //    ProductionCalendar oneModel = calendar.Where(x => x.id == id).FirstOrDefault();
+//
+        //    List<string> assignments = dbAccessor.Queryer<ProductionCalendarAssignment>(config.ConnectionString, config.AssegnaDbTable).Select(x => x.AssignedTo).ToList();
+//
+        //    ViewBag.AssignedTo = assignments;
+        //    ViewBag.AssignedToIndex = assignments.IndexOf(oneModel.AssignedTo);
+        //    ViewBag.StartDate = ReverseDate(oneModel.StartDate); 
+        //    ViewBag.EndDate = ReverseDate(oneModel.EndDate);
+//
+        //    return View(oneModel);
+        //}
+//
+        //[HttpPost]
+        //[Authorize(Roles = "root, CreaGantt")]
+        //private string ReverseDate(string inputDate)
+        //{
+        //    DateTime dateTime = Convert.ToDateTime(inputDate);
+//
+        //    return $"{dateTime.Year}-{dateTime.Month}-{dateTime.Day}";
+        //}
+//
+        //[HttpPost]
+        //[Authorize(Roles = "root, CreaGantt")]
+        //public IActionResult ModProdCalendar(ProductionCalendar oneModel)
+        //{
+        //   ////write
+        //    UserData userData = GetUserData();
+//
+        //    oneModel.CreatedBy = userData.UserName;
+        //    oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
+        //    //oneModel.Enabled = "1";
+        //    oneModel.CompletionPerc = "0";
+//
+        //    DatabaseAccessor dbAccessor = new DatabaseAccessor();
+//
+        //    int result = dbAccessor.Updater<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable, oneModel, oneModel.id);
+//
+        //    return RedirectToAction("ProductionCalendar");
+        //}
+//
+        //[HttpGet]
+        //[Authorize(Roles = "root, CreaGantt")]
+        //public IActionResult DeliverGanttWeek(int week)
+        //{
+        //    //che settimana è
+        //    //calcola il nmero della settimana          
+        //    int actualWeek = GetWeekNumber();
+        //    //--------------------            
+        //    //estrai tutti i dati di quella settimana
+        //    DatabaseAccessor dbAccessor = new DatabaseAccessor();  
+        //    List<ProductionCalendar> allTasks = dbAccessor.Queryer<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable)
+        //                                        .Where(y => y.Enabled =="1")
+        //                                        .Where(x => x.WeekNumber == actualWeek.ToString()).ToList();   
+        //    //compili il file
+        //    //string json2write = GanttCoreCompiler(allTasks);       
+//
+        //    string destFile = @"c:\temp\master.json";
+        //    
+        //    GeneralPurpose genPurpose = new GeneralPurpose();
+        //    genPurpose.BackupCalendarFile(destFile);
+//
+        //    WriteString2Disk(GanttCoreCompiler(allTasks), destFile);
+//
+        //    //lo copi in zona pubblica
+//
+        //    string server = "192.168.2.128";
+        //    string user = "Calendario";
+        //    string pwd = "C4l3nd4r10";
+//
+        //    FtpService ftpService = new FtpService(server, user, pwd);
+//
+        //    string res = ftpService.FtpUploadFile(destFile, Path.GetFileName(destFile));
+//
+        //    return View();
+        //}
+//
+//
+        //private int GetWeekNumber()
+        //{
+        //    DateTime dt = DateTime.Now;
+        //    Calendar cal = new CultureInfo("it-IT").Calendar;            
+        //    
+        //    return cal.GetWeekOfYear(dt, CalendarWeekRule.FirstDay, DayOfWeek.Monday) - 1;
+        //}
+//
+//
+        //public string GanttCoreCompiler(List<ProductionCalendar> inputList)
+        //{       
+        //    List<Task> taskList = new List<Task>();
+        //    List<string> emptyAssigns = new List<string>();
+        //    
+        //    for(int x=0; x<inputList.Count; x++)
+        //    {
+        //        ProductionCalendar oneTask = inputList[x];
+        //        Task singleTask = new Task(){
+        //            id=IdGenerator(x),
+        //            name = oneTask.TaskName,
+        //            progress = Convert.ToInt32(oneTask.CompletionPerc),
+        //            progressByWorklog = false,
+        //            description = oneTask.Description,
+        //            code = oneTask.AssignedTo,
+        //            level = 0,
+        //            status = AssignColor(oneTask.AssignedTo),
+        //            depends = "",
+        //            start = DateConverter(oneTask.StartDate),
+        //            duration =TaskDuration(oneTask.StartDate, oneTask.EndDate),
+        //            end = DateConverter(oneTask.EndDate),
+        //            startIsMilestone = false,
+        //            endIsMilestone = false,
+        //            collapsed = false,
+        //            canWrite = false,
+        //            canAdd=false,
+        //            canDelete=false,
+        //            canAddIssue=false,
+        //            assigs=emptyAssigns             
+        //        };
+//
+        //        taskList.Add(singleTask);
+        //    }
+        //                            
+        //    string jsonString = JsonConvert.SerializeObject(taskList);
+        //    string head = "{\"tasks\":";
+        //    //string tail = ",\"selectedRow\":0,\"deletedTaskIds\":[],\"resources\":[{\"id\":\"tmp_1\",\"name\":\"RvB PLAST\"},{\"id\":\"tmp_2\",\"name\":\"RvB 1836\"},{\"id\":\"tmp_3\",\"name\":\"RvB 1536\"},{\"id\":\"tmp_4\",\"name\":\"Akron\"},{\"id\":\"tmp_5\",\"name\":\"EasyJet 512\"},{\"id\":\"tmp_6\",\"name\":\"EasyJet 480\"},{\"id\":\"tmp_7\",\"name\":\"SCM Record 100\"},{\"id\":\"tmp_8\",\"name\":\"Waterjet\"},{\"id\":\"tmp_9\",\"name\":\"Akron\"},{\"id\":\"tmp_10\",\"name\":\"Incollaggio\"},{\"id\":\"tmp_11\",\"name\":\"Montaggio\"}],\"roles\":[{\"id\":\"tmp_1\",\"name\":\"Project Manager\"},{\"id\":\"tmp_2\",\"name\":\"Worker\"},{\"id\":\"tmp_3\",\"name\":\"Stakeholder\"},{\"id\":\"tmp_4\",\"name\":\"Customer\"}],\"canAdd\":false,\"canWrite\":false,\"canWriteOnParent\":false,\"zoom\":\"1w\"}";
+        //    string tail = ",\"selectedRow\":0,\"deletedTaskIds\":[],\"resources\":[{\"id\":\"tmp_1\",\"name\":\"RvB PLAST\"},{\"id\":\"tmp_2\",\"name\":\"RvB 1836\"},{\"id\":\"tmp_3\",\"name\":\"RvB 1536\"},{\"id\":\"tmp_4\",\"name\":\"Akron\"},{\"id\":\"tmp_5\",\"name\":\"EasyJet 512\"},{\"id\":\"tmp_6\",\"name\":\"EasyJet 480\"},{\"id\":\"tmp_7\",\"name\":\"SCM Record 100\"},{\"id\":\"tmp_8\",\"name\":\"Waterjet\"},{\"id\":\"tmp_9\",\"name\":\"Akron\"},{\"id\":\"tmp_10\",\"name\":\"Incollaggio\"},{\"id\":\"tmp_11\",\"name\":\"Montaggio\"},{\"id\":\"tmp_12\",\"name\":\"Stefani X\"},{\"id\":\"tmp_13\",\"name\":\"Ufficio tecnico\"}],\"roles\":[{\"id\":\"tmp_1\",\"name\":\"Project Manager\"},{\"id\":\"tmp_2\",\"name\":\"Worker\"},{\"id\":\"tmp_3\",\"name\":\"Stakeholder\"},{\"id\":\"tmp_4\",\"name\":\"Customer\"}],\"canAdd\":false,\"canWrite\":false,\"canWriteOnParent\":false,\"zoom\":\"1w\"}";
+        //    
+        //    return head + jsonString + tail;
+        //}
+//
+//
+        //private double TaskDuration(string startDate, string endDate)
+        //{
+        //    DateTime selectedStartDate = Convert.ToDateTime(startDate);
+        //    DateTime selectedEndDate = Convert.ToDateTime(endDate);
+//
+        //    double dayLong = ((selectedEndDate - selectedStartDate).TotalDays + 1);
+//
+        //    return dayLong;           
+        //}
+//
+        //private double DateConverter(string inputDate)        
+        //{
+        //    DateTime baseDate = new DateTime(1970, 1, 1);
+        //    DateTime selectedDate = Convert.ToDateTime(inputDate);
+//
+        //    TimeSpan elapsedDate = selectedDate - baseDate;
+//
+        //    double millisecDate = elapsedDate.TotalMilliseconds;
+//
+        //    return millisecDate;     
+        //}
+//
+        //private string AssignColor(string assigned2)
+        //{
+        //    string status = "";
+//
+        //    switch (assigned2)
+        //    {
+        //        case "RvB PLAST":
+        //            status = "STATUS_SUSPENDED";
+        //            break;
+//
+        //        case "RvB 1536":
+        //            status = "STATUS_ACTIVE";
+        //            break;
+//
+        //        case "RvB 1836":
+        //            status = "STATUS_DONE";
+        //            break;
+//
+        //        case "WaterJet":
+        //            status = "STATUS_UNDEFINED";
+        //            break;
+//
+        //        case "EasyJet 4.80":
+        //            status = "STATUS_4";
+        //            break;
+//
+        //        case "Scm Record 100":
+        //            status = "STATUS_2";
+        //            break;
+//
+        //        case "EasyJet 5.12":
+        //            status = "STATUS_FAILED";
+        //            break;
+//
+        //        case "Akron":
+        //            status = "STATUS_3";
+        //            break;
+//
+        //        case "Montaggio":
+        //            status = "STATUS_1";
+        //            break;
+//
+        //        case "Incollaggio":
+        //            status = "STATUS_WAITING";
+        //            break;
+//
+        //        case "Stefani X":
+        //            status = "STATUS_5";
+        //            break;
+//
+        //        case "Ufficio tecnico":
+        //            status = "STATUS_6";
+        //            break;                    
+        //    }
+//
+        //    return status;
+        //}
+//
+        //private string IdGenerator(int x)
+        //{
+        //    DateTime baseDate = new DateTime(1970, 1, 1);
+        //    DateTime dateTime = Convert.ToDateTime(DateTime.Now.ToShortDateString());
+//
+        //    TimeSpan tempStartDate = dateTime - baseDate;
+//
+        //    string startDate = tempStartDate.TotalMilliseconds.ToString();
+//
+        //    return $"tmp_fk{startDate}_{x}";
+        //}        
+//
+//
+        //#endregion
+//
+        //#region utilities
+//
+        //private void WriteString2Disk (string inputString, string filename2Write)
+        //{
+        //    using (StreamWriter sw = new StreamWriter(filename2Write))
+        //    {
+        //        sw.WriteLine(inputString);
+        //    }
+        //}
+//
+        //private string ChangeDateFormat(string inputDate)
+        //{
+        //    string[] parts = inputDate.Split('-');
+//
+        //    return $"{parts[2]}/{parts[1]}/{parts[0]}";
+        //}
+//
+        //private List<string> GetGanttAssignementList()
+        //{
+        //    DatabaseAccessor dbAccessor = new DatabaseAccessor();
+//
+        //    List<ProductionCalendarAssignment> assigned = dbAccessor.Queryer<ProductionCalendarAssignment>(config.ConnectionString, config.AssegnaDbTable)
+        //                                                    .Where( x=> x.Enabled =="1").ToList();
+//
+        //    List<string> result = assigned.Select(y => y.AssignedTo).ToList();
+//
+        //    return result;
+        //}
 
-        private string ChangeDateFormat(string inputDate)
-        {
-            string[] parts = inputDate.Split('-');
-
-            return $"{parts[2]}/{parts[1]}/{parts[0]}";
-        }
-
-        private List<string> GetGanttAssignementList()
-        {
-            DatabaseAccessor dbAccessor = new DatabaseAccessor();
-
-            List<ProductionCalendarAssignment> assigned = dbAccessor.Queryer<ProductionCalendarAssignment>(config.ConnectionString, config.AssegnaDbTable)
-                                                            .Where( x=> x.Enabled =="1").ToList();
-
-            List<string> result = assigned.Select(y => y.AssignedTo).ToList();
-
-            return result;
-        }
-
-        private UserData GetUserData()
-        {
-            UserData userData = new UserData();
-
-            string userRoles="";
-            ViewBag.userId =  User.FindFirstValue(ClaimTypes.NameIdentifier); // will give the user's userId
-            userData.UserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            ViewBag.userName =  User.FindFirstValue(ClaimTypes.Name); // will give the user's userName
-            userData.UserName = User.FindFirstValue(ClaimTypes.Name);
-
-            IEnumerable<Claim> roles = User.FindAll(ClaimTypes.Role);
-            foreach(var role in roles)
-            {
-                userRoles += $"{role.Value}, ";
-            }
-            userData.UserRoles = userRoles;
-            
-            ViewBag.userEmail =  User.FindFirstValue(ClaimTypes.Email); // will give the user's Email
-            userData.UserEmail = User.FindFirstValue(ClaimTypes.Email);
-
-            ViewBag.userRoles= userRoles;                    
-
-            //ViewBag.address = HttpContext.Features.Get<IHttpConnectionFeature>().RemoteIpAddress.ToString().Substring(7);
-            ViewBag.address = HttpContext.Features.Get<IHttpConnectionFeature>().RemoteIpAddress.ToString();
-            ViewBag.port = HttpContext.Features.Get<IHttpConnectionFeature>().RemotePort.ToString();
-
-            //userData.UserIpAddress = HttpContext.Features.Get<IHttpConnectionFeature>().RemoteIpAddress.ToString().Substring(7);
-            userData.UserIpAddress = HttpContext.Features.Get<IHttpConnectionFeature>().RemoteIpAddress.ToString();
-            userData.UserIpPort = HttpContext.Features.Get<IHttpConnectionFeature>().RemotePort.ToString();
-
-            return userData;
-        }
-
-        private List<ClienteViewModel> GetCustomers()
-        {
-            DatabaseAccessor dbAccessor = new DatabaseAccessor();
-
-            List<ClienteViewModel> customers = dbAccessor.Queryer<ClienteViewModel>(config.MesConnectionString, config.ClientiDbTable);
-
-            return customers;
-        }
 
         #endregion
 
@@ -1530,6 +1603,53 @@ namespace mes.Controllers
 
 
             return RedirectToAction("MainFiniti");
+        }
+
+        #endregion
+
+        #region ControllerUtilities
+
+        private UserData GetUserData()
+        {
+            UserData userData = new UserData();
+
+            string userRoles="";
+            ViewBag.userId =  User.FindFirstValue(ClaimTypes.NameIdentifier); // will give the user's userId
+            userData.UserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            ViewBag.userName =  User.FindFirstValue(ClaimTypes.Name); // will give the user's userName
+            userData.UserName = User.FindFirstValue(ClaimTypes.Name);
+
+            IEnumerable<Claim> roles = User.FindAll(ClaimTypes.Role);
+            foreach(var role in roles)
+            {
+                userRoles += $"{role.Value}, ";
+            }
+            userData.UserRoles = userRoles;
+            
+            ViewBag.userEmail =  User.FindFirstValue(ClaimTypes.Email); // will give the user's Email
+            userData.UserEmail = User.FindFirstValue(ClaimTypes.Email);
+
+            ViewBag.userRoles= userRoles;                    
+
+            //ViewBag.address = HttpContext.Features.Get<IHttpConnectionFeature>().RemoteIpAddress.ToString().Substring(7);
+            ViewBag.address = HttpContext.Features.Get<IHttpConnectionFeature>().RemoteIpAddress.ToString();
+            ViewBag.port = HttpContext.Features.Get<IHttpConnectionFeature>().RemotePort.ToString();
+
+            //userData.UserIpAddress = HttpContext.Features.Get<IHttpConnectionFeature>().RemoteIpAddress.ToString().Substring(7);
+            userData.UserIpAddress = HttpContext.Features.Get<IHttpConnectionFeature>().RemoteIpAddress.ToString();
+            userData.UserIpPort = HttpContext.Features.Get<IHttpConnectionFeature>().RemotePort.ToString();
+
+            return userData;
+        }
+
+        private List<ClienteViewModel> GetCustomers()
+        {
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+
+            List<ClienteViewModel> customers = dbAccessor.Queryer<ClienteViewModel>(config.MesConnectionString, config.ClientiDbTable);
+
+            return customers;
         }
 
         #endregion
