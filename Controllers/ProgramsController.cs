@@ -18,6 +18,7 @@ using ServiceStack.Text;
 using System.Text;
 using AutoMapper;
 using mes.Models.ControllersConfigModels;
+using ServiceStack;
 
 namespace mes.Controllers
 {
@@ -74,32 +75,43 @@ namespace mes.Controllers
                 bordi = tmpBordi.Where(x => x.GetType().GetProperties().Any(p => {var value = p.GetValue(x).ToString().ToLower(); return value!=null && value.ToString().Contains(filter.ToLower());})).ToList();
             }
 
-            aggiornaBordi = true;
+            //aggiornaBordi = true;
             return View("MagBordi", bordi);
         }
 
         [Authorize(Roles = "root, MagMaterialiScrivi")]
         public IActionResult AggiornaBordi(List<BordoViewModel> bordi)
         {
-            if(aggiornaBordi)
-            {                
-                UserData userData = GetUserData();
-                DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            //if(aggiornaBordi)
+            //{                
+            UserData userData = GetUserData();
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
 
-                List<BordoViewModel> actualValues = dbAccessor.Queryer<BordoViewModel>(config.ConnectionString, config.BordiDbTable);
+            //estraggo i dati originali
+            List<BordoViewModel> actualValues = dbAccessor.Queryer<BordoViewModel>(config.ConnectionString, config.BordiDbTable)
+                                                            .Where(e => e.Enabled =="1")
+                                                            .ToList();
 
-                for(int x=0; x<bordi.Count; x++)
-                {                    
-                    if(!ObjectsPropertyValuesComparer(actualValues[x], bordi[x]))
-                    {
-                        BordoViewModel oneModel = bordi[x];
+            //estraggo solo quelli dove la quantità è camnbiata
+                List<BordoViewModel> changed = actualValues
+                    .Join(bordi,
+                    item1 => item1.id,
+                    item2 => item2.id,
+                    (item1, item2) => new {Item1 = item1, Item2 = item2})
+                    .Where(pair => pair.Item1.Quantita != pair.Item2.Quantita)
+                    //.ToList();
+                    .Select(pair => pair.Item2)
+                    .ToList();
 
-                        oneModel.CreatedBy = userData.UserName;
-                        oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
-                        int result = dbAccessor.Updater<BordoViewModel>(config.ConnectionString, config.BordiDbTable, oneModel, oneModel.id);
-                    }
-                }
-            }       
+            //scrivo solo quelli
+            foreach(BordoViewModel oneModel in changed)
+            {
+                oneModel.CreatedBy = userData.UserName;
+                oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
+                oneModel.Enabled ="1";
+                int result = dbAccessor.Updater<BordoViewModel>(config.ConnectionString, config.ColleDbTable, oneModel, oneModel.id);
+            }  
+            //}       
             return RedirectToAction("MagBordi");
         }
 
@@ -109,7 +121,7 @@ namespace mes.Controllers
         public IActionResult InsertBordo()
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<BordoViewModel> bordi = (List<BordoViewModel>)dbAccessor.Queryer<BordoViewModel>(config.ConnectionString, config.BordiDbTable)
+            List<BordoViewModel> bordi = dbAccessor.Queryer<BordoViewModel>(config.ConnectionString, config.BordiDbTable)
                                         .Where(x => x.Enabled=="1").ToList();            
             
             ViewBag.BordersList = bordi;
@@ -129,7 +141,7 @@ namespace mes.Controllers
             newBordo.Enabled = "1";            
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<BordoViewModel> checkBordo = (List<BordoViewModel>)dbAccessor.Queryer<BordoViewModel>(config.ConnectionString, config.BordiDbTable)
+            List<BordoViewModel> checkBordo = dbAccessor.Queryer<BordoViewModel>(config.ConnectionString, config.BordiDbTable)
                                                 .Where(x => x.Codice ==newBordo.Codice).ToList();
             if(checkBordo.Count > 0)
             {
@@ -138,7 +150,7 @@ namespace mes.Controllers
                 return Redirect(Url.Action("InsertBordo", "Programs"));
             }
 
-            List<BordoViewModel> bordi = (List<BordoViewModel>)dbAccessor.Queryer<BordoViewModel>(config.ConnectionString, config.BordiDbTable);      
+            List<BordoViewModel> bordi = dbAccessor.Queryer<BordoViewModel>(config.ConnectionString, config.BordiDbTable);      
 
             long max = (from l in bordi select l.id).Max();
 
@@ -154,7 +166,7 @@ namespace mes.Controllers
         public IActionResult ModBordo(long id)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<BordoViewModel> bordi = (List<BordoViewModel>)dbAccessor.Queryer<BordoViewModel>(config.ConnectionString, config.BordiDbTable)
+            List<BordoViewModel> bordi = dbAccessor.Queryer<BordoViewModel>(config.ConnectionString, config.BordiDbTable)
                                         .Where(x => x.Enabled=="1").ToList(); 
             ViewBag.bordersList = bordi;
             BordoViewModel oneModel = bordi.Where(x => x.id == id).FirstOrDefault();
@@ -179,22 +191,6 @@ namespace mes.Controllers
             return RedirectToAction("MagBordi");
         }        
 
-        //[HttpGet]
-        //[Authorize(Roles = "root, MagMaterialiScrivi")]
-        //public IActionResult CancBordo(long id)
-        //{
-        //    aggiornaBordi = false;
-        //    DatabaseAccessor dbAccessor = new DatabaseAccessor();            
-        //    //int result = dbAccessor.Delete(connectionString, "MagazzinoBordi", id);
-//
-        //    BordoViewModel bordo2disable = dbAccessor.Queryer<BordoViewModel>(config.connectionString, config.BordiDbTable.Where(x => x.id == id).FirstOrDefault();
-        //    bordo2disable.Enabled = "0";
-//
-        //    int result = dbAccessor.Updater<BordoViewModel>(config.connectionString, config.BordiDbTable, bordo2disable, id);
-        //    
-        //    Thread.Sleep(1000);
-        //    return RedirectToAction("MagBordi");
-        //}
 
         [HttpPost]
         [Authorize(Roles = "root, MagMaterialiScrivi")]
@@ -242,25 +238,38 @@ namespace mes.Controllers
             List<CollaViewModel> colle = (List<CollaViewModel>)dbAccessor.Queryer<CollaViewModel>(config.ConnectionString, config.ColleDbTable)
                                             .Where(x => x.Enabled == "1").ToList();
                         
-            aggiornaColle = true;
             return View(colle);
         }
 
         [Authorize(Roles = "root, MagMaterialiScrivi")]
         public IActionResult AggiornaColle(List<CollaViewModel> colle)
         {
-            if(aggiornaColle)
+            UserData userData = GetUserData();
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+
+            //estraggo dati originali
+            List<CollaViewModel> collePreviousState = dbAccessor.Queryer<CollaViewModel>(config.ConnectionString, config.ColleDbTable)
+                                                                .Where(x => x.Enabled == "1")
+                                                                .ToList();                
+            //estraggo solo quelli dove la quantità è camnbiata
+                List<CollaViewModel> changed = collePreviousState
+                    .Join(colle,
+                    item1 => item1.id,
+                    item2 => item2.id,
+                    (item1, item2) => new {Item1 = item1, Item2 = item2})
+                    .Where(pair => pair.Item1.Quantita != pair.Item2.Quantita)
+                    //.ToList();
+                    .Select(pair => pair.Item2)
+                    .ToList();
+            
+            //scrivo solo quelli
+            foreach(CollaViewModel oneModel in changed)
             {
-                UserData userData = GetUserData();
-                DatabaseAccessor dbAccessor = new DatabaseAccessor();
-                foreach(CollaViewModel oneModel in colle)
-                {
-                    oneModel.CreatedBy = userData.UserName;
-                    oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
-                    oneModel.Enabled ="1";
-                    int result = dbAccessor.Updater<CollaViewModel>(config.ConnectionString, config.ColleDbTable, oneModel, oneModel.id);
-                }
-            }            
+                oneModel.CreatedBy = userData.UserName;
+                oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
+                oneModel.Enabled ="1";
+                int result = dbAccessor.Updater<CollaViewModel>(config.ConnectionString, config.ColleDbTable, oneModel, oneModel.id);
+            }       
             return RedirectToAction("MagColle");            
         }
 
@@ -269,7 +278,7 @@ namespace mes.Controllers
         public IActionResult InsertColla()
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<CollaViewModel> colle = (List<CollaViewModel>)dbAccessor.Queryer<CollaViewModel>(config.ConnectionString, config.ColleDbTable)
+            List<CollaViewModel> colle = dbAccessor.Queryer<CollaViewModel>(config.ConnectionString, config.ColleDbTable)
                                             .Where(x => x.Enabled=="1").ToList();            
             
             ViewBag.GluesList = colle;
@@ -290,7 +299,7 @@ namespace mes.Controllers
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             //controllo che il codice prodotto non sia già inserito
-            List<CollaViewModel> checkColla = (List<CollaViewModel>)dbAccessor.Queryer<CollaViewModel>(config.ConnectionString, config.ColleDbTable)
+            List<CollaViewModel> checkColla = dbAccessor.Queryer<CollaViewModel>(config.ConnectionString, config.ColleDbTable)
                                                 .Where(x => x.Codice ==newColla.Codice).ToList();
             if(checkColla.Count > 0)
             {
@@ -300,7 +309,7 @@ namespace mes.Controllers
             }
 
 
-            List<CollaViewModel> colle = (List<CollaViewModel>)dbAccessor.Queryer<CollaViewModel>(config.ConnectionString, config.ColleDbTable);             
+            List<CollaViewModel> colle = dbAccessor.Queryer<CollaViewModel>(config.ConnectionString, config.ColleDbTable);             
 
             long max = (from l in colle select l.id).Max();
 
@@ -316,7 +325,7 @@ namespace mes.Controllers
         public IActionResult ModColla(long id)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<CollaViewModel> colle = (List<CollaViewModel>)dbAccessor.Queryer<CollaViewModel>(config.ConnectionString, config.ColleDbTable)
+            List<CollaViewModel> colle = dbAccessor.Queryer<CollaViewModel>(config.ConnectionString, config.ColleDbTable)
                                     .Where(x => x.Enabled=="1").ToList(); 
             ViewBag.gluesList = colle;
             CollaViewModel oneModel = colle.Where(x => x.id == id).FirstOrDefault();
@@ -428,10 +437,25 @@ namespace mes.Controllers
         [Authorize(Roles = "root, PannelliScrivi")]
         public IActionResult AggiornaPannello(List<PannelloViewModel> pannelli)
         {   
-            //comparo gli oggetti e aggiorno solo quelli modificati
             UserData userData = GetUserData();
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            foreach(PannelloViewModel oneModel in pannelli)
+            
+            List<PannelloViewModel> actualValues = dbAccessor.Queryer<PannelloViewModel>(config.ConnectionString, config.PannelliDbTable)
+                                                                .Where(e => e.Enabled =="1")
+                                                                .ToList();
+            //estraggo solo quelli dove la quantità è camnbiata
+                List<PannelloViewModel> changed = actualValues
+                    .Join(pannelli,
+                    item1 => item1.id,
+                    item2 => item2.id,
+                    (item1, item2) => new {Item1 = item1, Item2 = item2})
+                    .Where(pair => pair.Item1.Quantita != pair.Item2.Quantita)
+                    //.ToList();
+                    .Select(pair => pair.Item2)
+                    .ToList();
+
+            //scrivo solo i modificati
+            foreach(PannelloViewModel oneModel in changed)
             {
                 oneModel.CreatedBy = userData.UserName;
                 oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
@@ -553,21 +577,6 @@ namespace mes.Controllers
             return RedirectToAction("MagPannelli");
         }        
 
-        //[HttpGet]
-        //[Authorize(Roles = "root, PannelliScrivi")]
-        //public IActionResult CancPannello(long id)
-        //{
-        //    DatabaseAccessor dbAccessor = new DatabaseAccessor();            
-//
-        //    PannelloViewModel bordo2disable = dbAccessor.Queryer<PannelloViewModel>(config.connectionString, config.PannelliDbTable).Where(x => x.id == id).FirstOrDefault();
-        //    bordo2disable.Enabled = "0";
-//
-        //    int result = dbAccessor.Updater<PannelloViewModel>(config.connectionString, config.PannelliDbTable, bordo2disable, id);
-        //    
-        //    Thread.Sleep(1000);
-        //    return RedirectToAction("MagPannelli");
-        //}
-
         [HttpGet]
         [Authorize(Roles = "root, PannelliScrivi, MagMaterialiLeggi")]
         public IActionResult StampaEtichetta(long id)
@@ -636,7 +645,24 @@ namespace mes.Controllers
         {           
             UserData userData = GetUserData();
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            foreach(MatPannelloViewModel oneModel in MatPannelli)
+            //estraggo dati originali
+            List<MatPannelloViewModel> actualValues = dbAccessor.Queryer<MatPannelloViewModel>(config.ConnectionString, config.MatPannelliDbTable)
+                                                                .Where(e => e.Enabled =="1")
+                                                                .ToList();
+
+            //estraggo solo quelli dove la quantità è camnbiata
+                List<MatPannelloViewModel> changed = actualValues
+                    .Join(MatPannelli,
+                    item1 => item1.id,
+                    item2 => item2.id,
+                    (item1, item2) => new {Item1 = item1, Item2 = item2})
+                    .Where(pair => pair.Item1.Nome != pair.Item2.Nome)
+                    //.ToList();
+                    .Select(pair => pair.Item2)
+                    .ToList();
+
+
+            foreach(MatPannelloViewModel oneModel in changed)
             {
                 oneModel.CreatedBy = userData.UserName;
                 oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
@@ -724,21 +750,6 @@ namespace mes.Controllers
             return RedirectToAction("MainMatPannelli");
         }        
 
-        //[HttpGet]
-        //[Authorize(Roles = "root, PannelliScrivi")]
-        //public IActionResult CancMatPannello(long id)
-        //{
-        //    DatabaseAccessor dbAccessor = new DatabaseAccessor();            
-//
-        //    MatPannelloViewModel bordo2disable = dbAccessor.Queryer<MatPannelloViewModel>(connectionString, "MaterialiPannelli").Where(x => x.id == id).FirstOrDefault();
-        //    bordo2disable.Enabled = "0";
-//
-        //    int result = dbAccessor.Updater<MatPannelloViewModel>(connectionString,"MaterialiPannelli", bordo2disable, id);
-        //    
-        //    Thread.Sleep(1000);
-        //    return RedirectToAction("MainMatPannelli");
-        //}
-
         public IActionResult ExportCsvPannelli (string tipoMateriale)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
@@ -823,17 +834,33 @@ namespace mes.Controllers
         [Authorize(Roles = "root, MagSemilavoratiScrivi")]
         public IActionResult AggiornaSemilavorati(List<SemilavoratoViewModel> Semilavorati)
         {
-            if(aggiornaSemilavorati)
-            {                
-                UserData userData = GetUserData();
-                DatabaseAccessor dbAccessor = new DatabaseAccessor();
-                foreach(SemilavoratoViewModel oneModel in Semilavorati)
-                {
-                    oneModel.CreatedBy = userData.UserName;
-                    oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
-                    int result = dbAccessor.Updater<SemilavoratoViewModel>(config.ConnectionString, config.SemilavDbTable, oneModel, oneModel.id);
-                }
-            }       
+            //if(aggiornaSemilavorati)
+            //{                
+            UserData userData = GetUserData();
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+
+            //estraggo dati originali
+            List<SemilavoratoViewModel> actualValues = dbAccessor.Queryer<SemilavoratoViewModel>(config.ConnectionString, config.SemilavDbTable)
+                                            .Where(x => x.Enabled == "1").ToList();  
+
+            //estraggo solo quelli dove la quantità è camnbiata
+            List<SemilavoratoViewModel> changed = actualValues
+                .Join(Semilavorati,
+                item1 => item1.id,
+                item2 => item2.id,
+                (item1, item2) => new {Item1 = item1, Item2 = item2})
+                .Where(pair => pair.Item1.Quantita != pair.Item2.Quantita)
+                //.ToList();
+                .Select(pair => pair.Item2)
+                .ToList();
+
+            foreach(SemilavoratoViewModel oneModel in changed)
+            {
+                oneModel.CreatedBy = userData.UserName;
+                oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
+                int result = dbAccessor.Updater<SemilavoratoViewModel>(config.ConnectionString, config.SemilavDbTable, oneModel, oneModel.id);
+            }
+            //}       
             return RedirectToAction("MainSemilavorati");
         }
 
@@ -989,14 +1016,29 @@ namespace mes.Controllers
         [Authorize(Roles = "root, PannelliScrivi")]
         public IActionResult AggiornaResti(List<RestoViewModel> Resti)
         {
-                UserData userData = GetUserData();
-                DatabaseAccessor dbAccessor = new DatabaseAccessor();
-                foreach(RestoViewModel oneModel in Resti)
-                {
-                    oneModel.CreatedBy = userData.UserName;
-                    oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
-                    int result = dbAccessor.Updater<RestoViewModel>(config.ConnectionString, config.RestiDbTable, oneModel, oneModel.id);
-                }
+            UserData userData = GetUserData();
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+
+            //estraggo dati originali
+            List<RestoViewModel> actualValues = dbAccessor.Queryer<RestoViewModel>(config.ConnectionString, config.RestiDbTable)
+                                            .Where(x => x.Enabled == "1").ToList();                
+            //estraggo solo quelli dove la quantità è camnbiata
+            List<RestoViewModel> changed = actualValues
+                .Join(Resti,
+                item1 => item1.id,
+                item2 => item2.id,
+                (item1, item2) => new {Item1 = item1, Item2 = item2})
+                .Where(pair => pair.Item1.Quantita != pair.Item2.Quantita)
+                //.ToList();
+                .Select(pair => pair.Item2)
+                .ToList();
+
+            foreach(RestoViewModel oneModel in changed)
+            {
+                oneModel.CreatedBy = userData.UserName;
+                oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
+                int result = dbAccessor.Updater<RestoViewModel>(config.ConnectionString, config.RestiDbTable, oneModel, oneModel.id);
+            }
             return RedirectToAction("MainResti");
         }
 
@@ -1088,334 +1130,6 @@ namespace mes.Controllers
 
         #endregion
 
-        #region ProductionCalendar
-
-        //[HttpGet]
-        //[Authorize(Roles = "root, CreaGantt")]
-        //public IActionResult ProductionCalendar()
-        //{
-        //    //calcola il nmero della settimanar;
-        //    int weekNumber = GetWeekNumber();          
-        //    ViewBag.WeekNumber = weekNumber;
-        //    //--------------------
-//
-        //    UserData userData = GetUserData();
-        //    ViewBag.userRoles = userData.UserRoles;
-//
-        //    DatabaseAccessor dbAccessor = new DatabaseAccessor();
-        //    List<ProductionCalendar> calendar = dbAccessor.Queryer<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable)
-        //                                                .Where(x => x.Enabled =="1")
-        //                                                .Where(y=> y.WeekNumber == weekNumber.ToString()).ToList();
-//
-        //    ViewBag.ProductionList = calendar;
-        //    ViewBag.AssignedTo = GetGanttAssignementList();
-//
-        //    return View();
-        //}
-        //[HttpPost]
-        //[Authorize(Roles = "root, CreaGantt")]
-        //public IActionResult ProductionCalendar(ProductionCalendar inputModel)
-        //{
-        //    DatabaseAccessor dbAccessor = new DatabaseAccessor();
-        //    List<ProductionCalendar> calendar = dbAccessor.Queryer<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable)
-        //                                    .Where(x => x.Enabled =="1").ToList();            
-        //    return View();
-        //}
-//
-        //[HttpPost]
-        //[Authorize(Roles = "root, CreaGantt")]
-        //public IActionResult InsertGanttTask(ProductionCalendar inputModel)
-        //{
-        //    UserData userData = GetUserData();
-//
-        //    inputModel.CreatedBy = userData.UserName;
-        //    inputModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
-        //    inputModel.Enabled = "1";
-        //    inputModel.CompletionPerc ="0";
-        //    inputModel.StartDate = ChangeDateFormat(inputModel.StartDate);
-        //    inputModel.EndDate = ChangeDateFormat(inputModel.EndDate);
-//
-        //    DatabaseAccessor dbAccessor = new DatabaseAccessor();
-//
-        //    List<ProductionCalendar> tasks = dbAccessor.Queryer<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable);      
-//
-        //    long max = (from l in tasks select l.id).Max();
-//
-        //    inputModel.id = max + 1;
-//
-        //    int result = dbAccessor.Insertor<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable, inputModel);
-//
-        //    return RedirectToAction("ProductionCalendar");
-        //}
-//
-        //[HttpGet]
-        //[Authorize(Roles = "root, CreaGantt")]
-        //public IActionResult ModProdCalendar(long id)
-        //{
-        //    int weekNumber = GetWeekNumber(); 
-//
-        //    DatabaseAccessor dbAccessor = new DatabaseAccessor();
-        //    List<ProductionCalendar> calendar = dbAccessor.Queryer<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable)
-        //                                .Where(x => x.Enabled=="1")
-        //                                .Where(y=> y.WeekNumber == weekNumber.ToString()).ToList();
-        //                                
-        //    ViewBag.ProductionList = calendar;
-        //    
-        //    ProductionCalendar oneModel = calendar.Where(x => x.id == id).FirstOrDefault();
-//
-        //    List<string> assignments = dbAccessor.Queryer<ProductionCalendarAssignment>(config.ConnectionString, config.AssegnaDbTable).Select(x => x.AssignedTo).ToList();
-//
-        //    ViewBag.AssignedTo = assignments;
-        //    ViewBag.AssignedToIndex = assignments.IndexOf(oneModel.AssignedTo);
-        //    ViewBag.StartDate = ReverseDate(oneModel.StartDate); 
-        //    ViewBag.EndDate = ReverseDate(oneModel.EndDate);
-//
-        //    return View(oneModel);
-        //}
-//
-        //[HttpPost]
-        //[Authorize(Roles = "root, CreaGantt")]
-        //private string ReverseDate(string inputDate)
-        //{
-        //    DateTime dateTime = Convert.ToDateTime(inputDate);
-//
-        //    return $"{dateTime.Year}-{dateTime.Month}-{dateTime.Day}";
-        //}
-//
-        //[HttpPost]
-        //[Authorize(Roles = "root, CreaGantt")]
-        //public IActionResult ModProdCalendar(ProductionCalendar oneModel)
-        //{
-        //   ////write
-        //    UserData userData = GetUserData();
-//
-        //    oneModel.CreatedBy = userData.UserName;
-        //    oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
-        //    //oneModel.Enabled = "1";
-        //    oneModel.CompletionPerc = "0";
-//
-        //    DatabaseAccessor dbAccessor = new DatabaseAccessor();
-//
-        //    int result = dbAccessor.Updater<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable, oneModel, oneModel.id);
-//
-        //    return RedirectToAction("ProductionCalendar");
-        //}
-//
-        //[HttpGet]
-        //[Authorize(Roles = "root, CreaGantt")]
-        //public IActionResult DeliverGanttWeek(int week)
-        //{
-        //    //che settimana è
-        //    //calcola il nmero della settimana          
-        //    int actualWeek = GetWeekNumber();
-        //    //--------------------            
-        //    //estrai tutti i dati di quella settimana
-        //    DatabaseAccessor dbAccessor = new DatabaseAccessor();  
-        //    List<ProductionCalendar> allTasks = dbAccessor.Queryer<ProductionCalendar>(config.ConnectionString, config.CalendarioDbTable)
-        //                                        .Where(y => y.Enabled =="1")
-        //                                        .Where(x => x.WeekNumber == actualWeek.ToString()).ToList();   
-        //    //compili il file
-        //    //string json2write = GanttCoreCompiler(allTasks);       
-//
-        //    string destFile = @"c:\temp\master.json";
-        //    
-        //    GeneralPurpose genPurpose = new GeneralPurpose();
-        //    genPurpose.BackupCalendarFile(destFile);
-//
-        //    WriteString2Disk(GanttCoreCompiler(allTasks), destFile);
-//
-        //    //lo copi in zona pubblica
-//
-        //    string server = "192.168.2.128";
-        //    string user = "Calendario";
-        //    string pwd = "C4l3nd4r10";
-//
-        //    FtpService ftpService = new FtpService(server, user, pwd);
-//
-        //    string res = ftpService.FtpUploadFile(destFile, Path.GetFileName(destFile));
-//
-        //    return View();
-        //}
-//
-//
-        //private int GetWeekNumber()
-        //{
-        //    DateTime dt = DateTime.Now;
-        //    Calendar cal = new CultureInfo("it-IT").Calendar;            
-        //    
-        //    return cal.GetWeekOfYear(dt, CalendarWeekRule.FirstDay, DayOfWeek.Monday) - 1;
-        //}
-//
-//
-        //public string GanttCoreCompiler(List<ProductionCalendar> inputList)
-        //{       
-        //    List<Task> taskList = new List<Task>();
-        //    List<string> emptyAssigns = new List<string>();
-        //    
-        //    for(int x=0; x<inputList.Count; x++)
-        //    {
-        //        ProductionCalendar oneTask = inputList[x];
-        //        Task singleTask = new Task(){
-        //            id=IdGenerator(x),
-        //            name = oneTask.TaskName,
-        //            progress = Convert.ToInt32(oneTask.CompletionPerc),
-        //            progressByWorklog = false,
-        //            description = oneTask.Description,
-        //            code = oneTask.AssignedTo,
-        //            level = 0,
-        //            status = AssignColor(oneTask.AssignedTo),
-        //            depends = "",
-        //            start = DateConverter(oneTask.StartDate),
-        //            duration =TaskDuration(oneTask.StartDate, oneTask.EndDate),
-        //            end = DateConverter(oneTask.EndDate),
-        //            startIsMilestone = false,
-        //            endIsMilestone = false,
-        //            collapsed = false,
-        //            canWrite = false,
-        //            canAdd=false,
-        //            canDelete=false,
-        //            canAddIssue=false,
-        //            assigs=emptyAssigns             
-        //        };
-//
-        //        taskList.Add(singleTask);
-        //    }
-        //                            
-        //    string jsonString = JsonConvert.SerializeObject(taskList);
-        //    string head = "{\"tasks\":";
-        //    //string tail = ",\"selectedRow\":0,\"deletedTaskIds\":[],\"resources\":[{\"id\":\"tmp_1\",\"name\":\"RvB PLAST\"},{\"id\":\"tmp_2\",\"name\":\"RvB 1836\"},{\"id\":\"tmp_3\",\"name\":\"RvB 1536\"},{\"id\":\"tmp_4\",\"name\":\"Akron\"},{\"id\":\"tmp_5\",\"name\":\"EasyJet 512\"},{\"id\":\"tmp_6\",\"name\":\"EasyJet 480\"},{\"id\":\"tmp_7\",\"name\":\"SCM Record 100\"},{\"id\":\"tmp_8\",\"name\":\"Waterjet\"},{\"id\":\"tmp_9\",\"name\":\"Akron\"},{\"id\":\"tmp_10\",\"name\":\"Incollaggio\"},{\"id\":\"tmp_11\",\"name\":\"Montaggio\"}],\"roles\":[{\"id\":\"tmp_1\",\"name\":\"Project Manager\"},{\"id\":\"tmp_2\",\"name\":\"Worker\"},{\"id\":\"tmp_3\",\"name\":\"Stakeholder\"},{\"id\":\"tmp_4\",\"name\":\"Customer\"}],\"canAdd\":false,\"canWrite\":false,\"canWriteOnParent\":false,\"zoom\":\"1w\"}";
-        //    string tail = ",\"selectedRow\":0,\"deletedTaskIds\":[],\"resources\":[{\"id\":\"tmp_1\",\"name\":\"RvB PLAST\"},{\"id\":\"tmp_2\",\"name\":\"RvB 1836\"},{\"id\":\"tmp_3\",\"name\":\"RvB 1536\"},{\"id\":\"tmp_4\",\"name\":\"Akron\"},{\"id\":\"tmp_5\",\"name\":\"EasyJet 512\"},{\"id\":\"tmp_6\",\"name\":\"EasyJet 480\"},{\"id\":\"tmp_7\",\"name\":\"SCM Record 100\"},{\"id\":\"tmp_8\",\"name\":\"Waterjet\"},{\"id\":\"tmp_9\",\"name\":\"Akron\"},{\"id\":\"tmp_10\",\"name\":\"Incollaggio\"},{\"id\":\"tmp_11\",\"name\":\"Montaggio\"},{\"id\":\"tmp_12\",\"name\":\"Stefani X\"},{\"id\":\"tmp_13\",\"name\":\"Ufficio tecnico\"}],\"roles\":[{\"id\":\"tmp_1\",\"name\":\"Project Manager\"},{\"id\":\"tmp_2\",\"name\":\"Worker\"},{\"id\":\"tmp_3\",\"name\":\"Stakeholder\"},{\"id\":\"tmp_4\",\"name\":\"Customer\"}],\"canAdd\":false,\"canWrite\":false,\"canWriteOnParent\":false,\"zoom\":\"1w\"}";
-        //    
-        //    return head + jsonString + tail;
-        //}
-//
-//
-        //private double TaskDuration(string startDate, string endDate)
-        //{
-        //    DateTime selectedStartDate = Convert.ToDateTime(startDate);
-        //    DateTime selectedEndDate = Convert.ToDateTime(endDate);
-//
-        //    double dayLong = ((selectedEndDate - selectedStartDate).TotalDays + 1);
-//
-        //    return dayLong;           
-        //}
-//
-        //private double DateConverter(string inputDate)        
-        //{
-        //    DateTime baseDate = new DateTime(1970, 1, 1);
-        //    DateTime selectedDate = Convert.ToDateTime(inputDate);
-//
-        //    TimeSpan elapsedDate = selectedDate - baseDate;
-//
-        //    double millisecDate = elapsedDate.TotalMilliseconds;
-//
-        //    return millisecDate;     
-        //}
-//
-        //private string AssignColor(string assigned2)
-        //{
-        //    string status = "";
-//
-        //    switch (assigned2)
-        //    {
-        //        case "RvB PLAST":
-        //            status = "STATUS_SUSPENDED";
-        //            break;
-//
-        //        case "RvB 1536":
-        //            status = "STATUS_ACTIVE";
-        //            break;
-//
-        //        case "RvB 1836":
-        //            status = "STATUS_DONE";
-        //            break;
-//
-        //        case "WaterJet":
-        //            status = "STATUS_UNDEFINED";
-        //            break;
-//
-        //        case "EasyJet 4.80":
-        //            status = "STATUS_4";
-        //            break;
-//
-        //        case "Scm Record 100":
-        //            status = "STATUS_2";
-        //            break;
-//
-        //        case "EasyJet 5.12":
-        //            status = "STATUS_FAILED";
-        //            break;
-//
-        //        case "Akron":
-        //            status = "STATUS_3";
-        //            break;
-//
-        //        case "Montaggio":
-        //            status = "STATUS_1";
-        //            break;
-//
-        //        case "Incollaggio":
-        //            status = "STATUS_WAITING";
-        //            break;
-//
-        //        case "Stefani X":
-        //            status = "STATUS_5";
-        //            break;
-//
-        //        case "Ufficio tecnico":
-        //            status = "STATUS_6";
-        //            break;                    
-        //    }
-//
-        //    return status;
-        //}
-//
-        //private string IdGenerator(int x)
-        //{
-        //    DateTime baseDate = new DateTime(1970, 1, 1);
-        //    DateTime dateTime = Convert.ToDateTime(DateTime.Now.ToShortDateString());
-//
-        //    TimeSpan tempStartDate = dateTime - baseDate;
-//
-        //    string startDate = tempStartDate.TotalMilliseconds.ToString();
-//
-        //    return $"tmp_fk{startDate}_{x}";
-        //}        
-//
-//
-        //#endregion
-//
-        //#region utilities
-//
-        //private void WriteString2Disk (string inputString, string filename2Write)
-        //{
-        //    using (StreamWriter sw = new StreamWriter(filename2Write))
-        //    {
-        //        sw.WriteLine(inputString);
-        //    }
-        //}
-//
-        //private string ChangeDateFormat(string inputDate)
-        //{
-        //    string[] parts = inputDate.Split('-');
-//
-        //    return $"{parts[2]}/{parts[1]}/{parts[0]}";
-        //}
-//
-        //private List<string> GetGanttAssignementList()
-        //{
-        //    DatabaseAccessor dbAccessor = new DatabaseAccessor();
-//
-        //    List<ProductionCalendarAssignment> assigned = dbAccessor.Queryer<ProductionCalendarAssignment>(config.ConnectionString, config.AssegnaDbTable)
-        //                                                    .Where( x=> x.Enabled =="1").ToList();
-//
-        //    List<string> result = assigned.Select(y => y.AssignedTo).ToList();
-//
-        //    return result;
-        //}
-
-
-        #endregion
 
         #region dbLogger
 
@@ -1555,7 +1269,22 @@ namespace mes.Controllers
         {
             UserData userData = GetUserData();
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            foreach(ProdFinitiViewModel oneProd in prodFiniti)
+
+            //estraggo dati originali
+            List<ProdFinitiViewModel> actualValues = dbAccessor.Queryer<ProdFinitiViewModel>(config.ConnectionString, config.ColleDbTable)
+                                            .Where(x => x.Enabled == "1").ToList();                
+            //estraggo solo quelli dove la quantità è camnbiata
+            List<ProdFinitiViewModel> changed = actualValues
+                .Join(prodFiniti,
+                item1 => item1.id,
+                item2 => item2.id,
+                (item1, item2) => new {Item1 = item1, Item2 = item2})
+                .Where(pair => pair.Item1.Quantita != pair.Item2.Quantita)
+                //.ToList();
+                .Select(pair => pair.Item2)
+                .ToList();
+
+            foreach(ProdFinitiViewModel oneProd in changed)
             {
                 oneProd.CreatedBy = userData.UserName;
                 oneProd.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
