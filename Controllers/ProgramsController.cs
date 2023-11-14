@@ -1130,7 +1130,6 @@ namespace mes.Controllers
 
         #endregion
 
-
         #region dbLogger
 
         private bool ObjectsPropertyValuesComparer(object newObject, object referenceObject)
@@ -1161,8 +1160,8 @@ namespace mes.Controllers
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
 
             List<PannelloViewModel> pannelli = dbAccessor.Queryer<PannelloViewModel>(config.ConnectionString, config.PannelliDbTable)
-                                                            .Where(x => x.Enabled =="1")
-                                                            .Where( y => Convert.ToInt32(y.Quantita) <= Convert.ToInt32(y.QuantitaMin)).ToList();
+                                                        .Where(x => x.Enabled =="1")
+                                                        .Where( y => Convert.ToInt32(y.Quantita) <= Convert.ToInt32(y.QuantitaMin)).ToList();
 
             List<CollaViewModel> colle = dbAccessor.Queryer<CollaViewModel>(config.ConnectionString, config.ColleDbTable)
                                                     .Where(x => x.Enabled == "1")
@@ -1340,6 +1339,15 @@ namespace mes.Controllers
 
         #endregion
 
+        #region accessDashboard
+
+        //raccogli i dati per ogni sezione
+        // esponi aggiornamento più recente - utente - e quanti entries per quell'utente
+        // conteggio 
+
+
+        #endregion
+
         #region ControllerUtilities
 
         private UserData GetUserData()
@@ -1386,6 +1394,5 @@ namespace mes.Controllers
         }
 
         #endregion
-
     }
 }
