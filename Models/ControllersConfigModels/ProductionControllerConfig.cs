@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace mes.Models.ControllersConfigModels
 {
     public class ProductionControllerConfig
@@ -8,5 +10,6 @@ namespace mes.Models.ControllersConfigModels
         public string CustomersDbTable { get; set; }
         public string ArticlesListConnString { get; set; }
         public string ArticlesDbTable { get; set; }
+        public List<string> UsersDashTables { get; set; }
     }
 }

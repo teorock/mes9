@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Security.Claims;
@@ -9,6 +10,7 @@ using mes.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
@@ -33,6 +35,8 @@ namespace mes.Controllers
             _logger = logger;
         }
 
+    #region productionDashboard
+
         [HttpGet]
         [Authorize(Roles ="root")]
         public IActionResult Index()
@@ -46,8 +50,7 @@ namespace mes.Controllers
 
         [Authorize(Roles = "root")]
         public IActionResult AggiornaProductionRequests(List<ProductionRequest> ProductionRequests)
-        {
-               
+        {               
             UserData userData = GetUserData();
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             foreach(ProductionRequest oneModel in ProductionRequests)
@@ -98,7 +101,6 @@ namespace mes.Controllers
             return RedirectToAction("Index");
         }
 
-
         [HttpGet]
         [Authorize(Roles = "root")]
         public IActionResult ModProductionRequest(long id)
@@ -129,6 +131,143 @@ namespace mes.Controllers
             return RedirectToAction("MainProductionRequests");
         }  
 
+    #endregion
+
+    #region usersDashboard
+
+        public IActionResult MainUsers()
+        {
+            //faccio fare tutto qui-non riesco ad elaborare una architettura migliore
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            
+            List<UsersDashViewModel> model = new List<UsersDashViewModel>();
+
+            //prelevo i dati di tutte le tabelle
+            List<string> allUsersTables = config.UsersDashTables;
+            
+
+            foreach(string oneUsersTable in allUsersTables)
+            {
+                string ora = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
+                DateTime adesso = DateTime.ParseExact(ora, "dd/MM/yyyy-HH:mm", null);
+                
+                switch(oneUsersTable)
+                {
+                    case "MagazzinoBordi":
+                        List<BordoViewModel> allBordi = dbAccessor.Queryer<BordoViewModel>(config.ConnString, oneUsersTable);
+                        BordoViewModel lastUpBordo = allBordi.OrderByDescending(d => DateTime.ParseExact(d.CreatedOn, "dd/MM/yyyy-HH:mm", null))
+                                                            .FirstOrDefault();
+
+                        model.Add(new UsersDashViewModel(){
+                                UserName = lastUpBordo.CreatedBy,
+                                Table = oneUsersTable,
+                                LastUpdated = DateConverter(lastUpBordo.CreatedOn),
+                                UpdatedTimes = allBordi.Count(),
+                                Distance = GetWorkDuration(DateConverter(lastUpBordo.CreatedOn), DateTime.Now),
+                                ForeignId = lastUpBordo.id                        
+                        });                    
+                        break;
+
+                    case "MagazzinoColle":
+                        List<CollaViewModel> allColle = dbAccessor.Queryer<CollaViewModel>(config.ConnString, oneUsersTable);
+                        CollaViewModel lastUpColla = allColle.OrderByDescending(d => DateTime.ParseExact(d.CreatedOn, "dd/MM/yyyy-HH:mm", null))
+                                                        .FirstOrDefault();
+
+                        model.Add(new UsersDashViewModel(){
+                                UserName = lastUpColla.CreatedBy,
+                                Table = oneUsersTable,
+                                LastUpdated = DateConverter(lastUpColla.CreatedOn),
+                                UpdatedTimes = allColle.Count(),
+                                Distance = GetWorkDuration(DateConverter(lastUpColla.CreatedOn), DateTime.Now),
+                                ForeignId = lastUpColla.id                        
+                        });                      
+                        break;
+
+                    case "MagazzinoPannelli":
+                        List<PannelloViewModel> allPanels = dbAccessor.Queryer<PannelloViewModel>(config.ConnString, oneUsersTable);
+                        PannelloViewModel lastUpPanel = allPanels.OrderByDescending(d => DateTime.ParseExact(d.CreatedOn, "dd/MM/yyyy-HH:mm", null))
+                                                                .FirstOrDefault();
+                        if(lastUpPanel!=null)
+                        {
+                            model.Add(new UsersDashViewModel(){
+                                    UserName = lastUpPanel.CreatedBy,
+                                    Table = oneUsersTable,
+                                    LastUpdated = DateConverter(lastUpPanel.CreatedOn),
+                                    UpdatedTimes = allPanels.Count(),
+                                    Distance = GetWorkDuration(DateConverter(lastUpPanel.CreatedOn), DateTime.Now),
+                                    ForeignId = lastUpPanel.id                        
+                            });
+                        }
+                        break;
+
+                    case "MagazzinoProdottiFiniti":
+                        List<ProdFinitiViewModel> allFinishedProd = dbAccessor.Queryer<ProdFinitiViewModel>(config.ConnString, oneUsersTable);
+                        ProdFinitiViewModel lastUpFinish = allFinishedProd.OrderByDescending(d => DateTime.ParseExact(d.CreatedOn, "dd/MM/yyyy-HH:mm", null))
+                                                                .FirstOrDefault();
+
+                        model.Add(new UsersDashViewModel(){
+                                UserName = lastUpFinish.CreatedBy,
+                                Table = oneUsersTable,
+                                LastUpdated = DateConverter(lastUpFinish.CreatedOn),
+                                UpdatedTimes = allFinishedProd.Count(),
+                                Distance = GetWorkDuration(DateConverter(lastUpFinish.CreatedOn), DateTime.Now),
+                                ForeignId = lastUpFinish.id                        
+                        });                    
+                        break;
+
+                    case "MagazzinoResti":
+                        List<RestoViewModel> allResti = dbAccessor.Queryer<RestoViewModel>(config.ConnString, oneUsersTable);
+                        RestoViewModel lastUpResto = allResti.OrderByDescending(d => DateTime.ParseExact(d.CreatedOn, "dd/MM/yyyy-HH:mm", null))
+                                                            .FirstOrDefault();
+
+                        model.Add(new UsersDashViewModel(){
+                                UserName = lastUpResto.CreatedBy,
+                                Table = oneUsersTable,
+                                LastUpdated = DateConverter(lastUpResto.CreatedOn),
+                                UpdatedTimes = allResti.Count(),
+                                Distance = GetWorkDuration(DateConverter(lastUpResto.CreatedOn), DateTime.Now),
+                                ForeignId = lastUpResto.id                        
+                        });                    
+                        break;
+
+                    case "MagazzinoSemilavorati":
+                        List<SemilavoratoViewModel> allSemilav = dbAccessor.Queryer<SemilavoratoViewModel>(config.ConnString, oneUsersTable);
+                        SemilavoratoViewModel lastUpSemilav = allSemilav.OrderByDescending(d => DateTime.ParseExact(d.CreatedOn, "dd/MM/yyyy-HH:mm", null))
+                                                            .FirstOrDefault();
+
+                        model.Add(new UsersDashViewModel(){
+                                UserName = lastUpSemilav.CreatedBy,
+                                Table = oneUsersTable,
+                                LastUpdated = DateConverter(lastUpSemilav.CreatedOn),
+                                UpdatedTimes = allSemilav.Count(),
+                                Distance = GetWorkDuration(DateConverter(lastUpSemilav.CreatedOn), DateTime.Now),
+                                ForeignId = lastUpSemilav.id                        
+                        });                         
+                        break;
+                }
+            }
+
+            return View(model);
+        }
+
+        private TimeSpan GetWorkDuration(DateTime startDate, DateTime endDate)
+        {
+            TimeSpan workDuration = TimeSpan.Zero;
+            DateTime currentDate = startDate;
+
+            while (currentDate <= endDate)
+            {
+                if (currentDate.DayOfWeek != DayOfWeek.Saturday && currentDate.DayOfWeek != DayOfWeek.Sunday)
+                {
+                    workDuration = workDuration.Add(new TimeSpan(0, 1, 0));
+                }
+                currentDate = currentDate.AddMinutes(1);
+            }
+
+            return workDuration;
+        }
+
+    #endregion
 
         //----------------- logger
 
@@ -173,6 +312,23 @@ namespace mes.Controllers
 
             return userData;
         }
+
+        private DateTime DateConverter(string input)
+        {
+            string format="dd/MM/yyyy-HH:mm";
+            DateTime result;
+            
+            DateTime.TryParseExact(input, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out result);
+
+            return result;
+        }
+
+        //private DateTime DateConverterReverse(string input)
+        //{
+        //    int day = Convert.ToInt16(input.Substring(0,2));
+        //    int month = Convert
+        //    DateTime result = new DateTime()
+        //}
 
     }
 }

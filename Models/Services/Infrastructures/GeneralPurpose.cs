@@ -97,6 +97,7 @@ namespace mes.Models.Services.Infrastructures
 
             return result;
         }
+        
         public T DenullifyObj<T>(T obj)
         {
             var properties = typeof(T).GetProperties();
