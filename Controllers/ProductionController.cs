@@ -274,12 +274,29 @@ namespace mes.Controllers
 
     #region UserActivityReport
 
+        [HttpGet]
+        [Authorize(Roles ="root, MagMaterialiScrivi")]
         public IActionResult MainUsersActivities()
         {
+            UserData userData = GetUserData();
             List<UserDbMovementsViewModel> usersMovs = new List<UserDbMovementsViewModel>();
+            
+            
+            List<string>productionTables = config.DbMovementsDbFilter;
+            
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            //prelevo tutti i dati di accesso ai database
-            List<DbMovementsViewModel> allDbMovements = dbAccessor.Queryer<DbMovementsViewModel>(config.DbMovementsConnString, config.DbMovementsTable);
+            List<DbMovementsViewModel> allDbMovements = new List<DbMovementsViewModel>();
+            if(userData.UserRoles.Contains("root")||userData.UserRoles.Contains("allUserActivities"))
+            {
+                allDbMovements = dbAccessor.Queryer<DbMovementsViewModel>(config.DbMovementsConnString, config.DbMovementsTable);
+            }
+            else
+            {
+                allDbMovements = dbAccessor.Queryer<DbMovementsViewModel>(config.DbMovementsConnString, config.DbMovementsTable)
+                                            .Where(t => productionTables.Contains(t.DbTable))
+                                            .ToList();
+            }
+            
 
             //creo la lista di ogni user
             List<string> activeUsers = allDbMovements.Select(u => u.User).Distinct().ToList();
