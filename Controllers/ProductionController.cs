@@ -38,7 +38,7 @@ namespace mes.Controllers
     #region productionDashboard
 
         [HttpGet]
-        [Authorize(Roles ="root")]
+        [Authorize(Roles ="root, MagMaterialiScrivi")]
         public IActionResult Index()
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
@@ -48,7 +48,9 @@ namespace mes.Controllers
             return View(requests);
         }
 
-        [Authorize(Roles = "root")]
+
+        [HttpGet]
+        [Authorize(Roles ="root, MagMaterialiScrivi")]
         public IActionResult AggiornaProductionRequests(List<ProductionRequest> ProductionRequests)
         {               
             UserData userData = GetUserData();
@@ -64,7 +66,7 @@ namespace mes.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "root")]
+        [Authorize(Roles ="root, MagMaterialiScrivi")]
         public IActionResult InsertProductionRequest()
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
@@ -80,7 +82,7 @@ namespace mes.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "root")]
+        [Authorize(Roles ="root, MagMaterialiScrivi")]
         public IActionResult InsertProductionRequest(ProductionRequest newProductionRequest)
         {
             UserData userData = GetUserData();
@@ -102,7 +104,7 @@ namespace mes.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "root")]
+        [Authorize(Roles ="root, MagMaterialiScrivi")]
         public IActionResult ModProductionRequest(long id)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
@@ -115,7 +117,7 @@ namespace mes.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "root")]
+        [Authorize(Roles ="root, MagMaterialiScrivi")]
         public IActionResult ModProductionRequest(ProductionRequest oneModel)
         {
             UserData userData = GetUserData();
@@ -135,6 +137,8 @@ namespace mes.Controllers
 
     #region usersDashboard
 
+        [HttpGet]
+        [Authorize(Roles ="root, MagMaterialiScrivi")]
         public IActionResult MainUsers()
         {
             //faccio fare tutto qui-non riesco ad elaborare una architettura migliore
@@ -269,6 +273,11 @@ namespace mes.Controllers
 
     #endregion
 
+        public IActionResult Test()
+        {
+            return View();
+        }
+
         //----------------- logger
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
@@ -322,13 +331,6 @@ namespace mes.Controllers
 
             return result;
         }
-
-        //private DateTime DateConverterReverse(string input)
-        //{
-        //    int day = Convert.ToInt16(input.Substring(0,2));
-        //    int month = Convert
-        //    DateTime result = new DateTime()
-        //}
 
     }
 }
