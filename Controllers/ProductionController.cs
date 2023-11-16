@@ -149,7 +149,6 @@ namespace mes.Controllers
             //prelevo i dati di tutte le tabelle
             List<string> allUsersTables = config.UsersDashTables;
             
-
             foreach(string oneUsersTable in allUsersTables)
             {
                 string ora = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
@@ -270,6 +269,44 @@ namespace mes.Controllers
 
             return workDuration;
         }
+
+    #endregion
+
+    #region UserActivityReport
+
+        public IActionResult MainUsersActivities()
+        {
+            List<UserDbMovementsViewModel> usersMovs = new List<UserDbMovementsViewModel>();
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            //prelevo tutti i dati di accesso ai database
+            List<DbMovementsViewModel> allDbMovements = dbAccessor.Queryer<DbMovementsViewModel>(config.DbMovementsConnString, config.DbMovementsTable);
+
+            //creo la lista di ogni user
+            List<string> activeUsers = allDbMovements.Select(u => u.User).Distinct().ToList();
+            
+            foreach(string oneUser in activeUsers)
+            {
+                List<DbMovementsViewModel> userMovements = allDbMovements.Where(u => u.User == oneUser).ToList();
+                DbMovementsViewModel lastUserMov = new DbMovementsViewModel();
+
+                lastUserMov = userMovements.OrderByDescending(d => DateTime.ParseExact(d.ModifiedOn, "dd/MM/yyyy-HH:mm", null))
+                                            .FirstOrDefault();
+
+                string modDetails = $"{lastUserMov.DbName}/{lastUserMov.DbTable}/{lastUserMov.DbColumn}/{lastUserMov.OperationType} a)=> {lastUserMov.PreviousVal} to {lastUserMov.NewVal}|{lastUserMov.Code}|{lastUserMov.Description}";
+                
+                UserDbMovementsViewModel oneUserMovs = new UserDbMovementsViewModel() 
+                {
+                    User = oneUser,
+                    LastMod = DateTime.ParseExact(lastUserMov.ModifiedOn, "dd/MM/yyyy-HH:mm", null),
+                    TotalMods = userMovements.Count,
+                    LastModDetails = modDetails
+                };
+                usersMovs.Add(oneUserMovs);
+            }            
+
+            return View(usersMovs.OrderBy(n => n.TotalMods).ToList());
+        }
+
 
     #endregion
 

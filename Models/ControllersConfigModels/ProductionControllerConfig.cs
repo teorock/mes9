@@ -11,5 +11,8 @@ namespace mes.Models.ControllersConfigModels
         public string ArticlesListConnString { get; set; }
         public string ArticlesDbTable { get; set; }
         public List<string> UsersDashTables { get; set; }
+        public string DbMovementsConnString { get; set; }
+        public string DbMovementsTable { get; set; }
+        public List<string> DbMovementsDbFilter { get; set; }
     }
 }

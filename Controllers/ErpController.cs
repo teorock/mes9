@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading;
@@ -11,10 +10,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using iTextSharp.text;
-using iTextSharp.text.pdf;
-using System.IO;
-using System.Reflection;
 using mes.Models.InfrastructureModels;
 
 namespace mes.Controllers
@@ -49,7 +44,7 @@ namespace mes.Controllers
             ViewBag.userRoles = userData.UserRoles;
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<DipendenteViewModel> dipendenti = (List<DipendenteViewModel>)dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti")
+            List<DipendenteViewModel> dipendenti = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti")
                                             .Where(x => x.Enabled =="1")
                                             .OrderBy(y => y.Cognome).ToList();
 
@@ -79,7 +74,7 @@ namespace mes.Controllers
         public IActionResult InsertDipendente(string errorMessage)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<DipendenteViewModel> dipendenti = (List<DipendenteViewModel>)dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti")
+            List<DipendenteViewModel> dipendenti = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti")
                                         .Where(x => x.Enabled=="1")
                                         .OrderBy(y =>y.Cognome).ToList();            
             
@@ -109,7 +104,7 @@ namespace mes.Controllers
             newDipendente.Enabled = "1";            
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<DipendenteViewModel> dipendenti = (List<DipendenteViewModel>)dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti");
+            List<DipendenteViewModel> dipendenti = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti");
 
             long max = (from l in dipendenti select l.id).Max();
 
@@ -125,7 +120,7 @@ namespace mes.Controllers
         public IActionResult ModDipendente(long id)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<DipendenteViewModel> Dipendenti = (List<DipendenteViewModel>)dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti")
+            List<DipendenteViewModel> Dipendenti = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti")
                                         .Where(x => x.Enabled=="1").ToList(); 
             ViewBag.DipendentiList = Dipendenti;
             DipendenteViewModel oneModel = Dipendenti.Where(x => x.id == id).FirstOrDefault();
@@ -191,20 +186,20 @@ namespace mes.Controllers
 
             if(level1)
             {
-                permessi = (List<PermessoViewModel>)dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
-                                            .Where(x => x.Enabled =="1")
-                                            .Where(z => Convert.ToDateTime(z.DataInizio).Date >= Convert.ToDateTime($"{actualYear}-{actualMonth}-01").Date)
-                                            .Where(w => Convert.ToDateTime(w.DataFine).Date <= Convert.ToDateTime($"{actualYear}-{actualMonth}-{lastDay}").Date)                                            
-                                            .OrderBy(y => y.DataInizio).ToList();                                    
+                permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                                    .Where(x => x.Enabled =="1")
+                                    .Where(z => Convert.ToDateTime(z.DataInizio).Date >= Convert.ToDateTime($"{actualYear}-{actualMonth}-01").Date)
+                                    .Where(w => Convert.ToDateTime(w.DataFine).Date <= Convert.ToDateTime($"{actualYear}-{actualMonth}-{lastDay}").Date)                                            
+                                    .OrderBy(y => y.DataInizio).ToList();                                    
             }
             else if(userData.UserRoles.Contains("User"))
             {
-                permessi = (List<PermessoViewModel>)dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
-                                            .Where(x => x.Enabled =="1")
-                                            .Where(z => Convert.ToDateTime(z.DataInizio).Date >= Convert.ToDateTime($"{actualYear}-{actualMonth}-01").Date)
-                                            .Where(w => Convert.ToDateTime(w.DataFine).Date <= Convert.ToDateTime($"{actualYear}-{actualMonth}-{lastDay}").Date)                                               
-                                            .Where(y => y.Username == userData.UserName)
-                                            .OrderBy(y => y.DataInizio).ToList();
+                permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                                    .Where(x => x.Enabled =="1")
+                                    .Where(z => Convert.ToDateTime(z.DataInizio).Date >= Convert.ToDateTime($"{actualYear}-{actualMonth}-01").Date)
+                                    .Where(w => Convert.ToDateTime(w.DataFine).Date <= Convert.ToDateTime($"{actualYear}-{actualMonth}-{lastDay}").Date)                                               
+                                    .Where(y => y.Username == userData.UserName)
+                                    .OrderBy(y => y.DataInizio).ToList();
             }
 
             List<DipendenteViewModel> dipendenti = (List<DipendenteViewModel>)dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti");
@@ -265,49 +260,49 @@ namespace mes.Controllers
             {
                 if(filter.Tipologia == null && filter.Username !=null) //chiedo un dipendente ma non la tipologia(permesso, ferie, etc)
                 {
-                    permessi = (List<PermessoViewModel>)dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
-                                                .Where(x => x.Enabled =="1")
-                                                .Where(y => y.Username == filter.Username)
-                                                .Where(z => Convert.ToDateTime(z.DataInizio).Date >= Convert.ToDateTime(filter.DataInizio).Date)
-                                                .Where(w => Convert.ToDateTime(w.DataFine).Date <= Convert.ToDateTime(filter.DataFine).Date)
-                                                .ToList();
+                    permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                                        .Where(x => x.Enabled =="1")
+                                        .Where(y => y.Username == filter.Username)
+                                        .Where(z => Convert.ToDateTime(z.DataInizio).Date >= Convert.ToDateTime(filter.DataInizio).Date)
+                                        .Where(w => Convert.ToDateTime(w.DataFine).Date <= Convert.ToDateTime(filter.DataFine).Date)
+                                        .ToList();
                 }
                 else if(filter.Username != null && filter.Tipologia != null) // chiedo un dipendente e anche la tipologia di permesso/ferie
                 {                     
-                    permessi = (List<PermessoViewModel>)dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
-                                                .Where(x => x.Enabled =="1")
-                                                .Where(y => y.Username == filter.Username)
-                                                .Where(z => Convert.ToDateTime(z.DataInizio).Date >= Convert.ToDateTime(filter.DataInizio).Date)
-                                                .Where(j => Convert.ToDateTime(j.DataFine).Date <= Convert.ToDateTime(filter.DataFine).Date)
-                                                .Where(k => k.Tipologia == filter.Tipologia)
-                                                .ToList();
+                    permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                                        .Where(x => x.Enabled =="1")
+                                        .Where(y => y.Username == filter.Username)
+                                        .Where(z => Convert.ToDateTime(z.DataInizio).Date >= Convert.ToDateTime(filter.DataInizio).Date)
+                                        .Where(j => Convert.ToDateTime(j.DataFine).Date <= Convert.ToDateTime(filter.DataFine).Date)
+                                        .Where(k => k.Tipologia == filter.Tipologia)
+                                        .ToList();
                 }
                 else if(filter.Username == null && filter.Tipologia == null) //non chiedo nulla, restituisce tutta la lista di quel periodo
                 {                   
-                    permessi = (List<PermessoViewModel>)dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
-                                                .Where(x => x.Enabled =="1")
-                                                .Where(z => Convert.ToDateTime(z.DataInizio).Date >= Convert.ToDateTime(filter.DataInizio).Date)
-                                                .Where(y => Convert.ToDateTime(y.DataFine).Date <= Convert.ToDateTime(filter.DataFine).Date)                                                
-                                                .ToList();
+                    permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                                        .Where(x => x.Enabled =="1")
+                                        .Where(z => Convert.ToDateTime(z.DataInizio).Date >= Convert.ToDateTime(filter.DataInizio).Date)
+                                        .Where(y => Convert.ToDateTime(y.DataFine).Date <= Convert.ToDateTime(filter.DataFine).Date)                                                
+                                        .ToList();
                 }
                 else if(filter.Username == null && filter.Tipologia != null) // tutta la lista di quella tipologia per tutti
                 {
-                    permessi = (List<PermessoViewModel>)dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
-                                                .Where(x => x.Enabled =="1")
-                                                .Where(z => Convert.ToDateTime(z.DataInizio).Date >= Convert.ToDateTime(filter.DataInizio).Date)
-                                                .Where(y => Convert.ToDateTime(y.DataFine).Date <= Convert.ToDateTime(filter.DataFine).Date)
-                                                .Where(w => w.Tipologia == filter.Tipologia)
-                                                .ToList(); 
+                    permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                                        .Where(x => x.Enabled =="1")
+                                        .Where(z => Convert.ToDateTime(z.DataInizio).Date >= Convert.ToDateTime(filter.DataInizio).Date)
+                                        .Where(y => Convert.ToDateTime(y.DataFine).Date <= Convert.ToDateTime(filter.DataFine).Date)
+                                        .Where(w => w.Tipologia == filter.Tipologia)
+                                        .ToList(); 
                 }
             }
             else if(userData.UserRoles.Contains("User"))
             {
-                permessi = (List<PermessoViewModel>)dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
                                             .Where(x => x.Enabled =="1")
                                             .Where(y => y.Username == userData.UserName).ToList();
             }
 
-            List<DipendenteViewModel> dipendenti = (List<DipendenteViewModel>)dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti");
+            List<DipendenteViewModel> dipendenti = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti");
             DipendenteViewModel dipendente = dipendenti.Where(x => x.Username == userData.UserName).FirstOrDefault();
             ViewBag.dipendente = dipendente;
             ViewBag.dipendenti = dipendenti;
@@ -390,31 +385,31 @@ namespace mes.Controllers
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<PermessoViewModel> Permessi = new List<PermessoViewModel>();
             
-            List<DipendenteViewModel> dipendenti = (List<DipendenteViewModel>)dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti");
+            List<DipendenteViewModel> dipendenti = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti");
             DipendenteViewModel dipendente = dipendenti.Where(x => x.Username == userData.UserName).FirstOrDefault();
 
             // se utente, vede solo la lista dei suoi
             if(userData.UserRoles.Contains("root")||userData.UserRoles.Contains("PermessiMaster")||userData.UserRoles.Contains("PermessiSupervisor"))
             {
-                Permessi = (List<PermessoViewModel>)dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                Permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
                                             .Where(x => x.Enabled=="1")
                                             .OrderBy(y => y.DataInizio).ToList(); 
             } else if (userData.UserRoles.Contains("User"))
             {
-                Permessi = (List<PermessoViewModel>)dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                Permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
                                             .Where(x => x.Enabled=="1")
                                             .Where(y => y.Username == userData.UserName)
                                             .OrderBy(z => z.DataInizio).ToList(); 
             } else if(userData.UserRoles.Contains("PermessiInsert"))
             {
-                List<DipendenteViewModel> allDipendenti = (List<DipendenteViewModel>)dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti");
+                List<DipendenteViewModel> allDipendenti = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti");
                 ViewBag.allDipendenti = allDipendenti.OrderBy(x => x.Cognome);
             }
             
             ViewBag.Dipendente = dipendente;
             ViewBag.PermessiList = Permessi;
             ViewBag.UserRoles = userData.UserRoles;
-            ViewBag.allDipendenti = (List<DipendenteViewModel>)dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti");
+            ViewBag.allDipendenti = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti");
             ViewBag.userName = userData.UserName;
 
             List<string> tipologie = new List<string>();
@@ -447,12 +442,12 @@ namespace mes.Controllers
             //ottieni il nome utente per lo user che richiede l'inserimento            
             //se il nome nel model != nome dello user => ricerca lo username del dipendente per il quale viene chiesto il permesso
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            DipendenteViewModel intermediaryUser = (DipendenteViewModel) dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti")
+            DipendenteViewModel intermediaryUser = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti")
                                                                     .Where(x => x.Username == userData.UserName).FirstOrDefault();
 
             if(intermediaryUser.Nome != newPermesso.Nome) 
             {
-                DipendenteViewModel applicantUser = (DipendenteViewModel) dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti")
+                DipendenteViewModel applicantUser = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti")
                                                                         .Where(x => x.Nome == newPermesso.Nome)
                                                                         .Where(y => y.Cognome == newPermesso.Cognome).FirstOrDefault();
                 newPermesso.Username = applicantUser.Username;
@@ -460,7 +455,7 @@ namespace mes.Controllers
             else newPermesso.Username = userData.UserName;
             
             newPermesso.Enabled = "1";            
-            List<PermessoViewModel> Permessi = (List<PermessoViewModel>)dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi");
+            List<PermessoViewModel> Permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi");
 
             long max = (from l in Permessi select l.id).Max();
             newPermesso.id = max + 1;
@@ -489,10 +484,10 @@ namespace mes.Controllers
             List<PermessoViewModel> Permessi = new List<PermessoViewModel>();
             if(authorize)
             {
-                Permessi = (List<PermessoViewModel>)dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                Permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
                                             .Where(x => x.Enabled=="1").ToList(); 
             } else {
-                Permessi = (List<PermessoViewModel>)dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                Permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
                                             .Where(u => u.Username == userData.UserName)
                                             .Where(x => x.Enabled=="1").ToList();                 
             }
@@ -530,7 +525,7 @@ namespace mes.Controllers
             oneModel.IntervalloTempo = genPurpose.PermissionTimeSpan(oneModel.DataInizio, oneModel.DataFine, oneModel.Tipologia);
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<PermessoViewModel> actualPermessi = (List<PermessoViewModel>)dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+            List<PermessoViewModel> actualPermessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
                                         .Where(x => x.Enabled =="1").ToList();           
 
             int result = dbAccessor.Updater<PermessoViewModel>(connectionString,"Permessi", oneModel, oneModel.id);
@@ -578,7 +573,7 @@ namespace mes.Controllers
             string hour = inputString.Substring(11,2);
             string minutes = inputString.Substring(14,2);
 
-            return $"{day}/{month}/{year} {hour}:{minutes}";
+            return $"{day}/{month}/{year}-{hour}:{minutes}";
         }        
         
         private bool IsValidEmail(string email)
@@ -597,22 +592,22 @@ namespace mes.Controllers
             }            
         }
 
-        [HttpGet]
-        [Authorize(Roles = "root, PermessiMaster")]
-        public IActionResult CancPermesso(long id)
-        {
-            aggiornaPermessi = false;
-            DatabaseAccessor dbAccessor = new DatabaseAccessor();            
-            //int result = dbAccessor.Delete(connectionString, "Permessi", id);
-
-            PermessoViewModel Permesso2disable = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi").Where(x => x.id == id).FirstOrDefault();
-            Permesso2disable.Enabled = "0";
-
-            int result = dbAccessor.Updater<PermessoViewModel>(connectionString,"Permessi", Permesso2disable, id);
-            
-            Thread.Sleep(1000);
-            return RedirectToAction("MainPermessi");
-        }
+        //[HttpGet]
+        //[Authorize(Roles = "root, PermessiMaster")]
+        //public IActionResult CancPermesso(long id)
+        //{
+        //    aggiornaPermessi = false;
+        //    DatabaseAccessor dbAccessor = new DatabaseAccessor();            
+        //    //int result = dbAccessor.Delete(connectionString, "Permessi", id);
+//
+        //    PermessoViewModel Permesso2disable = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi").Where(x => x.id == id).FirstOrDefault();
+        //    Permesso2disable.Enabled = "0";
+//
+        //    int result = dbAccessor.Updater<PermessoViewModel>(connectionString,"Permessi", Permesso2disable, id);
+        //    
+        //    Thread.Sleep(1000);
+        //    return RedirectToAction("MainPermessi");
+        //}
 
         public async Task<IActionResult> GeneratePdf(List<PermessoViewModel> objectList, string username)
         {
@@ -636,21 +631,21 @@ namespace mes.Controllers
             // prendere la lista di tutti i 
             List<UsersRolesNotify> allUsers = GetCompleteUsersList();
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<DipendenteViewModel> dipendenti = (List<DipendenteViewModel>)dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti");
+            List<DipendenteViewModel> dipendenti = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti");
 
             List<DipendenteViewModel> dipPermMaster = dipendenti.Where(x => x.Ruolo.Contains("PermMaster")).ToList();
 
             return dipPermMaster;
         }
 
-        private List<string> GetPermMasterNorifyAddress(List<UsersRolesNotify> allUsersRolesNotify)
-        {
-            List<string> notifyList = new List<string>();
-
-            //notifyList = allUsersRolesNotify.Where(x => x.UserRoles.ToString().Contains)
-
-            return notifyList;
-        }
+        //private List<string> GetPermMasterNorifyAddress(List<UsersRolesNotify> allUsersRolesNotify)
+        //{
+        //    List<string> notifyList = new List<string>();
+//
+        //    //notifyList = allUsersRolesNotify.Where(x => x.UserRoles.ToString().Contains)
+//
+        //    return notifyList;
+        //}
 
         #endregion
 
