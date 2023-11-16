@@ -292,7 +292,7 @@ namespace mes.Controllers
                 lastUserMov = userMovements.OrderByDescending(d => DateTime.ParseExact(d.ModifiedOn, "dd/MM/yyyy-HH:mm", null))
                                             .FirstOrDefault();
 
-                string modDetails = $"{lastUserMov.DbName}/{lastUserMov.DbTable}/{lastUserMov.DbColumn}/{lastUserMov.OperationType} a)=> {lastUserMov.PreviousVal} to {lastUserMov.NewVal}|{lastUserMov.Code}|{lastUserMov.Description}";
+                string modDetails = $"{Path.GetFileNameWithoutExtension(lastUserMov.DbName)}/{lastUserMov.DbTable}/{lastUserMov.DbColumn}/{lastUserMov.OperationType} da {lastUserMov.PreviousVal} a {lastUserMov.NewVal}|{lastUserMov.Code}|{lastUserMov.Description}";
                 
                 UserDbMovementsViewModel oneUserMovs = new UserDbMovementsViewModel() 
                 {
