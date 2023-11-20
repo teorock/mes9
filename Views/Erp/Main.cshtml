@@ -4,14 +4,32 @@
 }
 
 <div class="container">
+    <h2>gestione pianificazione</h2>
     <br>
     <br>
-    
+    <br>    
     <div class="row">
-
-        <div class="col-md-4 d-grid">
-            <a class="btn btn-primary btn-lg btn-block" asp-controller="Erp" asp-action="MainPermessi">Permessi e ferie</a>
+        <div class="col-md-1" align="center">
+            <i class="fa-solid fa-calendar-days fa-2xl"></i>
         </div>
-
+        <div class="col-md-4">
+            <h5>calendario macchine</h5>
+        </div>
+        <div class="col-md-3 d-grid">
+            <a class="btn btn-outline-primary btn-block" asp-controller="Test" asp-action="Index" >calendario produzione</a>
+        </div>
+    </div>
+    <hr>
+    <div class="row">
+        <div class="col-md-1" align="center">
+            <i class="fa-solid fa-calendar-check fa-2xl"></i>
+        </div>
+        <div class="col-md-4">
+            <h5>permessi e ferie</h5>
+        </div>
+        <div class="col-md-3 d-grid">
+            <a class="btn btn-outline-primary btn-block" asp-controller="Erp" asp-action="MainPermessi" >permessi e ferie</a>
+        </div>
     </div>
 </div>
+

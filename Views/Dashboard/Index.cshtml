@@ -1,0 +1,63 @@
+<h2>dashboard disponibili</h2>
+<br>
+<br>
+<br>
+<div class="row">
+    <div class="col-md-1" align="center">
+        <i class="fa-solid fa-industry fa-2xl"></i>
+    </div>
+    <div class="col-md-4">
+        <h5>stato macchine</h5>
+    </div>
+    <div class="col-md-3 d-grid">
+        <a class="btn btn-outline-success btn-block" asp-controller="Mes" asp-action="ProductionStatus" >stato produzione</a>
+    </div>
+</div>
+<hr>
+<div class="row">
+    <div class="col-md-1" align="center">
+        <i class="fa-solid fa-boxes-stacked fa-2xl"></i>
+    </div>
+    <div class="col-md-4">
+        <h5>dashboard materiali</h5>
+    </div>
+    <div class="col-md-3 d-grid">
+        <a class="btn btn-outline-success btn-block" asp-controller="Dashboard" asp-action="DashboardMateriali" >dashboard materiali</a>
+    </div>
+</div>
+<hr>
+<div class="row">
+    <div class="col-md-1" align="center">
+        <i class="fa-solid fa-users fa-2xl"></i>
+    </div>
+    <div class="col-md-4">
+        <h5>aggiornamento dati da utenti</h5>
+    </div>
+    <div class="col-md-3 d-grid">
+        <a class="btn btn-outline-success btn-block" asp-controller="Production" asp-action="MainUsers" >aggiornamento dati da utenti</a>
+    </div>
+</div>
+<hr>
+<div class="row">
+    <div class="col-md-1" align="center">
+        <i class="fa-solid fa-square-poll-vertical fa-2xl"></i>
+    </div>
+    <div class="col-md-4">
+        <h5>dashboard utilizzatori</h5>
+    </div>
+    <div class="col-md-3 d-grid">
+        <a class="btn btn-outline-success btn-block" asp-controller="Production" asp-action="MainUsersActivities" >attività utilizzatori</a>
+    </div>
+</div>
+<hr>
+<div class="row">
+    <div class="col-md-1" align="center">
+        <i class="bi bi-wrench" style="font-size:28px;padding-top:-10px;"></i>
+    </div>
+    <div class="col-md-4">
+        <h5>dashboard commesse</h5>
+    </div>
+    <div class="col-md-3 d-grid">
+        <a class="btn btn-outline-success btn-block" asp-controller="Production" asp-action="Index" >richieste produzione</a>
+    </div>
+</div>
