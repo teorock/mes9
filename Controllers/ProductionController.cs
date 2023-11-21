@@ -10,7 +10,6 @@ using mes.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
@@ -60,8 +59,8 @@ namespace mes.Controllers
                 oneModel.CreatedBy = userData.UserName;
                 oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
                 int result = dbAccessor.Updater<ProductionRequest>(config.ConnString, config.DbTable, oneModel, oneModel.id);
-            }
-      
+            }            
+
             return RedirectToAction("MainProductionRequests");
         }
 
@@ -70,13 +69,18 @@ namespace mes.Controllers
         public IActionResult InsertProductionRequest()
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<ProductionRequest> ProductionRequests = (List<ProductionRequest>)dbAccessor.Queryer<ProductionRequest>(config.ConnString, config.DbTable)
+            List<ProductionRequest> ProductionRequests = dbAccessor.Queryer<ProductionRequest>(config.ConnString, config.DbTable)
                                         .Where(x => x.Enabled=="1").ToList();            
             
             ViewBag.ProductionRequestsList = ProductionRequests;
 
-            //ViewBag.clienti
-            //ViewBag.articoli
+            List<ClienteViewModel> allCustomers = dbAccessor.Queryer<ClienteViewModel>(config.CustomerListConnString, config.CustomersDbTable);
+            ViewBag.allCustomers = allCustomers;
+
+            List<ArticoloViewModel> allArticles = dbAccessor.Queryer<ArticoloViewModel>(config.ArticlesListConnString, config.ArticlesDbTable);
+            ViewBag.allArticles = allArticles;
+
+            ViewBag.message = "test 123 messaggio";
 
             return View();
         }
@@ -92,7 +96,7 @@ namespace mes.Controllers
             newProductionRequest.Enabled = "1";            
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<ProductionRequest> ProductionRequests = (List<ProductionRequest>)dbAccessor.Queryer<ProductionRequest>(config.ConnString, config.DbTable);
+            List<ProductionRequest> ProductionRequests = dbAccessor.Queryer<ProductionRequest>(config.ConnString, config.DbTable);
 
             long max = (from l in ProductionRequests select l.id).Max();
 
@@ -108,7 +112,7 @@ namespace mes.Controllers
         public IActionResult ModProductionRequest(long id)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<ProductionRequest> ProductionRequests = (List<ProductionRequest>)dbAccessor.Queryer<ProductionRequest>(config.ConnString, config.DbTable)
+            List<ProductionRequest> ProductionRequests = dbAccessor.Queryer<ProductionRequest>(config.ConnString, config.DbTable)
                                         .Where(x => x.Enabled=="1").ToList(); 
             ViewBag.ProductionRequestsList = ProductionRequests;
             ProductionRequest oneModel = ProductionRequests.Where(x => x.id == id).FirstOrDefault();

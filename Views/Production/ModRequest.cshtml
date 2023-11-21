@@ -5,12 +5,12 @@
 <h3>modifica richiesta di produzione</h3>
 <br>
 
-@using(Html.BeginForm("InsertRequest", "Production", FormMethod.Post, new { name = "frmInsertReq", id = "frmInsertReq" }))
+@using(Html.BeginForm("ModProductionRequest", "Production", FormMethod.Post, new { name = "frmInsertReq", id = "frmInsertReq" }))
 {
 <table id="myTable" style="width:100%;">
 	<tr>
 		<th>cliente</th>
-		<th>modello</th>        
+		<th>articolo</th>        
 		<th>consegna</th> 
 		<th>diametro</th>
 		<th>spessore</th>            
@@ -21,7 +21,7 @@
 	</tr>	
     <tr>
         <td><input type="text" class="form-control" value="@Model.Cliente" readonly/></td>            
-        <td><input type="text" class="form-control" value="@Model.Modello" readonly/></td>
+        <td><input type="text" class="form-control" value="@Model.Articolo" readonly/></td>
         <td><input type="text" class="form-control" value="@Model.DataCons" readonly/></td>            
         <td><input type="text" class="form-control" value="@Model.Diametro" readonly/></td>
         <td><input type="text" class="form-control" value="@Model.Spessore" readonly/></td>            

@@ -1,8 +1,81 @@
 @using mes.Models.ViewModels
 @using System.Collections.Generic
+
 @model ProductionRequest
 
-<h3>inserisci nuova richiesta di produzione</h3>
+@{ 
+    List<ClienteViewModel> allCustomers = ViewBag.allCustomers; 
+    List<ArticoloViewModel> allArticles = ViewBag.allArticles;
+}
+
+<style>     
+    select {
+        border-radius: 0.25em;
+        border-color: rgb(196, 196, 196);
+        width: 120px;
+        height: 38px;
+    }
+
+    table, th {
+        font-size: 14px;        
+    }
+    th {
+        font-family: Arial, Helvetica, sans-serif;
+    }
+    input, td {
+        font-size: 14px;
+    }
+    input:hover {
+        background-color: gold;
+    }
+    input:focus {
+        background-color: lightyellow;
+    }  
+</style>
+
+<script>
+
+   function confirmLoadModal(){
+        //verifica campi compilati
+        if(!$("#cliente").val()) {
+            alert("campo 'cliente' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#codicearticolo").val()) {
+            alert("campo 'codice articolo' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#descrizione").val()) {
+            alert("campo 'descrizione' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }               
+        if(!$("#diametro").val()) {
+            alert("campo 'diametro' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#spessore").val()) {
+            alert("campo 'spessore' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#datacons").val()) {
+            alert("campo 'datacons' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#richiesti").val()) {
+            alert("campo 'richiesti' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }                                                                         
+        $("#frm").submit();
+   }
+
+</script>
 
 <!----modal starts here--->
 <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -24,25 +97,53 @@
 </div>
 <!--Modal ends here--->
 
-<hr>
-@using(Html.BeginForm("InsertProductionRequest", "Programs", FormMethod.Post, new { name = "frm", id = "frm" }))
+<br>
+<h3>inserisci nuova richiesta di produzione</h3>
+<br>
+<br>
+<br>
+@using(Html.BeginForm("InsertProductionRequest", "Production", FormMethod.Post, new { name = "frm", id = "frm" }))
 {
     <table>
         <tr>
             <th style="text-align: center;">cliente</th> 
-            <th style="text-align: center;">modello</th>            
-            <th style="text-align: center;">consegna</th>
+            <th style="text-align: center;">articolo</th>
+            <th style="text-align: center;">descrizione</th>                      
             <th style="text-align: center;">diametro</th>
             <th style="text-align: center;">spessore</th>
-            <th style="text-align: center;">richiesti</th>
+            <th style="text-align: center;">consegna</th>
+            <th style="text-align: center;">pezzi richiesti</th>
         </tr>
         <tr>
-            <td><input style="width: 160px;" type="text" asp-for=@Model.Cliente class="form-control" id="cliente" required/></td>                   
-            <td><input style="width: 260px;" type="text" asp-for=@Model.Modello class="form-control" id="modello" required/></td>            
+            <td>
+                <div class="select-editeable">
+                    <select id="sel-cliente" style="width: 160px;">
+                        <option value="" selected> </option>
+                        @foreach (var customer in allCustomers)
+                        {
+                            <option value=@customer.Nome>@customer.Nome</option>
+                        }
+                    </select>
+                    <input id="cliente" style="width: 160px;" type="hidden" asp-for=@Model.Cliente class="form-control"/>
+                </div>                
+            </td>
+            <td>
+                <div class="select-editeable">
+                    <select id="sel-articolo" style="width: 240px;">
+                        <option value="" selected> </option>
+                        @foreach (var article in allArticles)
+                        {
+                            <option value=@article.Codice>@article.Codice</option>
+                        }
+                    </select>
+                    <input id="codicearticolo" style="width: 240px;" type="hidden" asp-for=@Model.Articolo class="form-control"/>
+                </div>                
+            </td>
+            <td><input style="width: 240px; font-align: center;" type="text" asp-for=@Model.Descrizione class="form-control" id="descrizione" required/></td>                                                                 
+            <td><input style="width: 90px; font-align: center;" type="text" asp-for=@Model.Diametro class="form-control" id="diametro" required/></td>
+            <td><input style="width: 90px; font-align: center;" type="text" asp-for=@Model.Spessore class="form-control" id="spessore" required/></td>
             <td><input style="width: 160px; font-align: center;" type="date" asp-for=@Model.DataCons class="form-control" id="datacons" required/></td>
-            <td><input style="width: 160px; font-align: center;" type="text" asp-for=@Model.Diametro class="form-control" id="diametro" required/></td>
-            <td><input type="text" asp-for=@Model.Spessore class="form-control" id="spessore" required/></td>
-            <td><input style="width: 90px; font-align: center;" type="text" asp-for=@Model.Richiesti class="form-control" id="richiesti" required/></td>            
+            <td><input style="width: 160px; font-align: center;" type="text" asp-for=@Model.Richiesti class="form-control" id="richiesti" required/></td>            
         </tr> 
     </table>
     <br>
@@ -50,10 +151,20 @@
 
     <div class="row">
         <div class="col-md-3 d-grid">
-        <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#confirmationModal">conferma</button>            
+            <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#confirmationModal">conferma</button>            
         </div>
         <div class="col-md-3 d-grid">
             <a class="btn btn-outline-secondary btn-block" asp-controller="Production" asp-action="Index">annulla</a>
-        </div>             
+        </div>              
     </div>  
 }
+
+
+<script>
+    $("#sel-cliente").on('change', function() {
+        $("#cliente").val(this.value);
+    });
+    $("#sel-articolo").on('change', function() {
+        $("#codicearticolo").val(this.value);
+    });
+</script>

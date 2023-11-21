@@ -4,7 +4,8 @@ namespace mes.Models.ViewModels
     {
         public long id { get; set; }
         public string Cliente { get; set; }
-        public string Modello { get; set; }
+        public string Descrizione { get; set; }
+        public string Articolo { get; set; }
         public string DataCons { get; set; }
         public string Diametro { get; set; }
         public string Spessore { get; set; }
