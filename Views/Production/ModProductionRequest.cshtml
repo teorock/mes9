@@ -22,13 +22,12 @@
     <tr>
         <td><input type="text" class="form-control" value="@Model.Cliente" readonly/></td>            
         <td><input type="text" class="form-control" value="@Model.Articolo" readonly/></td>
-        <td><input type="text" class="form-control" value="@Model.DataCons" readonly/></td>            
-        <td><input type="text" class="form-control" value="@Model.Diametro" readonly/></td>
-        <td><input type="text" class="form-control" value="@Model.Spessore" readonly/></td>            
+        <td><input type="text" class="form-control" value="@Model.Descrizione" readonly/></td>
+        <td><input type="text" class="form-control" value="@Model.DataCons" readonly/></td>                     
         <td><input type="text" class="form-control" value="@Model.Richiesti" readonly/></td>
         <td><input type="text" class="form-control" value="@Model.Disponibili" readonly/></td>
-        <td><input type="text" class="form-control" value="@Model.CodSemilavorati" readonly/></td>
-        <td><input type="text" class="form-control" value="@Model.Lastre" readonly/></td>
+        <td><input type="text" class="form-control" value="@Model.CodSemilavorato" readonly/></td>
+        <td><input type="text" class="form-control" value="@Model.CodPannello" readonly/></td>
         <td style="padding-left: 10px;"><a asp-controller="Production" asp-action="ModRequest" asp-route-id="@Model.id"><i class="material-icons text-warning">&#xE254;</i></a></td>
     </tr>          
 </table>

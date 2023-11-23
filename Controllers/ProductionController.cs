@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using ServiceStack;
 
 namespace mes.Controllers
 {
@@ -44,7 +45,15 @@ namespace mes.Controllers
             List<ProductionRequest> requests = dbAccessor.Queryer<ProductionRequest>(config.ConnString, config.DbTable)
                                                 .Where(e => e.Enabled == "1").ToList();
 
-            return View(requests);
+            List<ProductionRequest> evidenziati = new List<ProductionRequest>();
+            foreach(var oneRequest in requests)
+            {
+                evidenziati.Add(oneRequest);
+            }
+            //calcolo e evidenziatore
+            //caricamento file di configurazione lastre-quantità di semilavorati
+
+            return View(evidenziati);
         }
 
 
@@ -66,21 +75,28 @@ namespace mes.Controllers
 
         [HttpGet]
         [Authorize(Roles ="root, MagMaterialiScrivi")]
-        public IActionResult InsertProductionRequest()
+        public IActionResult InsertProductionRequest(string customer)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<ProductionRequest> ProductionRequests = dbAccessor.Queryer<ProductionRequest>(config.ConnString, config.DbTable)
                                         .Where(x => x.Enabled=="1").ToList();            
-            
-            ViewBag.ProductionRequestsList = ProductionRequests;
 
+            ViewBag.ProductionRequestsList = ProductionRequests;
+            
             List<ClienteViewModel> allCustomers = dbAccessor.Queryer<ClienteViewModel>(config.CustomerListConnString, config.CustomersDbTable);
             ViewBag.allCustomers = allCustomers;
 
-            List<ArticoloViewModel> allArticles = dbAccessor.Queryer<ArticoloViewModel>(config.ArticlesListConnString, config.ArticlesDbTable);
+            List<ArticoloViewModel> allArticles = dbAccessor.Queryer<ArticoloViewModel>(config.ArticlesListConnString, config.ArticlesDbTable)
+                                    .Where(c => c.Cliente == customer).ToList();
+
+            bool selArticlesActive = (allArticles.Count == 0)? false : true;
+
+            
             ViewBag.allArticles = allArticles;
 
-            ViewBag.message = "test 123 messaggio";
+            //int customerIndex = allCustomers.IndexOf(allCustomers.Where(C => C.Nome == customer).FirstOrDefault());
+            ViewBag.selectedCustomer = customer;
+            ViewBag.selArtclesActive = selArticlesActive;
 
             return View();
         }
@@ -88,20 +104,33 @@ namespace mes.Controllers
         [HttpPost]
         [Authorize(Roles ="root, MagMaterialiScrivi")]
         public IActionResult InsertProductionRequest(ProductionRequest newProductionRequest)
-        {
+        {  
+            //analisi dei dati  
             UserData userData = GetUserData();
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
 
+            newProductionRequest = ComputeAvailability(newProductionRequest);
+
+            //------------------------------------------------------------------
             newProductionRequest.CreatedBy = userData.UserName;
             newProductionRequest.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
             newProductionRequest.Enabled = "1";            
 
-            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            //----- inserimento con id opportuna in database
             List<ProductionRequest> ProductionRequests = dbAccessor.Queryer<ProductionRequest>(config.ConnString, config.DbTable);
 
-            long max = (from l in ProductionRequests select l.id).Max();
+            long max = 0;
 
+            try
+            {
+                max = (from l in ProductionRequests select l.id).Max();            
+            }
+            catch
+            {
+
+            }
+            
             newProductionRequest.id = max + 1;
-
             int result = dbAccessor.Insertor<ProductionRequest>(config.ConnString, config.DbTable, newProductionRequest);
 
             return RedirectToAction("Index");
@@ -136,6 +165,62 @@ namespace mes.Controllers
 
             return RedirectToAction("MainProductionRequests");
         }  
+
+        private ProductionRequest ComputeAvailability(ProductionRequest newProductionRequest)        
+        {
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            //estrazione codici semilavorati e lastre e verifica quantita necessarie
+            ArticoloViewModel thisArticle = dbAccessor.Queryer<ArticoloViewModel>(config.ArticlesListConnString, config.ArticlesDbTable)
+                                                        .Where(c => c.Codice == newProductionRequest.Articolo)
+                                                        .FirstOrDefault();
+
+            string quantFiniti = dbAccessor.Queryer<ProdFinitiViewModel>(config.ProdFinitiConnString, config.ProdFinitiDbTable)
+                                            .Where(c => c.Codice == newProductionRequest.Articolo)
+                                            .Select(q => q.Quantita).FirstOrDefault();
+            newProductionRequest.Disponibili = quantFiniti;
+
+
+            string quantSemilav = dbAccessor.Queryer<SemilavoratoViewModel>(config.SemilavConnString, config.SemilavDbTable)
+                                        .Where(c => c.Codice == thisArticle.CodSemilavorato)
+                                        .Select(q => q.Quantita).FirstOrDefault();
+            newProductionRequest.DispSemilav = quantSemilav;
+            newProductionRequest.CodSemilavorato = thisArticle.CodSemilavorato;
+
+            string quantLastre = dbAccessor.Queryer<PannelloViewModel>(config.PanelsConnString, config.PanelsDbTable)
+                                        .Where(p => p.Codice == thisArticle.CodPannello)
+                                        .Select(q => q.Quantita).FirstOrDefault();   
+            newProductionRequest.DispPannello = quantLastre;
+            newProductionRequest.CodPannello = thisArticle.CodPannello;
+            
+            //assegna colori
+            int semilavPerPan = 50; //arriverà da file di configurazione dove codice ==     
+            int richiestaSemilav = 0;       
+            int richiestaPan =0;
+            
+            int richiestaFiniti = Convert.ToInt16(newProductionRequest.Disponibili) - Convert.ToInt16(newProductionRequest.Richiesti);
+            if(richiestaFiniti<0)
+            {
+                richiestaSemilav = Convert.ToInt16(newProductionRequest.DispSemilav) - Math.Abs(richiestaFiniti);
+                newProductionRequest.Finitibg = "orange";
+            }
+            if(richiestaSemilav<0)
+            {
+                richiestaPan = Convert.ToInt16(Math.Truncate((decimal)Math.Abs(richiestaSemilav)/semilavPerPan));
+                newProductionRequest.Semilavbg = "orange";
+            }
+            if((Convert.ToInt16(newProductionRequest.DispPannello)-richiestaPan)<0)
+            {
+                newProductionRequest.Pannellibg = "orange";
+            } else newProductionRequest.Pannellibg = "none";
+
+
+            //se le richiesti> finiti => programma n finiture
+            //se
+            //se le quantità di semilavorati < quantità a db
+            //
+
+            return newProductionRequest;       
+        }
 
     #endregion
 

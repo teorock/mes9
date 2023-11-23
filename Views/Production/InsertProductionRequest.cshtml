@@ -6,6 +6,11 @@
 @{ 
     List<ClienteViewModel> allCustomers = ViewBag.allCustomers; 
     List<ArticoloViewModel> allArticles = ViewBag.allArticles;
+    string errorMsg = ViewBag.errorMsg;
+    //int customerIndex = ViewBag.selectedCustomer;
+    string selectedCustomer = ViewBag.selectedCustomer;
+    var serializedArticles = Json.Serialize(allArticles);
+    bool selArticleActive = ViewBag.selArtclesActive;
 }
 
 <style>     
@@ -37,41 +42,31 @@
 
    function confirmLoadModal(){
         //verifica campi compilati
-        if(!$("#cliente").val()) {
-            alert("campo 'cliente' vuoto");
-            $("#confirmationModal").modal('toggle');
-            return;
-        }
-        if(!$("#codicearticolo").val()) {
-            alert("campo 'codice articolo' vuoto");
-            $("#confirmationModal").modal('toggle');
-            return;
-        }
-        if(!$("#descrizione").val()) {
-            alert("campo 'descrizione' vuoto");
-            $("#confirmationModal").modal('toggle');
-            return;
-        }               
-        if(!$("#diametro").val()) {
-            alert("campo 'diametro' vuoto");
-            $("#confirmationModal").modal('toggle');
-            return;
-        }
-        if(!$("#spessore").val()) {
-            alert("campo 'spessore' vuoto");
-            $("#confirmationModal").modal('toggle');
-            return;
-        }
-        if(!$("#datacons").val()) {
-            alert("campo 'datacons' vuoto");
-            $("#confirmationModal").modal('toggle');
-            return;
-        }
-        if(!$("#richiesti").val()) {
-            alert("campo 'richiesti' vuoto");
-            $("#confirmationModal").modal('toggle');
-            return;
-        }                                                                         
+        //if(!$("#cliente").val()) {
+        //    alert("campo 'cliente' vuoto");
+        //    $("#confirmationModal").modal('toggle');
+        //    return;
+        //}
+        //if(!$("#codicearticolo").val()) {
+        //    alert("campo 'codice articolo' vuoto");
+        //    $("#confirmationModal").modal('toggle');
+        //    return;
+        //}
+        //if(!$("#descrizione").val()) {
+        //    alert("campo 'descrizione' vuoto");
+        //    $("#confirmationModal").modal('toggle');
+        //    return;
+        //}               
+        //if(!$("#datacons").val()) {
+        //    alert("campo 'datacons' vuoto");
+        //    $("#confirmationModal").modal('toggle');
+        //    return;
+        //}
+        //if(!$("#richiesti").val()) {
+        //    alert("campo 'richiesti' vuoto");
+        //    $("#confirmationModal").modal('toggle');
+        //    return;
+        //}                                                                         
         $("#frm").submit();
    }
 
@@ -81,17 +76,17 @@
 <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title" id="confirmationModal">Richiesta conferma</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-            <p>confermi creazione nuovo bordo?</p>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">annulla</button>
-            <button type="button" id="btnConfirm" class="btn btn-success" onclick="confirmLoadModal()">conferma</button>
-        </div>
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmationModal">Richiesta conferma</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>confermi creazione nuovo bordo?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">annulla</button>
+                <button type="button" id="btnConfirm" class="btn btn-success" onclick="confirmLoadModal()">conferma</button>
+            </div>
         </div>
     </div>
 </div>
@@ -109,15 +104,13 @@
             <th style="text-align: center;">cliente</th> 
             <th style="text-align: center;">articolo</th>
             <th style="text-align: center;">descrizione</th>                      
-            <th style="text-align: center;">diametro</th>
-            <th style="text-align: center;">spessore</th>
             <th style="text-align: center;">consegna</th>
             <th style="text-align: center;">pezzi richiesti</th>
         </tr>
         <tr>
             <td>
                 <div class="select-editeable">
-                    <select id="sel-cliente" style="width: 160px;">
+                    <select id="sel-cliente" style="width: 180px;">
                         <option value="" selected> </option>
                         @foreach (var customer in allCustomers)
                         {
@@ -129,19 +122,28 @@
             </td>
             <td>
                 <div class="select-editeable">
-                    <select id="sel-articolo" style="width: 240px;">
+                    @if(selArticleActive)
+                    {
+                    <select id="sel-articolo" style="width: 180px;">
                         <option value="" selected> </option>
                         @foreach (var article in allArticles)
                         {
                             <option value=@article.Codice>@article.Codice</option>
                         }
                     </select>
-                    <input id="codicearticolo" style="width: 240px;" type="hidden" asp-for=@Model.Articolo class="form-control"/>
-                </div>                
+                    } else {
+                    <select id="sel-articolo" style="width: 180px;" disabled>
+                        <option value="" selected> </option>
+                        @foreach (var article in allArticles)
+                        {
+                            <option value=@article.Codice>@article.Codice</option>
+                        }
+                    </select>
+                    }
+                    <input id="codicearticolo" style="width: 180px;" type="hidden" asp-for=@Model.Articolo class="form-control"/>
+                </div>               
             </td>
-            <td><input style="width: 240px; font-align: center;" type="text" asp-for=@Model.Descrizione class="form-control" id="descrizione" required/></td>                                                                 
-            <td><input style="width: 90px; font-align: center;" type="text" asp-for=@Model.Diametro class="form-control" id="diametro" required/></td>
-            <td><input style="width: 90px; font-align: center;" type="text" asp-for=@Model.Spessore class="form-control" id="spessore" required/></td>
+            <td><input style="width: 480px; font-align: center;" type="text" asp-for=@Model.Descrizione class="form-control" id="descrizione" required/></td>                                                                 
             <td><input style="width: 160px; font-align: center;" type="date" asp-for=@Model.DataCons class="form-control" id="datacons" required/></td>
             <td><input style="width: 160px; font-align: center;" type="text" asp-for=@Model.Richiesti class="form-control" id="richiesti" required/></td>            
         </tr> 
@@ -155,16 +157,32 @@
         </div>
         <div class="col-md-3 d-grid">
             <a class="btn btn-outline-secondary btn-block" asp-controller="Production" asp-action="Index">annulla</a>
-        </div>              
+        </div>                    
     </div>  
 }
 
+<script>    
 
-<script>
-    $("#sel-cliente").on('change', function() {
+    $(document).ready(function(){
+        var selCustomer = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(selectedCustomer));
+        $('#sel-cliente').val(selCustomer);
+        $('#cliente').val(selCustomer);
+    });
+
+    $("#sel-cliente").on('change', function(){
+        var cliente = this.value;
         $("#cliente").val(this.value);
-    });
+        window.location.replace("/Production/InsertProductionRequest?customer=" + cliente);        
+    });  
+
     $("#sel-articolo").on('change', function() {
+        var selectedArticle = this.value;
         $("#codicearticolo").val(this.value);
+        var articlesList = @Html.Raw(@serializedArticles);
+        var selectedObject = articlesList.find(function(obj){            
+            return obj.codice === selectedArticle;            
+        });
+        $('#descrizione').val(selectedObject.descrizione);
     });
+
 </script>

@@ -80,7 +80,7 @@
                         <td><input readonly style="width: 260px;" type="text" asp-for=@Model[x].Descrizione class="form-control" value=@Model[x].Descrizione  /></td>
                         <td><input readonly style="width: 160px;" type="text" asp-for=@Model[x].Cliente class="form-control" value=@Model[x].Cliente  /></td>
                         <td><input readonly style="width: 160px;" type="text" asp-for=@Model[x].CodSemilavorato class="form-control" value=@Model[x].CodSemilavorato  /></td>
-                        <td><input readonly style="width: 160px;" type="text" asp-for=@Model[x].CodLastra class="form-control" value=@Model[x].CodLastra  /></td>
+                        <td><input readonly style="width: 160px;" type="text" asp-for=@Model[x].CodPannello class="form-control" value=@Model[x].CodPannello  /></td>
                         <td><input readonly style="width: 260px;" type="text" asp-for=@Model[x].Note class="form-control" value=@Model[x].Note  /></td>
                         <td> </td>
                         <td> </td>
@@ -93,7 +93,7 @@
                         <td><input style="width: 260px;" type="text" asp-for=@Model[x].Descrizione class="form-control" value=@Model[x].Descrizione readonly /></td>
                         <td><input style="width: 160px;" type="text" asp-for=@Model[x].Cliente class="form-control" value=@Model[x].Cliente readonly /></td>
                         <td><input style="width: 160px;" type="text" asp-for=@Model[x].CodSemilavorato class="form-control" value=@Model[x].CodSemilavorato readonly /></td>
-                        <td><input style="width: 160px;" type="text" asp-for=@Model[x].CodLastra class="form-control" value=@Model[x].CodLastra readonly /></td>
+                        <td><input style="width: 160px;" type="text" asp-for=@Model[x].CodPannello class="form-control" value=@Model[x].CodPannello readonly /></td>
                         <td><input style="width: 260px;" type="text" asp-for=@Model[x].Note class="form-control" value=@Model[x].Note readonly /></td>
                         <td style="padding-left: 25px;"><a asp-controller="DataInput" asp-action="ModArticolo" asp-route-id="@Model[x].id"><i class="material-icons text-warning">&#xE254;</i></a></td>
                         <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].id class="form-control" value=@Model[x].id /></td>                         

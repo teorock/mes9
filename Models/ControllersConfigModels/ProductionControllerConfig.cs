@@ -13,8 +13,12 @@ namespace mes.Models.ControllersConfigModels
         public string CustomerListConnString { get; set; }
         public string CustomersDbTable { get; set; }
         public string ArticlesListConnString { get; set; }
-        public string ArticlesDbTable { get; set; }
-        
-
+        public string ArticlesDbTable { get; set; }        
+        public string SemilavConnString { get; set; }
+        public string SemilavDbTable { get; set; }
+        public string PanelsConnString { get; set; }
+        public string PanelsDbTable { get; set; }
+        public string ProdFinitiConnString { get; set; }
+        public string ProdFinitiDbTable { get; set; }
     }
 }

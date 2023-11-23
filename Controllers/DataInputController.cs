@@ -214,7 +214,7 @@ namespace intranet.Controllers
             
             //indici di selezione delle tendine
             ViewBag.selectedCustomer = GetCustomers().IndexOf(oneModel.Cliente);
-            ViewBag.selectedPanel = GetPanelsCodes().IndexOf(oneModel.CodLastra);
+            ViewBag.selectedPanel = GetPanelsCodes().IndexOf(oneModel.CodPannello);
             ViewBag.selectedSemilav = GetSemilavCodes().IndexOf(oneModel.CodSemilavorato);
         
             return View(oneModel);

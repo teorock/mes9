@@ -145,7 +145,7 @@ function conferma() {
                             <option value=@panel>@panel</option>
                         }
                     </select>
-                    <input id="CodLastra" style="width: 160px;" type="hidden" asp-for=@Model.CodLastra class="form-control" required/>
+                    <input id="CodLastra" style="width: 160px;" type="hidden" asp-for=@Model.CodPannello class="form-control" required/>
                 </div>                                
             </td>
             <td><input id="Note" style="width: 260px;" type="text" asp-for=@Model.Note class="form-control" required/></td>
@@ -183,7 +183,7 @@ function conferma() {
                 <td><input style="width: 260px;" type="text" asp-for=@oneModel.Descrizione class="form-control" value=@oneModel.Descrizione readonly /></td> 
                 <td><input style="width: 160px;" type="text" asp-for=@oneModel.Cliente class="form-control" value=@oneModel.Cliente readonly /></td> 
                 <td><input style="width: 160px;" type="text" asp-for=@oneModel.CodSemilavorato class="form-control" value=@oneModel.CodSemilavorato readonly /></td> 
-                <td><input style="width: 160px;" type="text" asp-for=@oneModel.CodLastra class="form-control" value=@oneModel.CodLastra readonly /></td> 
+                <td><input style="width: 160px;" type="text" asp-for=@oneModel.CodPannello class="form-control" value=@oneModel.CodPannello readonly /></td> 
                 <td><input style="width: 260px;" type="text" asp-for=@oneModel.Note class="form-control" value=@oneModel.Note readonly /></td> 
             </tr>  
         }        

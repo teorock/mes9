@@ -5,6 +5,9 @@
 
 @{
     bool authorize = true;
+    string finitibg = ViewBag.finitibg;
+    string semilavbg = ViewBag.semilabg;
+    string pannellibg = ViewBag.pannellibg;
 }
 <style>
     table, th, td, input {
@@ -38,46 +41,47 @@
 {
 <table id="myTable" style="width:100%;">
 	<tr>
+        <th></th>
 		<th>cliente</th>
-		<th>articolo</th>        
-		<th>consegna</th> 
-		<th>diametro</th>
-		<th>spessore</th>            
-		<th>richiesti</th> 
-		<th>disponibili</th> 
-		<th>semilavorati</th>
-		<th>lastre</th>
+		<th>articolo</th>
+        <th>descrizione</th>
+		<th>consegna</th>            
+		<th>richiesti</th>
+        <th>finiti</th>
+        <th>semilavorati</th>
+        <th>lastre</th>
 	</tr>	
-        @for (int x=0;x<Model.Count; x++)
-        {
-            <tr>
-            @if(authorize)
-            {
-                <td><input type="text" class="form-control" value="@Model[x].Cliente" readonly/></td>            
-                <td><input type="text" class="form-control" value="@Model[x].Articolo" readonly/></td>
-                <td><input type="text" class="form-control" value="@Model[x].DataCons" readonly/></td>            
-                <td><input type="text" class="form-control" value="@Model[x].Diametro" readonly/></td>
-                <td><input type="text" class="form-control" value="@Model[x].Spessore" readonly/></td>            
-                <td><input type="text" class="form-control" value="@Model[x].Richiesti" readonly/></td>
-                <td><input type="text" class="form-control" value="@Model[x].Disponibili" readonly/></td>
-                <td><input type="text" class="form-control" value="@Model[x].CodSemilavorati" readonly/></td>
-                <td><input type="text" class="form-control" value="@Model[x].Lastre" readonly/></td>
-                <td style="padding-left: 10px;"><a asp-controller="Production" asp-action="ModRequest" asp-route-id="@Model[x].id"><i class="material-icons text-warning">&#xE254;</i></a></td>
-            }
-            else
-            {
-                <td><input type="text" class="form-control" value="@Model[x].Cliente" readonly/></td>            
-                <td><input type="text" class="form-control" value="@Model[x].Articolo" readonly/></td>
-                <td><input type="text" class="form-control" value="@Model[x].DataCons" readonly/></td>            
-                <td><input type="text" class="form-control" value="@Model[x].Diametro" readonly/></td>
-                <td><input type="text" class="form-control" value="@Model[x].Spessore" readonly/></td>            
-                <td><input type="text" class="form-control" value="@Model[x].Richiesti" readonly/></td>
-                <td><input type="text" class="form-control" value="@Model[x].Disponibili" readonly/></td>
-                <td><input type="text" class="form-control" value="@Model[x].CodSemilavorati" readonly/></td>
-                <td><input type="text" class="form-control" value="@Model[x].Lastre" readonly/></td>
-            }
-            </tr> 
-        }	 
+@for (int x=0;x<Model.Count; x++)
+{
+    <tr>
+    @if(authorize)
+    {
+        <td><input type="hidden" style="width:10px;" class="form-control" value="@Model[x].id" readonly/></td> 
+        <td><input type="text" style="width:160px;" class="form-control" value="@Model[x].Cliente" readonly/></td>            
+        <td><input type="text" style="width:240px;" class="form-control" value="@Model[x].Articolo" readonly/></td>
+        <td><input type="text" style="width:400px;" class="form-control" value="@Model[x].Descrizione" readonly/></td>
+        <td><input type="text" style="width:120px;" class="form-control" value="@Model[x].DataCons" readonly/></td>                     
+        <td><input type="text" style="width:90px;" class="form-control" value="@Model[x].Richiesti" readonly/></td>
+        <td><input type="text" style="width:90px; background-color: @Model[x].Finitibg;" class="form-control" value="@Model[x].Disponibili" readonly/></td>
+        <td><input type="text" style="width:90px; background-color: @Model[x].Semilavbg;" class="form-control" value="@Model[x].DispSemilav" readonly/></td>
+        <td><input type="text" style="width:90px; background-color: @Model[x].Pannellibg;" class="form-control" value="@Model[x].DispPannello" readonly/></td>
+        <td style="padding-left: 10px;"><a asp-controller="Production" asp-action="ModProductionRequest" asp-route-id="@Model[x].id"><i class="material-icons text-warning">&#xE254;</i></a></td>
+        <td style="padding-left: 10px;"><a asp-controller="Production" asp-action="ModRequest" asp-route-id="@Model[x].id"><i class="material-icons text-success">&#xe742;</i></a></td>
+    }
+    else
+    {
+        <td><input type="hidden" style="width:10px;" class="form-control" value="@Model[x].id" readonly/></td>
+        <td><input type="text" style="width:160px;" class="form-control" value="@Model[x].Cliente" readonly/></td>            
+        <td><input type="text" style="width:240px;" class="form-control" value="@Model[x].Articolo" readonly/></td>
+        <td><input type="text" style="width:400px;" class="form-control" value="@Model[x].Descrizione" readonly/></td>
+        <td><input type="text" style="width:120px;" class="form-control" value="@Model[x].DataCons" readonly/></td>                       
+        <td><input type="text" style="width:90px;"  class="form-control" value="@Model[x].Richiesti" readonly/></td>
+        <td><input type="text" style="width:90px; background-color:@Model[x].Finitibg;"  class="form-control" value="@Model[x].Disponibili" readonly/></td>
+        <td><input type="text" style="width:90px; background-color:@Model[x].Semilavbg;"  class="form-control" value="@Model[x].DispSemilav" readonly/></td>
+        <td><input type="text" style="width:90px; background-color:@Model[x].Pannellibg;"  class="form-control" value="@Model[x].DispPannello" readonly/></td>
+    }
+    </tr> 
+}	 
 </table>
 }
 <br>
