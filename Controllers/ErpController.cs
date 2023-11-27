@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using mes.Models.InfrastructureModels;
+using System.IO;
+using Newtonsoft.Json;
 
 namespace mes.Controllers
 {
@@ -20,6 +22,7 @@ namespace mes.Controllers
         private readonly string connectionString ="Data Source=../mesData/erpdata.db";
 
         private readonly string usersDbConnString ="Data Source=../data/app.db";
+        const string intranetLog=@"c:\temp\intranet.log";
 
         bool aggiornaDipendenti = false;
         bool aggiornaPermessi = false;
@@ -27,6 +30,10 @@ namespace mes.Controllers
         public ErpController(ILogger<ErpController> logger)
         {
             _logger = logger;
+
+            UserData userData = GetUserData();
+            Log2File($"-----------------ErpController");
+            Log2File(JsonConvert.SerializeObject(userData));            
         }
 
         public IActionResult Main()
@@ -733,5 +740,13 @@ namespace mes.Controllers
 
             return output;
         }
+
+        private void Log2File(string line2log)
+        {
+            using(StreamWriter sw = new StreamWriter(intranetLog))
+            {
+                sw.WriteLine($"{DateTime.Now} -> {line2log}");
+            }
+        }             
     }
 }

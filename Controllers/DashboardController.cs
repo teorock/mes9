@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using mes.ControllerConfig;
 using mes.Models.Services.Infrastructures;
 using mes.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -20,6 +22,7 @@ namespace mes.Controllers
         private readonly ILogger<DashboardController> _logger;
         DashboardControllerConfig config = new DashboardControllerConfig();
         private string dashboardControllerConfigPath = @"c:\core\mes\ControllerConfig\ProgramsController.json";
+        const string intranetLog=@"c:\temp\intranet.log";        
 
         public DashboardController(ILogger<DashboardController> logger)
         {
@@ -32,6 +35,9 @@ namespace mes.Controllers
                 rawConf = sr.ReadToEnd();
             }
             config = JsonConvert.DeserializeObject<DashboardControllerConfig>(rawConf);
+
+            UserData userData = GetUserData();
+            Log2File(JsonConvert.SerializeObject(userData));
 
         }
 
@@ -142,5 +148,47 @@ namespace mes.Controllers
         {
             return View("Error!");
         }
+
+        private UserData GetUserData()
+        {
+            UserData userData = new UserData();
+
+            string userRoles="";
+            ViewBag.userId =  User.FindFirstValue(ClaimTypes.NameIdentifier); // will give the user's userId
+            userData.UserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            ViewBag.userName =  User.FindFirstValue(ClaimTypes.Name); // will give the user's userName
+            userData.UserName = User.FindFirstValue(ClaimTypes.Name);
+
+            IEnumerable<Claim> roles = User.FindAll(ClaimTypes.Role);
+            foreach(var role in roles)
+            {
+                userRoles += $"{role.Value}, ";
+            }
+            userData.UserRoles = userRoles;
+            
+            ViewBag.userEmail =  User.FindFirstValue(ClaimTypes.Email); // will give the user's Email
+            userData.UserEmail = User.FindFirstValue(ClaimTypes.Email);
+
+            ViewBag.userRoles= userRoles;                    
+
+            //ViewBag.address = HttpContext.Features.Get<IHttpConnectionFeature>().RemoteIpAddress.ToString().Substring(7);
+            ViewBag.address = HttpContext.Features.Get<IHttpConnectionFeature>().RemoteIpAddress.ToString();
+            ViewBag.port = HttpContext.Features.Get<IHttpConnectionFeature>().RemotePort.ToString();
+
+            //userData.UserIpAddress = HttpContext.Features.Get<IHttpConnectionFeature>().RemoteIpAddress.ToString().Substring(7);
+            userData.UserIpAddress = HttpContext.Features.Get<IHttpConnectionFeature>().RemoteIpAddress.ToString();
+            userData.UserIpPort = HttpContext.Features.Get<IHttpConnectionFeature>().RemotePort.ToString();
+
+            return userData;
+        }
+
+        private void Log2File(string line2log)
+        {
+            using(StreamWriter sw = new StreamWriter(intranetLog))
+            {
+                sw.WriteLine($"{DateTime.Now} -> {line2log}");
+            }
+        }          
     }
 }

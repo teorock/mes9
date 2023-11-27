@@ -23,7 +23,8 @@ namespace intranet.Controllers
         private readonly ILogger<DataInputController> _logger;
         const string datainputControllerConfigPath = @"c:\core\mes\ControllerConfig\DataInputControllerConfig.json";
         DataInputControllerConfig config = new DataInputControllerConfig();
-        private readonly UserManager<IdentityUser> _userManager;        
+        private readonly UserManager<IdentityUser> _userManager;  
+        const string intranetLog = @"c:\temp\intranet.log";
 
         public DataInputController(ILogger<DataInputController> logger)
         {
@@ -36,6 +37,10 @@ namespace intranet.Controllers
                 rawConf = sr.ReadToEnd();
             }
             config = JsonConvert.DeserializeObject<DataInputControllerConfig>(rawConf); 
+
+            UserData userData = GetUserData();
+            Log2File("-------------DataInputController");
+            Log2File(JsonConvert.SerializeObject(userData));            
 
         }
       
@@ -345,5 +350,14 @@ namespace intranet.Controllers
 
            return userData;
        }
+
+        private void Log2File(string line2log)
+        {
+            using(StreamWriter sw = new StreamWriter(intranetLog))
+            {
+                sw.WriteLine($"{DateTime.Now} -> {line2log}");
+            }
+        }    
+
     }
 }

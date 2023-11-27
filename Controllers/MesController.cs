@@ -9,6 +9,8 @@ using System.IO;
 using mes.Models.ControllersConfigModels;
 using Newtonsoft.Json;
 using mes.Models.Services.Application;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http.Features;
 
 namespace mes.Controllers
 {
@@ -18,7 +20,8 @@ namespace mes.Controllers
        private readonly ILogger<MesController> _logger;
        //private readonly string connectionString ="Data Source=../mesData/datasource.db";
         MesControllerConfig config = new MesControllerConfig();
-        const string mesControllerConfigPath = @"c:\core\mes\ControllerConfig\MesController.json";       
+        const string mesControllerConfigPath = @"c:\core\mes\ControllerConfig\MesController.json";   
+        const string intranetLog=@"c:\temp\intranet.log";              
        public MesController(ILogger<MesController> logger)
        {
            _logger = logger;
@@ -29,7 +32,10 @@ namespace mes.Controllers
             {
                 rawConf = sr.ReadToEnd();
             }
-            config = JsonConvert.DeserializeObject<MesControllerConfig>(rawConf);            
+            config = JsonConvert.DeserializeObject<MesControllerConfig>(rawConf);  
+
+            UserData userData = GetUserData();
+            Log2File(JsonConvert.SerializeObject(userData));                        
        }
 
 
@@ -320,6 +326,7 @@ namespace mes.Controllers
             }
             catch(Exception excp)
             {
+                Log2File($"ERRORE: {excp.Message}");
                 return barWidth;
             }
             
@@ -337,6 +344,7 @@ namespace mes.Controllers
             }
             catch(Exception excp)
             {
+                Log2File($"ERRORE: {excp.Message}");
                 return barWidth;
             }
             
@@ -345,9 +353,47 @@ namespace mes.Controllers
 
     #endregion
 
+        private UserData GetUserData()
+        {
+            UserData userData = new UserData();
 
+            string userRoles="";
+            ViewBag.userId =  User.FindFirstValue(ClaimTypes.NameIdentifier); // will give the user's userId
+            userData.UserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
+            ViewBag.userName =  User.FindFirstValue(ClaimTypes.Name); // will give the user's userName
+            userData.UserName = User.FindFirstValue(ClaimTypes.Name);
 
+            IEnumerable<Claim> roles = User.FindAll(ClaimTypes.Role);
+            foreach(var role in roles)
+            {
+                userRoles += $"{role.Value}, ";
+            }
+            userData.UserRoles = userRoles;
+            
+            ViewBag.userEmail =  User.FindFirstValue(ClaimTypes.Email); // will give the user's Email
+            userData.UserEmail = User.FindFirstValue(ClaimTypes.Email);
+
+            ViewBag.userRoles= userRoles;                    
+
+            //ViewBag.address = HttpContext.Features.Get<IHttpConnectionFeature>().RemoteIpAddress.ToString().Substring(7);
+            ViewBag.address = HttpContext.Features.Get<IHttpConnectionFeature>().RemoteIpAddress.ToString();
+            ViewBag.port = HttpContext.Features.Get<IHttpConnectionFeature>().RemotePort.ToString();
+
+            //userData.UserIpAddress = HttpContext.Features.Get<IHttpConnectionFeature>().RemoteIpAddress.ToString().Substring(7);
+            userData.UserIpAddress = HttpContext.Features.Get<IHttpConnectionFeature>().RemoteIpAddress.ToString();
+            userData.UserIpPort = HttpContext.Features.Get<IHttpConnectionFeature>().RemotePort.ToString();
+
+            return userData;
+        }
+
+        private void Log2File(string line2log)
+        {
+            using(StreamWriter sw = new StreamWriter(intranetLog))
+            {
+                sw.WriteLine($"{DateTime.Now} -> {line2log}");
+            }
+        }     
 
     }
 }

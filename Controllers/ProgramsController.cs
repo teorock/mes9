@@ -27,12 +27,9 @@ namespace mes.Controllers
     {
         private readonly ILogger<ProgramsController> _logger;
         private string programsControllerConfigPath = @"c:\core\mes\ControllerConfig\ProgramsController.json";
+        const string intranetLog=@"c:\temp\intranet.log";
 
         ProgramsControllerConfig config = new ProgramsControllerConfig();
-        //private bool aggiornaBordi = true;
-        //private bool aggiornaColle = true;
-        //private bool aggiornaSemilavorati = true;
-        //private bool aggiornaMateriali = true;
 
         public ProgramsController(ILogger<ProgramsController> logger)
         {
@@ -44,7 +41,11 @@ namespace mes.Controllers
             {
                 rawConf = sr.ReadToEnd();
             }
-            config = JsonConvert.DeserializeObject<ProgramsControllerConfig>(rawConf);                    
+            config = JsonConvert.DeserializeObject<ProgramsControllerConfig>(rawConf);  
+
+            UserData userData = GetUserData();
+            Log2File("-------------ProgramsController");
+            Log2File(JsonConvert.SerializeObject(userData));
         }
 
         public IActionResult Index()
@@ -1399,5 +1400,13 @@ namespace mes.Controllers
         }
 
         #endregion
+
+        private void Log2File(string line2log)
+        {
+            using(StreamWriter sw = new StreamWriter(intranetLog))
+            {
+                sw.WriteLine($"{DateTime.Now} -> {line2log}");
+            }
+        }        
     }
 }

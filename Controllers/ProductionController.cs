@@ -23,6 +23,8 @@ namespace mes.Controllers
         ProductionControllerConfig config = new ProductionControllerConfig();
         const string prodControllerConfigPath = @"c:\core\mes\ControllerConfig\ProductionController.json";
 
+        const string intranetLog = @"c:\temp\intranet.log";
+
         public ProductionController(ILogger<ProductionController> logger)
         {
             string rawConf = "";
@@ -33,6 +35,10 @@ namespace mes.Controllers
             }
             config = JsonConvert.DeserializeObject<ProductionControllerConfig>(rawConf);                
             _logger = logger;
+
+            UserData userData = GetUserData();
+            Log2File("-------------ProductionController");
+            Log2File(JsonConvert.SerializeObject(userData));            
         }
 
     #region productionDashboard
@@ -48,10 +54,8 @@ namespace mes.Controllers
             List<ProductionRequest> evidenziati = new List<ProductionRequest>();
             foreach(var oneRequest in requests)
             {
-                evidenziati.Add(oneRequest);
+                evidenziati.Add(ComputeAvailability(oneRequest));
             }
-            //calcolo e evidenziatore
-            //caricamento file di configurazione lastre-quantità di semilavorati
 
             return View(evidenziati);
         }
@@ -121,13 +125,10 @@ namespace mes.Controllers
 
             long max = 0;
 
-            try
-            {
+            try {
                 max = (from l in ProductionRequests select l.id).Max();            
-            }
-            catch
-            {
-
+            } catch (Exception excp) {
+                Log2File($"ERRORE: {excp.Message}");
             }
             
             newProductionRequest.id = max + 1;
@@ -165,6 +166,18 @@ namespace mes.Controllers
 
             return RedirectToAction("MainProductionRequests");
         }  
+
+        public IActionResult ScheduleProdRequest(long id)
+        {
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            ProductionRequest request = dbAccessor.Queryer<ProductionRequest>(config.ConnString, config.DbTable)
+                                                    .Where(i => i.id == id)
+                                                    .FirstOrDefault();
+
+            ViewBag.request = ComputeAvailability(request);
+
+            return View(request);
+        }
 
         private ProductionRequest ComputeAvailability(ProductionRequest newProductionRequest)        
         {
@@ -212,12 +225,6 @@ namespace mes.Controllers
             {
                 newProductionRequest.Pannellibg = "orange";
             } else newProductionRequest.Pannellibg = "none";
-
-
-            //se le richiesti> finiti => programma n finiture
-            //se
-            //se le quantità di semilavorati < quantità a db
-            //
 
             return newProductionRequest;       
         }
@@ -475,5 +482,12 @@ namespace mes.Controllers
             return result;
         }
 
+        private void Log2File(string line2log)
+        {
+            using(StreamWriter sw = new StreamWriter(intranetLog))
+            {
+                sw.WriteLine($"{DateTime.Now} -> {line2log}");
+            }
+        }
     }
 }

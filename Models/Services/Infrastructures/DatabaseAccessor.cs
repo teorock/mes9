@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using mes.Models.ViewModels;
@@ -12,10 +13,11 @@ namespace mes.Models.Services.Infrastructures
         private bool LogEnabled = true;
         private string logConnectionString = "Data Source=../mesData/dbmovements.db";
 
-        const string logPath = @"c:\temp\intranetLog.log";
+        const string logPath = @"c:\temp\intranet.log";        
 
         public int Insertor<T>(string connectionString, string tableName, object inputObject)
         {
+            Log2File("insertor");
             var properties = typeof(T).GetProperties();
             List<string> allProperties = new List<string>();
             List<string> allValues = new List<string>();
@@ -44,21 +46,29 @@ namespace mes.Models.Services.Infrastructures
             }
 
             string query = $"INSERT INTO {tableName} ({propertiesLine.Substring(0,propertiesLine.Length-1)}) VALUES ({valuesLine.Substring(0,valuesLine.Length-1)})";
+            Log2File(query);
+            
+            try
+            {
+                var conn = new SqliteConnection(connectionString);
+                conn.Open();
 
-            var conn = new SqliteConnection(connectionString);
-            conn.Open();
+                var cmd= new SqliteCommand(query, conn);
+                cmd.ExecuteNonQuery();  
 
-            var cmd= new SqliteCommand(query, conn);
-            cmd.ExecuteNonQuery();  
-
-            conn.Close();
-            conn.Dispose();
-
+                conn.Close();
+                conn.Dispose();
+            }
+            catch(Exception excp)
+            {
+                Log2File($"ERRORE: {excp.Message}");
+            }
             return 0;
         }
 
         public int Updater<T>(string connectionString, string tableName, object inputObject, long id)
         {
+            Log2File("updater");
             var properties = typeof(T).GetProperties();
             List<string> allProperties = new List<string>();
             List<string> allValues = new List<string>();
@@ -100,54 +110,69 @@ namespace mes.Models.Services.Infrastructures
             }
 
             string query = $"UPDATE {tableName} SET ({propertiesLine.Substring(0,propertiesLine.Length-1)}) = ({valuesLine.Substring(0,valuesLine.Length-1)}) WHERE id={id}";
+            Log2File(query);
 
-            var conn = new SqliteConnection(connectionString);
-            conn.Open();
+            try
+            {
+                var conn = new SqliteConnection(connectionString);
+                conn.Open();
 
-            var cmd= new SqliteCommand(query, conn);
-            cmd.ExecuteNonQuery();  
+                var cmd= new SqliteCommand(query, conn);
+                cmd.ExecuteNonQuery();  
 
-            conn.Close();
-            conn.Dispose();
-
+                conn.Close();
+                conn.Dispose();
+            }
+            catch (Exception excp)
+            {
+                Log2File($"ERRORE: {excp.Message}");
+            }
             return 0;
         }
 
         public List<T> Queryer<T>(string connectionString, string table)
         {
+            Log2File("queryer");
             var typeOfInstance = typeof(T);
 
             List<T> results = new List<T>();
 
             var properties = typeof(T).GetProperties();
 
-            var conn = new SqliteConnection(connectionString);
-            conn.Open();
-
-            var cmd2 = new SqliteCommand($"SELECT * FROM {table}", conn);
-            var reader = cmd2.ExecuteReader();
-            
-            while(reader.Read())
+            try
             {
-                var instance = Activator.CreateInstance(typeof(T));
-                
-                foreach(var oneProp in properties)
-                {
-                    try
-                    {
-                        typeOfInstance.GetProperty(oneProp.Name).SetValue(instance, reader[oneProp.Name]);
-                    }
-                    catch (Exception excp)
-                    {
-                        
-                    }
-                }
-                results.Add((T)instance);
-                
-            } 
+                var conn = new SqliteConnection(connectionString);
+                conn.Open();
 
-            conn.Close();
-            conn.Dispose();
+                var cmd2 = new SqliteCommand($"SELECT * FROM {table}", conn);
+                var reader = cmd2.ExecuteReader();
+                
+                while(reader.Read())
+                {
+                    var instance = Activator.CreateInstance(typeof(T));
+                    
+                    foreach(var oneProp in properties)
+                    {
+                        try
+                        {
+                            typeOfInstance.GetProperty(oneProp.Name).SetValue(instance, reader[oneProp.Name]);
+                        }
+                        catch (Exception excp)
+                        {
+                            
+                        }
+                    }
+                    results.Add((T)instance);
+                    
+                } 
+
+                conn.Close();
+                conn.Dispose();
+            }
+            catch (Exception excp)
+            {
+                Log2File($"ERRORE: {excp.Message}");
+            }
 
             return results;
 
@@ -315,6 +340,14 @@ namespace mes.Models.Services.Infrastructures
             }
 
             return false;
+        }
+
+        private void Log2File(string line2log)
+        {
+            using(StreamWriter sw = new StreamWriter(logPath))
+            {
+                sw.WriteLine($"{DateTime.Now} -> {line2log}");
+            }
         }
     }
 }

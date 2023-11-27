@@ -22,6 +22,7 @@ namespace mes.Controllers
         TestControllerConfig config = new TestControllerConfig();
         const string testControllerConfigPath = @"c:\core\mes\ControllerConfig\TestController.json";
         string authorized = "";
+        const string intranetLog=@"c:\temp\intranet.log";        
 
         public TestController()
         {
@@ -32,7 +33,11 @@ namespace mes.Controllers
                 rawConf = sr.ReadToEnd();
             }
             config = JsonConvert.DeserializeObject<TestControllerConfig>(rawConf);
-            authorized = config.Authorized;   
+            authorized = config.Authorized; 
+
+            UserData userData = GetUserData();
+            Log2File("-------------TestController");
+            Log2File(JsonConvert.SerializeObject(userData));             
         }
 
         //[Authorize(Roles = "root, CalendarOperator, User")]
@@ -227,6 +232,14 @@ namespace mes.Controllers
 
             return userData;
         }
+
+        private void Log2File(string line2log)
+        {
+            using(StreamWriter sw = new StreamWriter(intranetLog))
+            {
+                sw.WriteLine($"{DateTime.Now} -> {line2log}");
+            }
+        }     
 
     }
 
