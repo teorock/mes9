@@ -34,8 +34,6 @@
         <a class="btn btn-outline-primary" asp-controller="Production" asp-action="InsertProductionRequest">nuova richiesta di produzione</a>
     </div>                                 
 </div>
-<br>
-<br>
 <hr>
 @using(Html.BeginForm("AggiornaPannello", "Programs", FormMethod.Post, new { name = "frmAggDati", id = "frmAggDati" }))
 {
@@ -85,13 +83,5 @@
 }	 
 </table>
 }
-<br>
-<br>
-@if(authorize)
-{
-    <div class="row">
-        <div class="col-md-3 d-grid">
-            <button type="button" class="btn btn-outline-primary btn-block" data-bs-toggle="modal" data-bs-target="#confirmationModal">aggiorna</button>          
-        </div>            
-    </div>  
-}
+
+

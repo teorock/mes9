@@ -10,6 +10,7 @@ using mes.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ServiceStack;
@@ -224,8 +225,19 @@ namespace mes.Controllers
             newProductionRequest.DispPannello = quantLastre;
             newProductionRequest.CodPannello = thisArticle.CodPannello;
             
-            //assegna colori
-            int semilavPerPan = 50; //arriverà da file di configurazione dove codice ==     
+            int semilavPerPan = 1;
+            //assegna numero pezzi per pannello da file
+            try
+            {
+                List<PezziPerPannelloViewModel> listaPezzixPannello = LoadPanelsPiecesList(config.PezziPerPannelloList);
+
+                semilavPerPan = listaPezzixPannello.Where(a => a.ArticleCode == newProductionRequest.Articolo)
+                                                        .Select(p => p.Pieces).FirstOrDefault(); 
+            }
+            catch (Exception excp)
+            {
+                Log2File($"ERRORE: {excp.Message}");
+            }
             int richiestaSemilav = 0;       
             int richiestaPan =0;
             
@@ -247,6 +259,39 @@ namespace mes.Controllers
 
             return newProductionRequest;       
         }
+
+        private List<PezziPerPannelloViewModel> LoadPanelsPiecesList(string listFileName)
+        {
+            List<PezziPerPannelloViewModel> result = new List<PezziPerPannelloViewModel>();
+            List<string> rawFile = new List<string>();
+            try
+            {
+                rawFile = new List<string>(System.IO.File.ReadAllLines(listFileName));
+            }
+            catch (Exception excp)
+            {
+                Log2File($"ERRORE: {excp.Message}");
+            }
+
+            try
+            {
+                foreach(string oneLine in rawFile)
+                {
+                    string[] parts = oneLine.Split(',');
+                    PezziPerPannelloViewModel onePezziPan = new PezziPerPannelloViewModel(){
+                        ArticleCode = parts[0],
+                        Pieces = Convert.ToInt16(parts[1])
+                    };
+                    result.Add(onePezziPan);
+                }
+            }
+            catch (Exception excp)
+            {
+                Log2File($"ERRORE: {excp.Message}");
+            }
+            return result;
+        }
+
 
     #endregion
 

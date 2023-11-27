@@ -20,5 +20,6 @@ namespace mes.Models.ControllersConfigModels
         public string PanelsDbTable { get; set; }
         public string ProdFinitiConnString { get; set; }
         public string ProdFinitiDbTable { get; set; }
+        public string PezziPerPannelloList { get; set; }
     }
 }
