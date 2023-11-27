@@ -29,15 +29,15 @@ namespace mes.Controllers
 
         public ErpController(ILogger<ErpController> logger)
         {
-            _logger = logger;
-
-            UserData userData = GetUserData();
-            Log2File($"-----------------ErpController");
-            Log2File(JsonConvert.SerializeObject(userData));            
+            _logger = logger;         
         }
 
         public IActionResult Main()
         {
+            UserData userData = GetUserData();            
+            Log2File(JsonConvert.SerializeObject(userData));
+            Log2File($"-----------------ErpController");
+
             return View();
         }
 
@@ -743,7 +743,7 @@ namespace mes.Controllers
 
         private void Log2File(string line2log)
         {
-            using(StreamWriter sw = new StreamWriter(intranetLog))
+            using(StreamWriter sw = new StreamWriter(intranetLog, true))
             {
                 sw.WriteLine($"{DateTime.Now} -> {line2log}");
             }

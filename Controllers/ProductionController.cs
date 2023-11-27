@@ -36,9 +36,6 @@ namespace mes.Controllers
             config = JsonConvert.DeserializeObject<ProductionControllerConfig>(rawConf);                
             _logger = logger;
 
-            UserData userData = GetUserData();
-            Log2File("-------------ProductionController");
-            Log2File(JsonConvert.SerializeObject(userData));            
         }
 
     #region productionDashboard
@@ -47,6 +44,14 @@ namespace mes.Controllers
         [Authorize(Roles ="root, MagMaterialiScrivi")]
         public IActionResult Index()
         {
+
+            UserData userData = GetUserData();            
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
+
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<ProductionRequest> requests = dbAccessor.Queryer<ProductionRequest>(config.ConnString, config.DbTable)
                                                 .Where(e => e.Enabled == "1").ToList();
@@ -66,6 +71,11 @@ namespace mes.Controllers
         public IActionResult AggiornaProductionRequests(List<ProductionRequest> ProductionRequests)
         {               
             UserData userData = GetUserData();
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------            
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             foreach(ProductionRequest oneModel in ProductionRequests)
             {
@@ -111,6 +121,11 @@ namespace mes.Controllers
         {  
             //analisi dei dati  
             UserData userData = GetUserData();
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------            
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
 
             newProductionRequest = ComputeAvailability(newProductionRequest);
@@ -155,7 +170,11 @@ namespace mes.Controllers
         public IActionResult ModProductionRequest(ProductionRequest oneModel)
         {
             UserData userData = GetUserData();
-
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             oneModel.CreatedBy = userData.UserName;
             oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
             //oneModel.Enabled = "1";
@@ -375,6 +394,11 @@ namespace mes.Controllers
         public IActionResult MainUsersActivities()
         {
             UserData userData = GetUserData();
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------            
             List<UserDbMovementsViewModel> usersMovs = new List<UserDbMovementsViewModel>();
             
             
@@ -484,7 +508,7 @@ namespace mes.Controllers
 
         private void Log2File(string line2log)
         {
-            using(StreamWriter sw = new StreamWriter(intranetLog))
+            using(StreamWriter sw = new StreamWriter(intranetLog, true))
             {
                 sw.WriteLine($"{DateTime.Now} -> {line2log}");
             }

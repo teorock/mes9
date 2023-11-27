@@ -38,14 +38,16 @@ namespace intranet.Controllers
             }
             config = JsonConvert.DeserializeObject<DataInputControllerConfig>(rawConf); 
 
-            UserData userData = GetUserData();
-            Log2File("-------------DataInputController");
-            Log2File(JsonConvert.SerializeObject(userData));            
-
         }
       
         public IActionResult AnagraficheMain()
         {
+            UserData userData = GetUserData();
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------               
             return View();
         }
 
@@ -139,6 +141,11 @@ namespace intranet.Controllers
         {
             UserData userData = GetUserData();
             ViewBag.userRoles = userData.UserRoles;
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------            
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<ArticoloViewModel> Articoli = dbAccessor.Queryer<ArticoloViewModel>(config.ConnString, config.ArticlesDbTable)
@@ -151,6 +158,11 @@ namespace intranet.Controllers
         public IActionResult AggiornaArticoli(List<ArticoloViewModel> Articoli)
         {
                 UserData userData = GetUserData();
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------                
                 DatabaseAccessor dbAccessor = new DatabaseAccessor();
                 foreach(ArticoloViewModel oneModel in Articoli)
                 {
@@ -184,7 +196,11 @@ namespace intranet.Controllers
         public IActionResult InsertArticolo(ArticoloViewModel newArticolo)
         {
             UserData userData = GetUserData();
-
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             newArticolo.CreatedBy = userData.UserName;
             newArticolo.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
             newArticolo.Enabled = "1";            
@@ -230,7 +246,11 @@ namespace intranet.Controllers
         public IActionResult ModArticolo(ArticoloViewModel oneModel)
         {
             UserData userData = GetUserData();
-
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             oneModel.CreatedBy = userData.UserName;
             oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
             oneModel.Enabled = "1";
@@ -353,7 +373,7 @@ namespace intranet.Controllers
 
         private void Log2File(string line2log)
         {
-            using(StreamWriter sw = new StreamWriter(intranetLog))
+            using(StreamWriter sw = new StreamWriter(intranetLog, true))
             {
                 sw.WriteLine($"{DateTime.Now} -> {line2log}");
             }

@@ -33,15 +33,15 @@ namespace mes.Controllers
                 rawConf = sr.ReadToEnd();
             }
             config = JsonConvert.DeserializeObject<MesControllerConfig>(rawConf);  
-
-            UserData userData = GetUserData();
-            Log2File(JsonConvert.SerializeObject(userData));                        
        }
 
 
         [Route("Main")]
         public IActionResult Main()
         {
+            UserData userData = GetUserData();
+            Log2File(JsonConvert.SerializeObject(userData));                        
+            Log2File("------------MesController");            
             return View();
         }
         
@@ -389,7 +389,7 @@ namespace mes.Controllers
 
         private void Log2File(string line2log)
         {
-            using(StreamWriter sw = new StreamWriter(intranetLog))
+            using(StreamWriter sw = new StreamWriter(intranetLog, true))
             {
                 sw.WriteLine($"{DateTime.Now} -> {line2log}");
             }

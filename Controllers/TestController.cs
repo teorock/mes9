@@ -33,20 +33,24 @@ namespace mes.Controllers
                 rawConf = sr.ReadToEnd();
             }
             config = JsonConvert.DeserializeObject<TestControllerConfig>(rawConf);
-            authorized = config.Authorized; 
-
-            UserData userData = GetUserData();
-            Log2File("-------------TestController");
-            Log2File(JsonConvert.SerializeObject(userData));             
+            authorized = config.Authorized;       
         }
 
         //[Authorize(Roles = "root, CalendarOperator, User")]
         [HttpGet]        
         public IActionResult Index(string eventFilter)
         {
+
+            UserData userData = GetUserData();
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
+            
+
             //leggo configurazione da file e la passo
             string rawConf = "";
-            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
 
             using (StreamReader sr = new StreamReader(testControllerConfigPath))
             {
@@ -54,7 +58,7 @@ namespace mes.Controllers
             }
             config = JsonConvert.DeserializeObject<TestControllerConfig>(rawConf);
 
-            UserData userData = GetUserData();
+            //UserData userData = GetUserData();
             
             ViewBag.authorize = ((userData.UserRoles.Contains("root")
                                     |userData.UserRoles.Contains("CalendarOperator")
@@ -83,7 +87,6 @@ namespace mes.Controllers
             //prelevo la lista di tutti i CalendarAssignments
             List<CalendarAssignment> assignments = config.CalendarAssignments;
             //la filtro a seconda del ruolo
-            //List<CalendarAssignment> userAssignments = assignments.Where(x => userRoles.Contains(x.AuthorizedRole)).ToList();
             List<string> userAssignments = assignments.Where(x => userRoles.Contains(x.AuthorizedRole)).Select(x => x.AssignmentName).ToList();
             //la passo come ViewBag alla View
             ViewBag.userAssignments = userAssignments;
@@ -96,6 +99,11 @@ namespace mes.Controllers
         public IActionResult InsertEvent(string jsonString)
         {
             UserData userData = GetUserData();
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------            
             ProductionCalendarPageModel getCalendar = new ProductionCalendarPageModel();
 
             getCalendar = JsonConvert.DeserializeObject<ProductionCalendarPageModel>(jsonString);
@@ -235,11 +243,11 @@ namespace mes.Controllers
 
         private void Log2File(string line2log)
         {
-            using(StreamWriter sw = new StreamWriter(intranetLog))
+            using(StreamWriter sw = new StreamWriter(intranetLog, true))
             {
                 sw.WriteLine($"{DateTime.Now} -> {line2log}");
             }
-        }     
+        }         
 
     }
 

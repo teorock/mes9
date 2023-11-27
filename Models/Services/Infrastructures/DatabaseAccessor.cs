@@ -145,6 +145,7 @@ namespace mes.Models.Services.Infrastructures
                 conn.Open();
 
                 var cmd2 = new SqliteCommand($"SELECT * FROM {table}", conn);
+                Log2File(cmd2.CommandText);
                 var reader = cmd2.ExecuteReader();
                 
                 while(reader.Read())
@@ -159,7 +160,7 @@ namespace mes.Models.Services.Infrastructures
                         }
                         catch (Exception excp)
                         {
-                            
+                            Log2File($"ERRORE: {excp.Message}");
                         }
                     }
                     results.Add((T)instance);
@@ -194,6 +195,7 @@ namespace mes.Models.Services.Infrastructures
             }
             catch (Exception excp)
             {
+                Log2File($"ERRORE: {excp.Message}");
                 return -1;
             }
 
@@ -253,8 +255,9 @@ namespace mes.Models.Services.Infrastructures
                 code = inputObject.GetType().GetProperty("Codice").GetValue(inputObject, null).ToString();
             }
             catch (Exception excp)
-            {
+            {                
                 code = $"no code - error: {excp.Message}";
+                Log2File($"ERRORE: {code}");
             }
 
             //---- descrizione ----            
@@ -266,6 +269,7 @@ namespace mes.Models.Services.Infrastructures
             catch (Exception excp)
             {
                 description = $"no name/description - error:{excp.Message}";
+                Log2File($"ERRORE: {description}");
             }
 
             string user = inputObject.GetType().GetProperty("CreatedBy").GetValue(inputObject, null).ToString();
@@ -344,7 +348,7 @@ namespace mes.Models.Services.Infrastructures
 
         private void Log2File(string line2log)
         {
-            using(StreamWriter sw = new StreamWriter(logPath))
+            using(StreamWriter sw = new StreamWriter(logPath, true))
             {
                 sw.WriteLine($"{DateTime.Now} -> {line2log}");
             }

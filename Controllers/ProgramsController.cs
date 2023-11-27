@@ -43,18 +43,27 @@ namespace mes.Controllers
             }
             config = JsonConvert.DeserializeObject<ProgramsControllerConfig>(rawConf);  
 
-            UserData userData = GetUserData();
-            Log2File("-------------ProgramsController");
-            Log2File(JsonConvert.SerializeObject(userData));
         }
 
         public IActionResult Index()
         {
+            UserData userData = GetUserData();            
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------          
             return View();
         }
 
         public IActionResult Index_programs()
         {
+            UserData userData = GetUserData();            
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------                
             return View();
         }
         
@@ -66,6 +75,11 @@ namespace mes.Controllers
         {
             UserData userData = GetUserData();
             ViewBag.userRoles = userData.UserRoles;
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------            
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<BordoViewModel> bordi = new List<BordoViewModel>();
@@ -92,7 +106,11 @@ namespace mes.Controllers
             //{                
             UserData userData = GetUserData();
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             //estraggo i dati originali
             List<BordoViewModel> actualValues = dbAccessor.Queryer<BordoViewModel>(config.ConnectionString, config.BordiDbTable)
                                                             .Where(e => e.Enabled =="1")
@@ -141,7 +159,11 @@ namespace mes.Controllers
         public IActionResult InsertBordo(BordoViewModel newBordo)
         {
             UserData userData = GetUserData();
-
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             newBordo.CreatedBy = userData.UserName;
             newBordo.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
             newBordo.Enabled = "1";            
@@ -185,7 +207,11 @@ namespace mes.Controllers
         public IActionResult ModBordo(BordoViewModel oneModel)
         {
             UserData userData = GetUserData();
-
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             oneModel.CreatedBy = userData.UserName;
             oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
             //oneModel.Enabled = "1";
@@ -239,7 +265,11 @@ namespace mes.Controllers
         {
             UserData userData = GetUserData();
             ViewBag.userRoles = userData.UserRoles;
-
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<CollaViewModel> colle = (List<CollaViewModel>)dbAccessor.Queryer<CollaViewModel>(config.ConnectionString, config.ColleDbTable)
                                             .Where(x => x.Enabled == "1").ToList();
@@ -252,7 +282,11 @@ namespace mes.Controllers
         {
             UserData userData = GetUserData();
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             //estraggo dati originali
             List<CollaViewModel> collePreviousState = dbAccessor.Queryer<CollaViewModel>(config.ConnectionString, config.ColleDbTable)
                                                                 .Where(x => x.Enabled == "1")
@@ -298,7 +332,11 @@ namespace mes.Controllers
         public IActionResult InsertColla(CollaViewModel newColla)
         {
             UserData userData = GetUserData();
-
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             newColla.CreatedBy = userData.UserName;
             newColla.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
             newColla.Enabled="1";           
@@ -344,7 +382,11 @@ namespace mes.Controllers
         public IActionResult ModColla(CollaViewModel oneModel)
         {
             UserData userData = GetUserData();
-
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             oneModel.CreatedBy = userData.UserName;
             oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
             //oneModel.Enabled = "1";
@@ -406,7 +448,11 @@ namespace mes.Controllers
             if(tipoMateriale=="" || tipoMateriale == null) tipoMateriale="tutti";
             UserData userData = GetUserData();
             ViewBag.userRoles = userData.UserRoles;
-
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<PannelloViewModel> pannelli = new List<PannelloViewModel>();
             List<PannelloViewModel> tempPannelli = new List<PannelloViewModel>();
@@ -445,7 +491,11 @@ namespace mes.Controllers
         {   
             UserData userData = GetUserData();
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------            
             List<PannelloViewModel> actualValues = dbAccessor.Queryer<PannelloViewModel>(config.ConnectionString, config.PannelliDbTable)
                                                                 .Where(e => e.Enabled =="1")
                                                                 .ToList();
@@ -512,7 +562,11 @@ namespace mes.Controllers
         public IActionResult InsertPannello(PannelloViewModel newPannello)
         {    
             UserData userData = GetUserData();
-
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             newPannello.CreatedBy = userData.UserName;
             newPannello.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
             newPannello.Enabled = "1";            
@@ -571,7 +625,11 @@ namespace mes.Controllers
         public IActionResult ModPannello(PannelloViewModel oneModel)
         {
             UserData userData = GetUserData();
-
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             oneModel.CreatedBy = userData.UserName;
             oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
             //oneModel.Enabled = "1";
@@ -600,7 +658,6 @@ namespace mes.Controllers
         [Authorize(Roles = "root, PannelliScrivi, MagMaterialiLeggi")]
         public IActionResult StampaEtichetta(long id, int copie)
         {
-
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<PannelloViewModel> pannelli = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(config.ConnectionString, config.PannelliDbTable)
                                         .Where(x => x.Enabled=="1").ToList(); 
@@ -637,7 +694,11 @@ namespace mes.Controllers
         {
             UserData userData = GetUserData();
             ViewBag.userRoles = userData.UserRoles;
-
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<MatPannelloViewModel> MatPannelli = dbAccessor.Queryer<MatPannelloViewModel>(config.ConnectionString, config.MatPannelliDbTable)
                                             .Where(x => x.Enabled =="1").ToList();
@@ -651,6 +712,11 @@ namespace mes.Controllers
         {           
             UserData userData = GetUserData();
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------            
             //estraggo dati originali
             List<MatPannelloViewModel> actualValues = dbAccessor.Queryer<MatPannelloViewModel>(config.ConnectionString, config.MatPannelliDbTable)
                                                                 .Where(e => e.Enabled =="1")
@@ -683,7 +749,11 @@ namespace mes.Controllers
         {
             UserData userData = GetUserData();
             ViewBag.userRoles = userData.UserRoles;
-
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<MatPannelloViewModel> MatPannelli = dbAccessor.Queryer<MatPannelloViewModel>(config.ConnectionString, config.MatPannelliDbTable)
                                         .Where(x => x.Enabled=="1").ToList();            
@@ -699,7 +769,11 @@ namespace mes.Controllers
         public IActionResult InsertMatPannello(MatPannelloViewModel newMatPannello)
         {
             UserData userData = GetUserData();
-
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             newMatPannello.CreatedBy = userData.UserName;
             newMatPannello.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
             newMatPannello.Enabled = "1";            
@@ -744,7 +818,11 @@ namespace mes.Controllers
         public IActionResult ModMatPannello(MatPannelloViewModel oneModel)
         {
             UserData userData = GetUserData();
-
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             oneModel.CreatedBy = userData.UserName;
             oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
             //oneModel.Enabled = "1";
@@ -803,7 +881,11 @@ namespace mes.Controllers
         {
             UserData userData = GetUserData();
             ViewBag.userRoles = userData.UserRoles;
-
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<SemilavoratoViewModel> semilavorati = new List<SemilavoratoViewModel>();
             List<SemilavoratoViewModel> tmpSemilavorati = new List<SemilavoratoViewModel>();
@@ -839,12 +921,14 @@ namespace mes.Controllers
 
         [Authorize(Roles = "root, MagSemilavoratiScrivi")]
         public IActionResult AggiornaSemilavorati(List<SemilavoratoViewModel> Semilavorati)
-        {
-            //if(aggiornaSemilavorati)
-            //{                
+        {            
             UserData userData = GetUserData();
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             //estraggo dati originali
             List<SemilavoratoViewModel> actualValues = dbAccessor.Queryer<SemilavoratoViewModel>(config.ConnectionString, config.SemilavDbTable)
                                             .Where(x => x.Enabled == "1").ToList();  
@@ -889,7 +973,11 @@ namespace mes.Controllers
         public IActionResult InsertSemilavorato(SemilavoratoViewModel newSemilavorato)
         {
             UserData userData = GetUserData();
-
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             newSemilavorato.CreatedBy = userData.UserName;
             newSemilavorato.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
             newSemilavorato.Enabled = "1";            
@@ -934,7 +1022,11 @@ namespace mes.Controllers
         public IActionResult ModSemilavorato(SemilavoratoViewModel oneModel)
         {
             UserData userData = GetUserData();
-
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             oneModel.CreatedBy = userData.UserName;
             oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
             //oneModel.Enabled = "1";
@@ -1010,7 +1102,11 @@ namespace mes.Controllers
         {
             UserData userData = GetUserData();
             ViewBag.userRoles = userData.UserRoles;
-
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<RestoViewModel> Resti = dbAccessor.Queryer<RestoViewModel>(config.ConnectionString, config.RestiDbTable)
                                             .Where(x => x.Enabled =="1").ToList();
@@ -1024,7 +1120,11 @@ namespace mes.Controllers
         {
             UserData userData = GetUserData();
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             //estraggo dati originali
             List<RestoViewModel> actualValues = dbAccessor.Queryer<RestoViewModel>(config.ConnectionString, config.RestiDbTable)
                                             .Where(x => x.Enabled == "1").ToList();                
@@ -1070,7 +1170,11 @@ namespace mes.Controllers
         public IActionResult InsertResto(RestoViewModel newResto)
         {
             UserData userData = GetUserData();
-
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             newResto.CreatedBy = userData.UserName;
             newResto.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
             newResto.Enabled = "1";            
@@ -1122,7 +1226,11 @@ namespace mes.Controllers
         public IActionResult ModResto(RestoViewModel oneModel)
         {
             UserData userData = GetUserData();
-
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             oneModel.CreatedBy = userData.UserName;
             oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
             //oneModel.Enabled = "1";
@@ -1403,7 +1511,7 @@ namespace mes.Controllers
 
         private void Log2File(string line2log)
         {
-            using(StreamWriter sw = new StreamWriter(intranetLog))
+            using(StreamWriter sw = new StreamWriter(intranetLog, true))
             {
                 sw.WriteLine($"{DateTime.Now} -> {line2log}");
             }

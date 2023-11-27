@@ -36,15 +36,18 @@ namespace mes.Controllers
             }
             config = JsonConvert.DeserializeObject<DashboardControllerConfig>(rawConf);
 
-            UserData userData = GetUserData();
-            Log2File(JsonConvert.SerializeObject(userData));
-
         }
 
         [HttpGet]
         [Authorize(Roles ="root, MagMaterialiScrivi")]
         public IActionResult Index()
         {
+            UserData userData = GetUserData();
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------                
             return View();
         }
         
@@ -53,7 +56,12 @@ namespace mes.Controllers
         [Authorize(Roles ="root, MagMaterialiScrivi")]
         public IActionResult DashboardMateriali()
         {
-            
+            UserData userData = GetUserData();
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
 
             List<PannelloViewModel> pannelli = dbAccessor.Queryer<PannelloViewModel>(config.ConnectionString, config.PannelliDbTable)
@@ -182,13 +190,13 @@ namespace mes.Controllers
 
             return userData;
         }
-
         private void Log2File(string line2log)
         {
-            using(StreamWriter sw = new StreamWriter(intranetLog))
+            using(StreamWriter sw = new StreamWriter(intranetLog, true))
             {
                 sw.WriteLine($"{DateTime.Now} -> {line2log}");
             }
-        }          
+        }  
+
     }
 }
