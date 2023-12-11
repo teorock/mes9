@@ -436,15 +436,15 @@ namespace mes.Controllers
             UserData userData = GetUserData();
 
             newPermesso.CreatedBy = userData.UserName;
-            newPermesso.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
-            newPermesso.DataDiRichiesta = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
+            newPermesso.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
+            newPermesso.DataDiRichiesta = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
             GeneralPurpose genPurpose = new GeneralPurpose();
             newPermesso.IntervalloTempo = genPurpose.PermissionTimeSpan(newPermesso.DataInizio, newPermesso.DataFine, newPermesso.Tipologia);
             newPermesso.Stato = "in attesa";
             if(newPermesso.Note == null) newPermesso.Note ="nessuna";
 
-            newPermesso.DataInizio = Convert.ToDateTime(newPermesso.DataInizio).ToString("dd/MM/yyyy HH:mm");
-            newPermesso.DataFine = Convert.ToDateTime(newPermesso.DataFine).ToString("dd/MM/yyyy HH:mm");
+            newPermesso.DataInizio = Convert.ToDateTime(newPermesso.DataInizio).ToString("dd/MM/yyyy-HH:mm");
+            newPermesso.DataFine = Convert.ToDateTime(newPermesso.DataFine).ToString("dd/MM/yyyy-HH:mm");
 
             //ottieni il nome utente per lo user che richiede l'inserimento            
             //se il nome nel model != nome dello user => ricerca lo username del dipendente per il quale viene chiesto il permesso
