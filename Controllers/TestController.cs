@@ -90,6 +90,7 @@ namespace mes.Controllers
             List<string> userAssignments = assignments.Where(x => userRoles.Contains(x.AuthorizedRole)).Select(x => x.AssignmentName).ToList();
             //la passo come ViewBag alla View
             ViewBag.userAssignments = userAssignments;
+            ViewBag.eventFilter = eventFilter;
 
             return View();
         }

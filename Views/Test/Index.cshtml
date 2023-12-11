@@ -11,6 +11,7 @@
   string defaultView = ViewBag.defaultView;
   string baseAddress = ViewBag.baseAddress;
   TestControllerConfig config = ViewBag.config;
+  string eventFilter = ViewBag.eventFilter;
 
   List<string> assignments = ViewBag.userAssignments;
 
@@ -208,22 +209,16 @@
             }                                    
 
           function showModal(event, mode, assignments) {
-            //var extendedP = event.extendedProps;
-            //console.log("showModal " + event.title);
-
 
             var jsonAssignments = '@Json.Serialize(assignments)';
-            //alert(jsonAssignments);
             var assignmentsArray = JSON.parse(jsonAssignments);
-            //alert(assignmentsArray);            
-
-            //alert(assignmentsArray.length);
 
             var assignedToOptions  ='';
+            var eventFilter = '@eventFilter';
 
             for (var i =0; i< assignmentsArray.length; i++){
-              assignedToOptions  += `<option value="${assignmentsArray[i]}">${assignmentsArray[i]}</option>`;
-              //alert(assignedToOptions);
+              var isSelected = assignmentsArray[i] === eventFilter ? 'selected' : '';
+              assignedToOptions  += `<option value="${assignmentsArray[i]}" ${isSelected}>${assignmentsArray[i]}</option>`;
             }
 
             $('#myModal .modal-body').html(`
@@ -467,3 +462,4 @@
       </div>
     </div>
   </div>
+
