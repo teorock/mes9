@@ -2,10 +2,44 @@
 @using System.Collections.Generic
 
 @model List<UsersDashViewModel>
+@{
+    
+}
+
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+<script>
+    google.charts.load('current', {'packages':['corechart']});
+    google.charts.setOnLoadCallback(drawChart);
+
+    function drawChart() {
+    const data = google.visualization.arrayToDataTable([
+    ['Contry', 'Giorni di ritardo', {role: 'annotation'}],
+    ['Pannelli',0.5, 'test'],
+    ['Semilavorati',1, 'mirko@intranet'],
+    ['Colle',2, 'test'],
+    ['Bordi',4, 'test'],
+    ['Finiti',6, 'test']
+    ]);
+
+    const options = {
+    title:'stato di aggiornamento del magazzino materiali'
+    };
+
+    const chart = new google.visualization.BarChart(document.getElementById('myChart'));
+    chart.draw(data, options);
+    }
+</script>
 
 <h3>Dashboard utilizzatori</h3>
 <br>
 <br>
+<div class="row">
+    <div class="md-col-12">
+        <div id="myChart" style="width:100%; max-width:900px; height:400px;"></div>
+    </div>
+</div>
+<hr>
 <div class = "row">
     <div class = "col-md-2">
         <h5>operatore</h5>

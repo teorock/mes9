@@ -210,18 +210,21 @@ namespace mes.Controllers
             string quantFiniti = dbAccessor.Queryer<ProdFinitiViewModel>(config.ProdFinitiConnString, config.ProdFinitiDbTable)
                                             .Where(c => c.Codice == newProductionRequest.Articolo)
                                             .Select(q => q.Quantita).FirstOrDefault();
+            if(quantFiniti==null) quantFiniti ="0"                                            ;
             newProductionRequest.Disponibili = quantFiniti;
 
 
             string quantSemilav = dbAccessor.Queryer<SemilavoratoViewModel>(config.SemilavConnString, config.SemilavDbTable)
                                         .Where(c => c.Codice == thisArticle.CodSemilavorato)
                                         .Select(q => q.Quantita).FirstOrDefault();
+            if(quantSemilav==null) quantSemilav ="0";
             newProductionRequest.DispSemilav = quantSemilav;
             newProductionRequest.CodSemilavorato = thisArticle.CodSemilavorato;
 
             string quantLastre = dbAccessor.Queryer<PannelloViewModel>(config.PanelsConnString, config.PanelsDbTable)
                                         .Where(p => p.Codice == thisArticle.CodPannello)
-                                        .Select(q => q.Quantita).FirstOrDefault();   
+                                        .Select(q => q.Quantita).FirstOrDefault();
+            if(quantLastre==null) quantLastre ="0";
             newProductionRequest.DispPannello = quantLastre;
             newProductionRequest.CodPannello = thisArticle.CodPannello;
             
@@ -246,12 +249,14 @@ namespace mes.Controllers
             {
                 richiestaSemilav = Convert.ToInt16(newProductionRequest.DispSemilav) - Math.Abs(richiestaFiniti);
                 newProductionRequest.Finitibg = "orange";
-            }
+            } else newProductionRequest.Finitibg ="none";
+            
             if(richiestaSemilav<0)
             {
                 richiestaPan = Convert.ToInt16(Math.Truncate((decimal)Math.Abs(richiestaSemilav)/semilavPerPan));
                 newProductionRequest.Semilavbg = "orange";
-            }
+            } else newProductionRequest.Semilavbg ="none";
+            
             if((Convert.ToInt16(newProductionRequest.DispPannello)-richiestaPan)<0)
             {
                 newProductionRequest.Pannellibg = "orange";
@@ -409,6 +414,20 @@ namespace mes.Controllers
                         break;
                 }
             }
+
+            //------------------
+			List<DataPoint> dataPoints = new List<DataPoint>();
+ 
+			dataPoints.Add(new DataPoint("Economics", 1));
+			dataPoints.Add(new DataPoint("Physics", 2));
+			dataPoints.Add(new DataPoint("Literature", 4));
+			dataPoints.Add(new DataPoint("Chemistry", 4));
+			dataPoints.Add(new DataPoint("Literature", 9));
+			dataPoints.Add(new DataPoint("Physiology or Medicine", 11));
+			dataPoints.Add(new DataPoint("Peace", 13));
+ 
+			ViewBag.DataPoints = JsonConvert.SerializeObject(dataPoints);
+            //------------------
 
             return View(model);
         }
