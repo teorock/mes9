@@ -490,17 +490,10 @@ namespace mes.Controllers
                 List<DbMovementsViewModel> userMovements = allDbMovements.Where(u => u.User == oneUser).ToList();
                 DbMovementsViewModel lastUserMov = new DbMovementsViewModel();
 
-                try
-                {
-                    lastUserMov = userMovements.OrderByDescending(d => DateTime.ParseExact(d.ModifiedOn, "dd/MM/yyyy-HH:mm", null))
+
+                lastUserMov = userMovements.OrderByDescending(d => DateTime.ParseExact(d.ModifiedOn, "dd/MM/yyyy-HH:mm", null))
                                                 .FirstOrDefault();
-                }
-                catch(Exception excp)
-                {
-                    Log2File($"ERRORE: {excp.Message}");
-                    lastUserMov = userMovements.OrderByDescending(d => DateTime.ParseExact(d.ModifiedOn, "dd/MM/yyyy HH:mm", null))
-                                                .FirstOrDefault();                    
-                }
+
 
                 string modDetails = $"{Path.GetFileNameWithoutExtension(lastUserMov.DbName)}/{lastUserMov.DbTable}/{lastUserMov.DbColumn}/{lastUserMov.OperationType} da {lastUserMov.PreviousVal} a {lastUserMov.NewVal}|{lastUserMov.Code}|{lastUserMov.Description}";
                 
