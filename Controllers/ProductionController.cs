@@ -310,7 +310,8 @@ namespace mes.Controllers
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             
             List<UsersDashViewModel> model = new List<UsersDashViewModel>();
-
+            List<DataPoint> dataPoints = new List<DataPoint>();
+            
             //prelevo i dati di tutte le tabelle
             List<string> allUsersTables = config.UsersDashTables;
             
@@ -333,7 +334,13 @@ namespace mes.Controllers
                                 UpdatedTimes = allBordi.Count(),
                                 Distance = GetWorkDuration(DateConverter(lastUpBordo.CreatedOn), DateTime.Now),
                                 ForeignId = lastUpBordo.id                        
-                        });                    
+                        });
+                        //-------------------------
+                        dataPoints.Add(new DataPoint(
+                            "Bordi",
+                            Convert.ToDouble(GetDoubleWorkDuration(
+                                                GetWorkDuration(DateConverter(lastUpBordo.CreatedOn), DateTime.Now))),
+                            lastUpBordo.CreatedBy));
                         break;
 
                     case "MagazzinoColle":
@@ -348,7 +355,13 @@ namespace mes.Controllers
                                 UpdatedTimes = allColle.Count(),
                                 Distance = GetWorkDuration(DateConverter(lastUpColla.CreatedOn), DateTime.Now),
                                 ForeignId = lastUpColla.id                        
-                        });                      
+                        });
+                        //-------------------------
+                        dataPoints.Add(new DataPoint(
+                            "Colle",
+                            Convert.ToDouble(GetDoubleWorkDuration(
+                                                GetWorkDuration(DateConverter(lastUpColla.CreatedOn), DateTime.Now))),
+                            lastUpColla.CreatedBy));                                              
                         break;
 
                     case "MagazzinoPannelli":
@@ -365,6 +378,12 @@ namespace mes.Controllers
                                     Distance = GetWorkDuration(DateConverter(lastUpPanel.CreatedOn), DateTime.Now),
                                     ForeignId = lastUpPanel.id                        
                             });
+                            //-------------------------
+                            dataPoints.Add(new DataPoint(
+                                "Pannelli",
+                            Convert.ToDouble(GetDoubleWorkDuration(
+                                                GetWorkDuration(DateConverter(lastUpPanel.CreatedOn), DateTime.Now))),
+                                lastUpPanel.CreatedBy));                               
                         }
                         break;
 
@@ -380,7 +399,13 @@ namespace mes.Controllers
                                 UpdatedTimes = allFinishedProd.Count(),
                                 Distance = GetWorkDuration(DateConverter(lastUpFinish.CreatedOn), DateTime.Now),
                                 ForeignId = lastUpFinish.id                        
-                        });                    
+                        });
+                        //-------------------------
+                        dataPoints.Add(new DataPoint(
+                            "Finiti",
+                            Convert.ToDouble(GetDoubleWorkDuration(
+                                                GetWorkDuration(DateConverter(lastUpFinish.CreatedOn), DateTime.Now))),
+                            lastUpFinish.CreatedBy));                                       
                         break;
 
                     case "MagazzinoResti":
@@ -395,7 +420,13 @@ namespace mes.Controllers
                                 UpdatedTimes = allResti.Count(),
                                 Distance = GetWorkDuration(DateConverter(lastUpResto.CreatedOn), DateTime.Now),
                                 ForeignId = lastUpResto.id                        
-                        });                    
+                        });
+                        //-------------------------
+                        dataPoints.Add(new DataPoint(
+                            "Resti",
+                            Convert.ToDouble(GetDoubleWorkDuration(
+                                                GetWorkDuration(DateConverter(lastUpResto.CreatedOn), DateTime.Now))),
+                            lastUpResto.CreatedBy));                                          
                         break;
 
                     case "MagazzinoSemilavorati":
@@ -410,24 +441,26 @@ namespace mes.Controllers
                                 UpdatedTimes = allSemilav.Count(),
                                 Distance = GetWorkDuration(DateConverter(lastUpSemilav.CreatedOn), DateTime.Now),
                                 ForeignId = lastUpSemilav.id                        
-                        });                         
+                        });
+                        //-------------------------
+                        dataPoints.Add(new DataPoint(
+                            "Semilav",
+                            Convert.ToDouble(GetDoubleWorkDuration(
+                                                GetWorkDuration(DateConverter(lastUpSemilav.CreatedOn), DateTime.Now))),
+                            lastUpSemilav.CreatedBy));                                       
                         break;
                 }
             }
 
-            //------------------
-			List<DataPoint> dataPoints = new List<DataPoint>();
- 
-			dataPoints.Add(new DataPoint("Economics", 1));
-			dataPoints.Add(new DataPoint("Physics", 2));
-			dataPoints.Add(new DataPoint("Literature", 4));
-			dataPoints.Add(new DataPoint("Chemistry", 4));
-			dataPoints.Add(new DataPoint("Literature", 9));
-			dataPoints.Add(new DataPoint("Physiology or Medicine", 11));
-			dataPoints.Add(new DataPoint("Peace", 13));
+			//dataPoints.Add(new DataPoint("Economics", 1, "e.guidolin"));
+			//dataPoints.Add(new DataPoint("Physics", 2, "e.guidolin"));
+			//dataPoints.Add(new DataPoint("Literature", 4, "e.guidolin"));
+			//dataPoints.Add(new DataPoint("Chemistry", 4, "e.guidolin"));
+			//dataPoints.Add(new DataPoint("Literature", 9, "e.guidolin"));
+			//dataPoints.Add(new DataPoint("Physiology or Medicine", 11, "e.guidolin"));
+			//dataPoints.Add(new DataPoint("Peace", 13, "e.guidolin"));
  
 			ViewBag.DataPoints = JsonConvert.SerializeObject(dataPoints);
-            //------------------
 
             return View(model);
         }
@@ -447,6 +480,12 @@ namespace mes.Controllers
             }
 
             return workDuration;
+        }
+
+        private double GetDoubleWorkDuration(TimeSpan input)
+        {
+            double result = Convert.ToDouble(input.Days + input.Hours * 0.0417);
+            return result;
         }
 
     #endregion

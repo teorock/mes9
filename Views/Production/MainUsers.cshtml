@@ -1,57 +1,36 @@
 @using mes.Models.ViewModels
 @using System.Collections.Generic
+@using Newtonsoft.Json;
 
 @model List<UsersDashViewModel>
 @{
-    
+
 }
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 
-<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-
-<script>
-    google.charts.load('current', {'packages':['corechart']});
-    google.charts.setOnLoadCallback(drawChart);
-
-    function drawChart() {
-    const data = google.visualization.arrayToDataTable([
-    ['Contry', 'Giorni di ritardo', {role: 'annotation'}],
-    ['Pannelli',0.5, 'test'],
-    ['Semilavorati',1, 'mirko@intranet'],
-    ['Colle',2, 'test'],
-    ['Bordi',4, 'test'],
-    ['Finiti',6, 'test']
-    ]);
-
-    const options = {
-    title:'stato di aggiornamento del magazzino materiali'
-    };
-
-    const chart = new google.visualization.BarChart(document.getElementById('myChart'));
-    chart.draw(data, options);
-    }
-</script>
 
 <h3>Dashboard utilizzatori</h3>
 <br>
 <br>
 <div class="row">
     <div class="md-col-12">
-        <div id="myChart" style="width:100%; max-width:900px; height:400px;"></div>
+        <canvas id="myChart" style="width:100%;max-width:600px; height:400px; max-height:400px;"></canvas>
     </div>
 </div>
 <hr>
 <div class = "row">
     <div class = "col-md-2">
-        <h5>operatore</h5>
+        <h6>operatore</h6>
     </div>
     <div class = "col-md-3">
-        <h5>tabella</h5>
+        <h6>tabella</h6>
     </div>
     <div class = "col-md-5">
-        <h5>ultimo aggiornamento</h5>
+        <h6>ultimo aggiornamento</h6>
     </div>    
     <div class = "col-md-2">
-        <h5>totale aggiornamenti tabella</h5>
+        <h6>totale aggiornamenti tabella</h6>
     </div>            
 </div>
 <hr>
@@ -65,17 +44,72 @@
 
     <div class = "row">
         <div class = "col-md-2">
-            <h5>@oneDash.UserName.Split('@')[0]</h5>
+            <h6>@oneDash.UserName.Split('@')[0]</h6>
         </div>
         <div class = "col-md-3">
-            <h5>@oneDash.Table</h5>
+            <h6>@oneDash.Table</h6>
         </div>
         <div class = "col-md-5">
-            <h5>@data >>> @dist</h5>
+            <h6>@data >>> @dist</h6>
         </div>        
         <div class = "col-md-2">
-            <h5>@oneDash.UpdatedTimes</h5>
+            <h6>@oneDash.UpdatedTimes</h6>
         </div>            
     </div>
     <hr> 
 }
+
+  <script>
+    // Use the JSON data directly from ViewBag without additional serialization
+    
+    const dataPoints = JSON.parse('@Html.Raw(ViewBag.DataPoints)');
+    //alert("dataPoints: " + dataPoints);
+
+    // Extract xValues, yValues, and labels from dataPoints
+    const xValues = dataPoints.map(dp => dp.xValue);
+    const yValues = dataPoints.map(dp => dp.Y);
+    const labels = dataPoints.map(dp => dp.Label);
+
+    const barColors = [
+      "rgba(0,255,0,1.0)",
+      "rgba(0,255,0,0.8)",
+      "rgba(0,255,0,0.6)",
+      "rgba(0,255,0,0.4)",
+      "rgba(0,255,0,0.2)"
+    ];
+
+    const ctx = document.getElementById('myChart').getContext('2d');
+    Chart.register(ChartDataLabels); // Register the plugin
+    new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: xValues,
+        datasets: [{
+          backgroundColor: barColors,
+          data: yValues
+        }]
+      },
+      options: {
+        plugins: {
+          legend: {
+            display: false
+          },
+          title: {
+            display: true,
+            text: "giorni trascorsi dall'ultimo aggiornamento"
+          },
+          datalabels: {
+            anchor: 'center',
+            align: 'center',
+            color: 'black',
+            font: {
+              weight: 'bold'
+            },
+            formatter: function (value, context) {
+              return labels[context.dataIndex];
+            }
+          }
+        }
+      }
+    });
+  </script>
