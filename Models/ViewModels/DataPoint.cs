@@ -8,10 +8,11 @@ namespace mes.Models.ViewModels
 {
     public class DataPoint
     {
-		public DataPoint(string label, double y)
+		public DataPoint(string label, double y, string xValue)
 		{
 			this.Label = label;
 			this.Y = y;
+			this.xValue = xValue;
 		}
  
 		//Explicitly setting the name to be used while serializing to JSON.
@@ -20,6 +21,9 @@ namespace mes.Models.ViewModels
  
 		//Explicitly setting the name to be used while serializing to JSON.
 		[DataMember(Name = "y")]
-		public Nullable<double> Y = null;        
+		public Nullable<double> Y = null;
+
+		[DataMember(Name = "xValue")]
+		public string xValue = null;  		   
     }
 }
