@@ -21,5 +21,6 @@ namespace mes.Models.ControllersConfigModels
         public string ProdFinitiConnString { get; set; }
         public string ProdFinitiDbTable { get; set; }
         public string PezziPerPannelloList { get; set; }
+        public List<CalendarAssignment> CalendarAssignments { get; set; }
     }
 }

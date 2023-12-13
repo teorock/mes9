@@ -23,7 +23,6 @@ namespace mes.Controllers
         private readonly ILogger<ProductionController> _logger;
         ProductionControllerConfig config = new ProductionControllerConfig();
         const string prodControllerConfigPath = @"c:\core\mes\ControllerConfig\ProductionController.json";
-
         const string intranetLog = @"c:\temp\intranet.log";
 
         public ProductionController(ILogger<ProductionController> logger)
@@ -187,16 +186,31 @@ namespace mes.Controllers
             return RedirectToAction("MainProductionRequests");
         }  
 
+        [HttpGet]
         public IActionResult ScheduleProdRequest(long id)
         {
+            //leggere TestControllerConfig
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             ProductionRequest request = dbAccessor.Queryer<ProductionRequest>(config.ConnString, config.DbTable)
                                                     .Where(i => i.id == id)
                                                     .FirstOrDefault();
 
             ViewBag.request = ComputeAvailability(request);
+            //passare lista delle assegnabilità ()
 
             return View(request);
+
+            //{
+            //	"assignedTo": "Waterjet",
+            //	"eventTitle": "NomeTask",
+            //	"eventDescription": "descrizione",
+            //	"startDate": "2023-11-29T07:00",
+            //	"endDate": "2023-11-29T16:00",
+            //	"operationType": "create",
+            //	"fileLocation": "test",
+            //	"id": "1000"
+            //}
+
         }
 
         private ProductionRequest ComputeAvailability(ProductionRequest newProductionRequest)        
@@ -451,14 +465,6 @@ namespace mes.Controllers
                         break;
                 }
             }
-
-			//dataPoints.Add(new DataPoint("Economics", 1, "e.guidolin"));
-			//dataPoints.Add(new DataPoint("Physics", 2, "e.guidolin"));
-			//dataPoints.Add(new DataPoint("Literature", 4, "e.guidolin"));
-			//dataPoints.Add(new DataPoint("Chemistry", 4, "e.guidolin"));
-			//dataPoints.Add(new DataPoint("Literature", 9, "e.guidolin"));
-			//dataPoints.Add(new DataPoint("Physiology or Medicine", 11, "e.guidolin"));
-			//dataPoints.Add(new DataPoint("Peace", 13, "e.guidolin"));
  
 			ViewBag.DataPoints = JsonConvert.SerializeObject(dataPoints);
 

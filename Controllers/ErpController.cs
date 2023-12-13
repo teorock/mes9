@@ -27,6 +27,8 @@ namespace mes.Controllers
         bool aggiornaDipendenti = false;
         bool aggiornaPermessi = false;
 
+        string dateFormat = "dd/MM/yyyy-HH:mm";
+
         public ErpController(ILogger<ErpController> logger)
         {
             _logger = logger;         
@@ -177,6 +179,7 @@ namespace mes.Controllers
         [Authorize(Roles = "User, root, PermessiInsertor, PermessiSupervisor, PermessiMaster")]
         public IActionResult MainPermessi()
         {
+
             int actualMonth = DateTime.Today.Month;
             int actualYear = DateTime.Today.Year;
             int lastDay = DateTime.DaysInMonth(actualYear,actualMonth);
@@ -195,16 +198,16 @@ namespace mes.Controllers
             {
                 permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
                                     .Where(x => x.Enabled =="1")
-                                    .Where(z => Convert.ToDateTime(z.DataInizio).Date >= Convert.ToDateTime($"{actualYear}-{actualMonth}-01").Date)
-                                    .Where(w => Convert.ToDateTime(w.DataFine).Date <= Convert.ToDateTime($"{actualYear}-{actualMonth}-{lastDay}").Date)                                            
+                                    .Where(z => DateTime.ParseExact(z.DataInizio, dateFormat, null).Date >= Convert.ToDateTime($"{actualYear}-{actualMonth}-01").Date)
+                                    .Where(w => DateTime.ParseExact(w.DataFine, dateFormat, null).Date <= Convert.ToDateTime($"{actualYear}-{actualMonth}-{lastDay}").Date)                                            
                                     .OrderBy(y => y.DataInizio).ToList();                                    
             }
             else if(userData.UserRoles.Contains("User"))
             {
                 permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
                                     .Where(x => x.Enabled =="1")
-                                    .Where(z => Convert.ToDateTime(z.DataInizio).Date >= Convert.ToDateTime($"{actualYear}-{actualMonth}-01").Date)
-                                    .Where(w => Convert.ToDateTime(w.DataFine).Date <= Convert.ToDateTime($"{actualYear}-{actualMonth}-{lastDay}").Date)                                               
+                                    .Where(z => DateTime.ParseExact(z.DataInizio, dateFormat, null).Date >= Convert.ToDateTime($"{actualYear}-{actualMonth}-01").Date)
+                                    .Where(w => DateTime.ParseExact(w.DataFine, dateFormat, null).Date <= Convert.ToDateTime($"{actualYear}-{actualMonth}-{lastDay}").Date)                                               
                                     .Where(y => y.Username == userData.UserName)
                                     .OrderBy(y => y.DataInizio).ToList();
             }
@@ -247,6 +250,7 @@ namespace mes.Controllers
             return View();
         }
 
+
         [HttpPost]
         [Authorize(Roles = "User, root, PermessiInsertor, PermessiSupervisor, PermessiMaster")]
         public IActionResult MainPermessi(PermessoFilter filter)
@@ -270,8 +274,8 @@ namespace mes.Controllers
                     permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
                                         .Where(x => x.Enabled =="1")
                                         .Where(y => y.Username == filter.Username)
-                                        .Where(z => Convert.ToDateTime(z.DataInizio).Date >= Convert.ToDateTime(filter.DataInizio).Date)
-                                        .Where(w => Convert.ToDateTime(w.DataFine).Date <= Convert.ToDateTime(filter.DataFine).Date)
+                                        .Where(z => DateTime.ParseExact(z.DataInizio, dateFormat, null).Date >= Convert.ToDateTime(filter.DataInizio).Date)
+                                        .Where(w => DateTime.ParseExact(w.DataFine, dateFormat, null).Date <= Convert.ToDateTime(filter.DataFine).Date)
                                         .ToList();
                 }
                 else if(filter.Username != null && filter.Tipologia != null) // chiedo un dipendente e anche la tipologia di permesso/ferie
@@ -279,8 +283,8 @@ namespace mes.Controllers
                     permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
                                         .Where(x => x.Enabled =="1")
                                         .Where(y => y.Username == filter.Username)
-                                        .Where(z => Convert.ToDateTime(z.DataInizio).Date >= Convert.ToDateTime(filter.DataInizio).Date)
-                                        .Where(j => Convert.ToDateTime(j.DataFine).Date <= Convert.ToDateTime(filter.DataFine).Date)
+                                        .Where(z => DateTime.ParseExact(z.DataInizio, dateFormat, null).Date >= Convert.ToDateTime(filter.DataInizio).Date)
+                                        .Where(j => DateTime.ParseExact(j.DataFine, dateFormat, null).Date <= Convert.ToDateTime(filter.DataFine).Date)
                                         .Where(k => k.Tipologia == filter.Tipologia)
                                         .ToList();
                 }
@@ -288,16 +292,16 @@ namespace mes.Controllers
                 {                   
                     permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
                                         .Where(x => x.Enabled =="1")
-                                        .Where(z => Convert.ToDateTime(z.DataInizio).Date >= Convert.ToDateTime(filter.DataInizio).Date)
-                                        .Where(y => Convert.ToDateTime(y.DataFine).Date <= Convert.ToDateTime(filter.DataFine).Date)                                                
+                                        .Where(z => DateTime.ParseExact(z.DataInizio, dateFormat, null).Date >= Convert.ToDateTime(filter.DataInizio).Date)
+                                        .Where(y => DateTime.ParseExact(y.DataFine, dateFormat, null).Date <= Convert.ToDateTime(filter.DataFine).Date)                                                
                                         .ToList();
                 }
                 else if(filter.Username == null && filter.Tipologia != null) // tutta la lista di quella tipologia per tutti
                 {
                     permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
                                         .Where(x => x.Enabled =="1")
-                                        .Where(z => Convert.ToDateTime(z.DataInizio).Date >= Convert.ToDateTime(filter.DataInizio).Date)
-                                        .Where(y => Convert.ToDateTime(y.DataFine).Date <= Convert.ToDateTime(filter.DataFine).Date)
+                                        .Where(z => DateTime.ParseExact(z.DataInizio, dateFormat, null).Date >= Convert.ToDateTime(filter.DataInizio).Date)
+                                        .Where(y => DateTime.ParseExact(y.DataFine, dateFormat, null).Date <= Convert.ToDateTime(filter.DataFine).Date)
                                         .Where(w => w.Tipologia == filter.Tipologia)
                                         .ToList(); 
                 }
@@ -338,9 +342,9 @@ namespace mes.Controllers
                 CalendarEvent oneEvent = new CalendarEvent(){
                     Title = $"{permesso.Nome} {permesso.Cognome}",
                     //StartDate = genP.PermessiDate2Calendar(permesso.DataInizio),
-                    StartDate = Convert.ToDateTime(permesso.DataInizio),
+                    StartDate = DateTime.ParseExact(permesso.DataInizio, dateFormat, null),
                     //EndDate = genP.PermessiDate2Calendar(permesso.DataFine),
-                    EndDate = Convert.ToDateTime(permesso.DataFine),
+                    EndDate = DateTime.ParseExact(permesso.DataFine, dateFormat, null),
                     Color = GetPermessoColor(permesso.Stato)
                 };
                 permessiOnCalendar.Add(oneEvent);
