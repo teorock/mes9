@@ -196,9 +196,10 @@ namespace mes.Controllers
                                                     .FirstOrDefault();
 
             ViewBag.request = ComputeAvailability(request);
-            //passare lista delle assegnabilità ()
+            ViewBag.allAssignments = config.CalendarAssignments.Select(a => a.AssignmentName).ToList();
+            //List<string> allAssignments = config.CalendarAssignments.Select(a => a.AssignmentName).ToList();
 
-            return View(request);
+            return View();
 
             //{
             //	"assignedTo": "Waterjet",

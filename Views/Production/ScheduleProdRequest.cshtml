@@ -1,10 +1,12 @@
 @using mes.Models.ViewModels
+@using mes.Models.InfrastructureModels
 @using System.Collections.Generic
 
-@model ProductionRequest
+@model ProductionCalendarDbModel
 
 @{
     ProductionRequest request = ViewBag.request;
+    List<string> allAssignments = ViewBag.allAssignments;
 }
 
 <style>     
@@ -37,6 +39,8 @@
 
 </style>
 
+
+
 <h3>programma attività di produzione</h3>
 <br>
 <br>
@@ -66,23 +70,8 @@
 	</tr>
 </table>
 <hr>
-<div class="row">
-    <div class="col-md-2">
-        <h5>programma per</h5>
-    </div>
-    <div class="col-md-2">
-        <input type="datetime-local">
-    </div>
-    <div class="col-md-2">
-        <input type="datetime-local">
-    </div>
-    <div class="col-md-2">
-        <select id="sel-assignment">
-            <option value="RvBPlast">RvBPlast</option>
-            <option value="RvB1536">RvB1536</option>
-        </select>
-    </div>
-    <div class="col-md-2">
-        <a class="btn btn-outline-primary">conferma</a>
-    </div>            
-</div>
+<br>
+
+
+
+  

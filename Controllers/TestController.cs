@@ -161,7 +161,6 @@ namespace mes.Controllers
             return RedirectToAction("Index");
         }
 
-
         public string GetAllEvents()
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();

@@ -341,9 +341,7 @@ namespace mes.Controllers
             {
                 CalendarEvent oneEvent = new CalendarEvent(){
                     Title = $"{permesso.Nome} {permesso.Cognome}",
-                    //StartDate = genP.PermessiDate2Calendar(permesso.DataInizio),
                     StartDate = DateTime.ParseExact(permesso.DataInizio, dateFormat, null),
-                    //EndDate = genP.PermessiDate2Calendar(permesso.DataFine),
                     EndDate = DateTime.ParseExact(permesso.DataFine, dateFormat, null),
                     Color = GetPermessoColor(permesso.Stato)
                 };
