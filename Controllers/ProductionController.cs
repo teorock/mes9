@@ -62,6 +62,10 @@ namespace mes.Controllers
                 evidenziati.Add(ComputeAvailability(oneRequest));
             }
 
+            //ViewBag lista macchine
+            List<string> assignments = config.CalendarAssignments.Select(a => a.AssignmentName).ToList();
+            ViewBag.assignments = assignments;
+
             return View(evidenziati);
         }
 

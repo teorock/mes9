@@ -73,5 +73,44 @@
 <br>
 
 
-
+  <!-- Modal -->
+  <div class="modal fade" id="myModal" role="dialog">
+    <div class="modal-dialog modal-lg">
+    
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Programma lavorazione per...</h4>
+        </div>
+        <div class="modal-body">
+          <input type="datetime-local" id="startDate" placeholder="data di inizio"></input>
+          <input type="datetime-local" id="endDate" placeholder="data di fine"></input>
+          <input type="text" id="description" placeholder="descrizione"></input>
+          <select id="assignment">
+          	<option val="" selected> </option>
+            <option val="RvB Plast">RvB Plast</option>
+            <option val="RvB 1836">RvB 1836</option>
+            <option val="RvB 1536">RvB 1536</option>
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-warning" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-success" onclick="message()">conferma</button>
+        </div>
+      </div>
+      
+    </div>
+  </div>
   
+</div>
+
+<script>
+    function message(){
+        var inizio=$('#startDate').val();
+        var fine = $('#endDate').val();
+        var assignedTo = $('#assignment').val();
+        var description = $('#description').val();
+    alert("data inizio: " + inizio + "- data fine: " + fine + " assegnato a:" + assignedTo + " - descrizione: " + description);
+    };
+</script>

@@ -8,11 +8,24 @@
     string finitibg = ViewBag.finitibg;
     string semilavbg = ViewBag.semilabg;
     string pannellibg = ViewBag.pannellibg;
+    List<string> assignments = ViewBag.assignments;
 }
 <style>
-    table, th, td, input {
-        text-align: center;
-        font-family: Arial, Helvetica, sans-serif;            
+    select, input {
+        border-radius: 0.25em;
+        border-color: rgb(196, 196, 196);
+        width: 120px;
+        height: 38px;
+    }
+
+    table, th {
+        font-size: 14px;
+    }
+    th {
+        font-family: Arial, Helvetica, sans-serif;
+    }
+    input, td {
+        font-size: 14px;
     }
     input:hover {
         background-color: gold;
@@ -20,6 +33,10 @@
     input:focus {
         background-color: lightyellow;
     }
+    select option:disabled {
+        background-color: #c7c7c7;
+        font-style: italic;
+}
 </style>
 
 <h3>gestione richieste di produzione</h3>
@@ -37,51 +54,142 @@
 <hr>
 @using(Html.BeginForm("AggiornaPannello", "Programs", FormMethod.Post, new { name = "frmAggDati", id = "frmAggDati" }))
 {
-<table id="myTable" style="width:100%;">
-	<tr>
-        <th></th>
-		<th>cliente</th>
-		<th>articolo</th>
-        <th>descrizione</th>
-		<th>consegna</th>            
-		<th>richiesti</th>
-        <th>finiti</th>
-        <th>semilavorati</th>
-        <th>lastre</th>
-	</tr>	
-@for (int x=0;x<Model.Count; x++)
-{
-    <tr>
-    @if(authorize)
+    <table id="myTable" style="width:100%;">
+        <tr>
+            <th></th>
+            <th>cliente</th>
+            <th>articolo</th>
+            <th>descrizione</th>
+            <th>consegna</th>            
+            <th>richiesti</th>
+            <th>finiti</th>
+            <th>semilavorati</th>
+            <th>lastre</th>
+        </tr>	
+    @for (int x=0;x<Model.Count; x++)
     {
-        <td><input type="hidden" style="width:10px;" class="form-control" value="@Model[x].id" readonly/></td> 
-        <td><input type="text" style="width:160px;" class="form-control" value="@Model[x].Cliente" readonly/></td>            
-        <td><input type="text" style="width:240px;" class="form-control" value="@Model[x].Articolo" readonly/></td>
-        <td><input type="text" style="width:400px;" class="form-control" value="@Model[x].Descrizione" readonly/></td>
-        <td><input type="text" style="width:120px;" class="form-control" value="@Model[x].DataCons" readonly/></td>                     
-        <td><input type="text" style="width:90px;" class="form-control" value="@Model[x].Richiesti" readonly/></td>
-        <td><input type="text" style="width:90px; background-color: @Model[x].Finitibg;" class="form-control" value="@Model[x].Disponibili" readonly/></td>
-        <td><input type="text" style="width:90px; background-color: @Model[x].Semilavbg;" class="form-control" value="@Model[x].DispSemilav" readonly/></td>
-        <td><input type="text" style="width:90px; background-color: @Model[x].Pannellibg;" class="form-control" value="@Model[x].DispPannello" readonly/></td>
-        <td style="padding-left: 10px;"><a asp-controller="Production" asp-action="ScheduleProdRequest" asp-route-id="@Model[x].id"><i class="material-icons text-success">&#xe742;</i></a></td>
-        <td style="padding-left: 10px;"><a asp-controller="Production" asp-action="ModProductionRequest" asp-route-id="@Model[x].id"><i class="material-icons text-warning">&#xE254;</i></a></td>
-        
-    }
-    else
-    {
-        <td><input type="hidden" style="width:10px;" class="form-control" value="@Model[x].id" readonly/></td>
-        <td><input type="text" style="width:160px;" class="form-control" value="@Model[x].Cliente" readonly/></td>            
-        <td><input type="text" style="width:240px;" class="form-control" value="@Model[x].Articolo" readonly/></td>
-        <td><input type="text" style="width:400px;" class="form-control" value="@Model[x].Descrizione" readonly/></td>
-        <td><input type="text" style="width:120px;" class="form-control" value="@Model[x].DataCons" readonly/></td>                       
-        <td><input type="text" style="width:90px;"  class="form-control" value="@Model[x].Richiesti" readonly/></td>
-        <td><input type="text" style="width:90px; background-color:@Model[x].Finitibg;"  class="form-control" value="@Model[x].Disponibili" readonly/></td>
-        <td><input type="text" style="width:90px; background-color:@Model[x].Semilavbg;"  class="form-control" value="@Model[x].DispSemilav" readonly/></td>
-        <td><input type="text" style="width:90px; background-color:@Model[x].Pannellibg;"  class="form-control" value="@Model[x].DispPannello" readonly/></td>
-    }
-    </tr> 
-}	 
-</table>
+        <tr>
+        @if(authorize)
+        {
+            <td><input type="hidden" style="width:10px;" class="form-control" value="@Model[x].id" readonly/></td> 
+            <td><input type="text" style="width:160px;" class="form-control" value="@Model[x].Cliente" readonly/></td>            
+            <td><input type="text" style="width:240px;" class="form-control" value="@Model[x].Articolo" readonly/></td>
+            <td><input type="text" style="width:400px;" class="form-control" value="@Model[x].Descrizione" readonly/></td>
+            <td><input type="text" style="width:120px;" class="form-control" value="@Model[x].DataCons" readonly/></td>                     
+            <td><input type="text" style="width:90px;" class="form-control" value="@Model[x].Richiesti" readonly/></td>
+            <td><input type="text" style="width:90px; background-color: @Model[x].Finitibg;" class="form-control" value="@Model[x].Disponibili" readonly/></td>
+            <td><input type="text" style="width:90px; background-color: @Model[x].Semilavbg;" class="form-control" value="@Model[x].DispSemilav" readonly/></td>
+            <td><input type="text" style="width:90px; background-color: @Model[x].Pannellibg;" class="form-control" value="@Model[x].DispPannello" readonly/></td>
+            <td style="padding-left: 10px;">
+                <button type="button" id="insCalendar" class="btn btn-outline-success btn-block" data-description="@Model[x].Descrizione" data-bs-toggle="modal" data-bs-target="#insertModal">x</button> 
+            </td>
+            <td style="padding-left: 10px;"><a asp-controller="Production" asp-action="ModProductionRequest" asp-route-id="@Model[x].id"><i class="material-icons text-warning">&#xE254;</i></a></td>
+        }
+        else
+        {
+            <td><input type="hidden" style="width:10px;" class="form-control" value="@Model[x].id" readonly/></td>
+            <td><input type="text" style="width:160px;" class="form-control" value="@Model[x].Cliente" readonly/></td>            
+            <td><input type="text" style="width:240px;" class="form-control" value="@Model[x].Articolo" readonly/></td>
+            <td><input type="text" style="width:400px;" class="form-control" value="@Model[x].Descrizione" readonly/></td>
+            <td><input type="text" style="width:120px;" class="form-control" value="@Model[x].DataCons" readonly/></td>                       
+            <td><input type="text" style="width:90px;"  class="form-control" value="@Model[x].Richiesti" readonly/></td>
+            <td><input type="text" style="width:90px; background-color:@Model[x].Finitibg;"  class="form-control" value="@Model[x].Disponibili" readonly/></td>
+            <td><input type="text" style="width:90px; background-color:@Model[x].Semilavbg;"  class="form-control" value="@Model[x].DispSemilav" readonly/></td>
+            <td><input type="text" style="width:90px; background-color:@Model[x].Pannellibg;"  class="form-control" value="@Model[x].DispPannello" readonly/></td>
+        }
+        </tr> 
+    }	 
+    </table>
 }
 
+	  <!-- Modal -->
+	  <div class="modal fade" id="insertModal" role="dialog">
+		<div class="modal-dialog modal-lg">
+		
+		  <!-- Modal content-->
+		  <div class="modal-content">
+			<div class="modal-header">
+			  <h4 class="modal-title">Programma lavorazione per...</h4>
+			</div>
+			<div class="modal-body">
+			  <input type="datetime-local" id="startDate" placeholder="data di inizio" style="width:160px;"></input>
+			  <input type="datetime-local" id="endDate" placeholder="data di fine" style="width:160px;"></input>
+			  <input type="text" id="description" placeholder="descrizione" style="width:320px;" readonly></input>
+			  <select id="assignment" style="width:120px;">
+				<option val="" selected> </option>
+                @foreach(string oneAssign in assignments)
+                {
+                    <option val="@oneAssign">@oneAssign</option>
+                }
+			  </select>
+			</div>
+			<div class="modal-footer">
+			  <button type="button" class="btn btn-warning" onclick="dismissModal()">annulla</button>
+			  <button type="button" class="btn btn-success" onclick="message()">conferma</button>
+			</div>
+		  </div>
+		  
+		</div>
+	  </div>
+	  
+	</div>
 
+	<script>
+
+        //showModal
+        $(document).ready(function(){
+            $(document).on('click', '#insCalendar', function(){
+                var descriptionValue = $(this).data('description');
+                $('#insertModal #description').val(descriptionValue);
+                $('insertModal').modal('show');
+            });
+        });
+
+        //get input from modal
+		function message(){
+
+            //controllo campi vuoti
+            if(!$("#startDate").val()) {
+                alert("campo 'data inizio' vuoto");
+                //$("#insertModal").modal('toggle');
+                return;                                      
+                };
+
+            if(!$("#endDate").val()) {
+                alert("campo 'data fine' vuoto");
+                //$("#insertModal").modal('toggle');
+                return;
+                };
+            if(!$("#description").val()) {
+                alert("campo 'descrizione' vuoto");
+                //$("#insertModal").modal('toggle');
+                return;  
+                };
+            if(!$("#assignment").val()) {
+                alert("campo 'assegna a' vuoto");
+                //$("#insertModal").modal('toggle');
+                return;     
+                };
+
+            var dataObject = {
+                assignedTo: $('#assignment').val(),
+                eventTitle: $('#insertModal #description').val(),
+                eventDescription: $('#insertModal #description').val(),
+                startDate: $('#startDate').val(),
+                endDate: $('#endDate').val(),
+                operationType: 'create',
+                fileLocation: 'test',
+                id: '1000'
+            };
+            var jsonString = JSON.stringify(dataObject);
+            console.log(jsonString);
+
+            //window.location.replace('/Test/InsertEvent?jsonString='+jsonString);
+            $.post('/Test/InsertEvent?jsonString='+jsonString);
+		  };
+
+            function dismissModal() {
+                $("#insertModal").modal('toggle');
+            };
+
+	</script>
