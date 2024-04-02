@@ -190,6 +190,30 @@ namespace mes.Models.Services.Infrastructures
             }
 
             return pingable;
-        }         
+        }
+
+        public void FormatMachineData(List<DayStatistic> inputStats,
+                                        string machineType,
+                                        out List<int>onTime,
+                                        out List<int> workingTime,
+                                        out List<string> daysNames,
+                                        out List<int> progsPerDay)
+        {
+            onTime = new List<int>();
+            workingTime = new List<int>();
+            daysNames = new List<string>();
+            progsPerDay = new List<int>();
+            
+            foreach(DayStatistic oneStat in inputStats)
+            {
+                if(machineType =="SCM2")
+                { onTime.Add(0);}
+                else{ onTime.Add(Convert.ToInt32(oneStat.TimeOn.TotalMinutes));}
+                
+                workingTime.Add(Convert.ToInt32(oneStat.TimeWorking.TotalMinutes));
+                daysNames.Add(oneStat.StartTime.ToString("dd MMM"));
+                progsPerDay.Add(oneStat.ProgramsToday);
+            }
+        }
     }
 }

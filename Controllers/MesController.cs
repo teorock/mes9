@@ -109,7 +109,7 @@ namespace mes.Controllers
                     }
                     catch(Exception ex)
                     {
-                        Log2File($"ERRORE: MesController/ProductionStatus/GetWorklistTotalProgress: {ex.Message}");
+                        Log2File($"ERRORE: MesController/ProductionStatus/GetWorklistTotalProgress: GetWorklistTotalProgress {machineName}/{worklistName}->{ex.Message}");
                     }
 
                     WorklistProgressViewmodel oneProgress = new WorklistProgressViewmodel()

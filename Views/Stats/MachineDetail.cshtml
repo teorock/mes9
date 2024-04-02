@@ -1,25 +1,31 @@
 @{
     string machineName = ViewBag.machineName;
-    string defaultDate = ViewBag.defaultDate;
+    //string defaultDate = ViewBag.defaultDate;
     string startWeek = ViewBag.startWeek;
     string endWeek = ViewBag.endWeek;
     string errorMsg = ViewBag.errorMsg;
-    var data1 = ViewBag.Data1;
+    //var onTime = ViewBag.OnTime;
 }
 
 <h2>Dettagli macchina per @machineName</h2>
 <br>
 <hr>
 <div class="row">
-    <div class="col-md-4">
-      <h6>settimana dal @startWeek al @endWeek</h6> 
+    <div class="col-md-1">
+      <h6>periodo dal</h6> 
     </div>
     <div class="col-md-2">
-        <h6>seleziona periodo</h6>
+        <input type="date" style="width:120px;" id="periodStart" name="selPeriod" value="@startWeek">
     </div>
-    <div class="col-md-3">
-        <input type="date" style="width:120px;" id="selPeriod" name="selPeriod" value="@defaultDate">
+    <div class="col-md-1">
+        <h6>al</h6>
+    </div>    
+    <div class="col-md-2">
+        <input type="date" style="width:120px;" id="periodEnd" name="selPeriod" value="@endWeek">
     </div>
+    <div class="col-md-2">
+        <a class="btn btn-outline-primary" id="update">aggiorna</a>
+    </div>        
 </div>
 <hr>
 <br>
@@ -95,18 +101,22 @@ else
 <script>
   //var data1 = [180, 55, 41, 37, 22, 43];
 
-  var test =  @Html.Raw(Json.Serialize(ViewBag.Data1));
-  console.log("test=" + test);
+  var onTime =  @Html.Raw(Json.Serialize(ViewBag.OnTime));
+  console.log("onTime=" + onTime);
+  var workingTime =  @Html.Raw(Json.Serialize(ViewBag.WorkingTime));
+  console.log("workingTime=" + workingTime);
+  var days =  @Html.Raw(Json.Serialize(ViewBag.Days));
+  console.log("days=" + days);  
 
   var options = {
     series: [
       {
         name: 'Accesa',
-        data: test,
+        data: onTime,
       },
       {
         name: 'In lavorazione',
-        data: [53, 32, 33, 52, 13, 43],
+        data: workingTime,
       },
     ],
     chart: {
@@ -151,7 +161,7 @@ else
       text: 'Fiction Books Sales',
     },
     xaxis: {
-      categories: ['21 Feb', '22 Feb', '23 Feb', '24 Feb', '25 Feb', '26 Feb'],
+      categories: days,
       labels: {
         formatter: function (val) {
           return val;
@@ -202,43 +212,52 @@ else
 </script>
 
 <script>
-    $("#selPeriod").on('change', function() {
-        var refString = $("#selPeriod").val();
-        var lun = getMonday(refString, 0);
-        var sab = getMonday(refString, 5);
-        //alert(lun);
-        //alert(getFormattedDate(lun));
-        //alert(sab);
-        //alert(getFormattedDate(sab));
-        var redirectUrl = '/Stats/MachineDetail?machineName=' + 'Stefani' + '&startTime=' + getFormattedDate(lun).replace(/\//g, '%2F') + '&endTime=' + getFormattedDate(sab).replace(/\//g, '%2F');
-        //alert(redirectUrl);
-        window.location.href = redirectUrl;
-    });
 
-    function getMonday(d, e) {
-        d = new Date(d);
-        var day = d.getDay(),
-            diff = d.getDate() - day + (day == 0 ? -6 : 1) + e; // adjust when day is sunday
-        return new Date(d.setDate(diff));
-    }
+$(document).ready(function(){
+  //assegna i valori a 
+});
 
-    function getFormattedDate(d){
-        // Parse the date string
-        var parsedDate = new Date(d);
+var machineName = '@machineName';
+  $("#update").on('click', function() {
+    //alert("click");
+    var perStart = $("#periodStart").val();
+    var perEnd = $("#periodEnd").val();
+    //var lun = getMonday(refString, 0);
+    //var sab = getMonday(refString, 5);
+    //alert(lun);
+    //alert(getFormattedDate(lun));
+    //alert(sab);
+    //alert(getFormattedDate(sab));
+    //var redirectUrl = '/Stats/MachineDetail?machineName=' + machineName + '&startTime=' + getFormattedDate(lun).replace(/\//g, '%2F') + '&endTime=' + getFormattedDate(sab).replace(/\//g, '%2F');
+    var redirectUrl = '/Stats/MachineDetail?machineName=' + machineName + '&startTime=' + perStart + '&endTime=' + perEnd;
+    alert(redirectUrl);
+    window.location.href = redirectUrl;
+  });
 
-        // Extract day, month, and year components
-        var day = parsedDate.getDate();
-        var month = parsedDate.getMonth() + 1; // Month is zero-based, so we add 1
-        var year = parsedDate.getFullYear();
+  function getMonday(d, e) {
+      d = new Date(d);
+      var day = d.getDay(),
+          diff = d.getDate() - day + (day == 0 ? -6 : 1) + e; // adjust when day is sunday
+      return new Date(d.setDate(diff));
+  }
 
-        // Format day and month to have leading zeros if necessary
-        day = day < 10 ? '0' + day : day;
-        month = month < 10 ? '0' + month : month;
+  function getFormattedDate(d){
+      // Parse the date string
+      var parsedDate = new Date(d);
 
-        // Create the formatted date string
-        var formattedDate = day + '/' + month + '/' + year;
+      // Extract day, month, and year components
+      var day = parsedDate.getDate();
+      var month = parsedDate.getMonth() + 1; // Month is zero-based, so we add 1
+      var year = parsedDate.getFullYear();
 
-        return formattedDate;
-    }
+      // Format day and month to have leading zeros if necessary
+      day = day < 10 ? '0' + day : day;
+      month = month < 10 ? '0' + month : month;
+
+      // Create the formatted date string
+      var formattedDate = day + '/' + month + '/' + year;
+
+      return formattedDate;
+  }
 
 </script>

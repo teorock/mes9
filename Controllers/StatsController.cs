@@ -43,8 +43,7 @@ namespace mes.Controllers
             ViewBag.machineNames = machineNames;
 
             GeneralPurpose genPurpose = new GeneralPurpose();
-            //Date
-            //int interval = config.DaysDisplayedDefault;
+            //qui vengono generate le date di default per la prima visione
             ViewBag.startTime = genPurpose.GetWeeksMonday(0);
             ViewBag.endTime = genPurpose.GetWeeksMonday(5);
 
@@ -53,24 +52,18 @@ namespace mes.Controllers
 
         public IActionResult MachineDetail(string machineName, string startTime, string endTime)
         {
-            //string MachineName
-            MachineDetails machineDetails = config.AvailableMachines.Where(m =>m.MachineName == machineName).FirstOrDefault();
-            
-            GeneralPurpose genPurpose = new GeneralPurpose();
-            string startTime2 = genPurpose.GetWeeksMonday(-machineDetails.DaysDisplayedDefault).ToString();
-            string endTime2 = genPurpose.GetWeeksMonday(0).ToString();
-
             StatisticsService statService = new StatisticsService();
-            List<DayStatistic> machineStatistics = statService.GetMachineStats(machineDetails, startTime2, endTime2);
+            GeneralPurpose genPurpose = new GeneralPurpose();
 
+            MachineDetails machineDetails = config.AvailableMachines.Where(m =>m.MachineName == machineName).FirstOrDefault();                        
+            
+            List<DayStatistic> machineStatistics = statService.GetMachineStats(machineDetails, startTime, endTime);
+            //dati arrivati
             ViewBag.machineName = machineName;
             ViewBag.defaultDate = DateTime.Now.ToString("yyyy-MM-dd");
 
-            //---------------------- settimana dal al
-            //GeneralPurpose genPurpose = new GeneralPurpose();
-
-            ViewBag.startWeek = genPurpose.GetWeeksMonday(0).ToString("dd/MM/yyyy");
-            ViewBag.endWeek = genPurpose.GetWeeksMonday(5).ToString("dd/MM/yyyy");           
+            ViewBag.startWeek = Convert.ToDateTime(startTime).ToString("yyyy-MM-dd");
+            ViewBag.endWeek = Convert.ToDateTime(endTime).ToString("yyyy-MM-dd");
 
             if(!machineStatistics[0].IsAlive)
             {
@@ -83,10 +76,20 @@ namespace mes.Controllers
             // minuti di lavorazione (quando disponibili) per ogni 
             // giorni della settimana nel periodo
             // text: pannelli stefani
-            //
+            // toolTipBox per ogni barra con pezzi totali di quel giorno e pezzi/ora
 
-            var data1 = new List<int> {180, 55, 41, 37, 22, 43};
-            ViewBag.Data1 = data1;
+            List<int> onTime;
+            List<int> workingTime;
+            List<string> daysNames;
+            List<int> progsPerDay;
+
+            statService.FormatMachineData(machineStatistics,machineDetails.MachineType, out onTime, out workingTime, out daysNames, out progsPerDay);
+
+            //var data1 = new List<int> {180, 55, 41, 37, 22, 43};
+            ViewBag.OnTime = onTime;
+            ViewBag.WorkingTime = workingTime;
+            ViewBag.Days = daysNames;
+            ViewBag.ProgsXDays = progsPerDay;
 
             return View(machineStatistics);
         }
