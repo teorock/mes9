@@ -121,7 +121,7 @@ namespace mes.Models.Services.Infrastructures
                     ProgramsToday = progs,
                     TimeOn = dayEnd - dayStart,
                     TimeWorking = timeWorking,
-                    ProgramsPerHour = prgPerHour,
+                    ProgramsPerHour = Math.Round(prgPerHour,1),
                     IsAlive = true
                 });                
             }
@@ -197,12 +197,14 @@ namespace mes.Models.Services.Infrastructures
                                         out List<int>onTime,
                                         out List<int> workingTime,
                                         out List<string> daysNames,
-                                        out List<int> progsPerDay)
+                                        out List<int> progsPerDay,
+                                        out List<double> progsPerHour)
         {
             onTime = new List<int>();
             workingTime = new List<int>();
             daysNames = new List<string>();
             progsPerDay = new List<int>();
+            progsPerHour = new List<double>();
             
             foreach(DayStatistic oneStat in inputStats)
             {
@@ -213,6 +215,7 @@ namespace mes.Models.Services.Infrastructures
                 workingTime.Add(Convert.ToInt32(oneStat.TimeWorking.TotalMinutes));
                 daysNames.Add(oneStat.StartTime.ToString("dd MMM"));
                 progsPerDay.Add(oneStat.ProgramsToday);
+                progsPerHour.Add(oneStat.ProgramsPerHour);
             }
         }
     }

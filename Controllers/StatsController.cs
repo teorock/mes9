@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -82,14 +83,17 @@ namespace mes.Controllers
             List<int> workingTime;
             List<string> daysNames;
             List<int> progsPerDay;
+            List<double> progsPerHour;            
 
-            statService.FormatMachineData(machineStatistics,machineDetails.MachineType, out onTime, out workingTime, out daysNames, out progsPerDay);
+            statService.FormatMachineData(machineStatistics,machineDetails.MachineType, out onTime, out workingTime, out daysNames, out progsPerDay, out progsPerHour);
 
-            //var data1 = new List<int> {180, 55, 41, 37, 22, 43};
             ViewBag.OnTime = onTime;
             ViewBag.WorkingTime = workingTime;
             ViewBag.Days = daysNames;
             ViewBag.ProgsXDays = progsPerDay;
+            ViewBag.ProgramsPerHour = progsPerHour;
+
+            ViewBag.Comment = $"Dati per {machineName} dal {Convert.ToDateTime(startTime).ToString("dd/MMM")} al {Convert.ToDateTime(endTime).ToString("dd/MMM")}";
 
             return View(machineStatistics);
         }
