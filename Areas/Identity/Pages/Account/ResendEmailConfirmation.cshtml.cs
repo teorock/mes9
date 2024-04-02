@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using mes.Models.Services.Infrastructures;
 using Microsoft.AspNetCore.Authorization;
 
 using Microsoft.AspNetCore.Identity;
@@ -65,6 +66,19 @@ namespace intranet.Areas.Identity.Pages.Account
                 Input.Email,
                 "Confirm your email",
                 $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+
+                EmailSender sender = new EmailSender();
+                try
+                {
+                sender.SendEmail("Conferma email",
+                                $"Richiesta conferma email\nPrego confermare il vostro account <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>cliccando qui</a>."
+                                ,Input.Email,
+                                "automation@intranet.gb");
+                }
+                catch(Exception excp)
+                {
+                    
+                }                
 
             ModelState.AddModelError(string.Empty, "Verification email sent. Please check your email.");
             return Page();

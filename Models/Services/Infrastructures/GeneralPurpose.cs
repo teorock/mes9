@@ -187,5 +187,12 @@ namespace mes.Models.Services.Infrastructures
             return new List<string>();
         }
 
+        public DateTime GetWeeksMonday(int addDays)
+        {
+            int daysUntilSunday = (int)DateTime.Now.DayOfWeek - (int)DayOfWeek.Sunday - 1;
+            DateTime firstDayOfThisWeek = DateTime.Now.AddDays(-daysUntilSunday);
+            return firstDayOfThisWeek.AddDays(addDays);
+        }
+
     }
 }

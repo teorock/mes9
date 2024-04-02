@@ -2,15 +2,27 @@ using System;
 using System.Threading.Tasks;
 using System.Net.Mail;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using System.IO;
+using Newtonsoft.Json;
+using mes.Models.InfrastructureConfigModels;
 
 namespace mes.Models.Services.Infrastructures
 {
     public class EmailSender
     {
-        string serverIp="192.168.2.128";
-        int serverPort = 25;
-        string userName ="automation@intranet";
-        string passWd ="4ut0m4t10n!";
+        string emailerConfigPath =@"C:\core\mes\ControllerConfig\InfrastructureConfig\emailerConfig.json";
+        EmailSenderConfig config = new EmailSenderConfig();
+        public EmailSender()
+        {
+            string rawConf = "";
+
+            using (StreamReader sr = new StreamReader(emailerConfigPath))
+            {
+                rawConf = sr.ReadToEnd();
+            }
+            config = JsonConvert.DeserializeObject<EmailSenderConfig>(rawConf);            
+        }
+
         public bool SendEmail(string subject, string body, string to, string from)
         {
             //var apiKey = "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";
@@ -34,10 +46,10 @@ namespace mes.Models.Services.Infrastructures
 
             try
             {
-                SmtpClient smtp = new SmtpClient(serverIp, serverPort);
+                SmtpClient smtp = new SmtpClient(config.ServerIP, config.ServerPort);
                 smtp.EnableSsl = false;
 
-                smtp.Credentials = new System.Net.NetworkCredential(userName, passWd);
+                smtp.Credentials = new System.Net.NetworkCredential(config.Username, config.Password);
                 smtp.Send(email);
                 email.Dispose();
 

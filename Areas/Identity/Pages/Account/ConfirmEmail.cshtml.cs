@@ -24,7 +24,7 @@ namespace intranet.Areas.Identity.Pages.Account
         [TempData]
         public string StatusMessage { get; set; }
 
-        public async Task<IActionResult> OnGetAsync(string userId, string code)
+        public async Task<IActionResult> OnGetAsync(string userId, string code, string amp)
         {
             if (userId == null || code == null)
             {

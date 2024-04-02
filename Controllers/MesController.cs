@@ -98,13 +98,27 @@ namespace mes.Controllers
                 {
                     string machineName = oneMachineStatus[oneMachineStatus.Count-1].MachineName;
                     string worklistName = oneMachineStatus[oneMachineStatus.Count-1].WorklistName;
+                    //TO DO: try catch, il file potrebbe non esistere
+
+                    string totalQuantity = "0";
+                    string totalCounter = "0";
+                    try
+                    {
+                        totalQuantity = GetWorklistTotalProgress(worklistName, machineName, true).Key.ToString();
+                        totalCounter =  GetWorklistTotalProgress(worklistName, machineName, true).Value.ToString();
+                    }
+                    catch(Exception ex)
+                    {
+                        Log2File($"ERRORE: MesController/ProductionStatus/GetWorklistTotalProgress: {ex.Message}");
+                    }
 
                     WorklistProgressViewmodel oneProgress = new WorklistProgressViewmodel()
-                    {                        
+                    {
+                        
                         MachineName = machineName,
                         WorklistName = worklistName,
-                        TotalQuantity = GetWorklistTotalProgress(worklistName, machineName, true).Key.ToString(),
-                        TotalCounter =  GetWorklistTotalProgress(worklistName, machineName, true).Value.ToString()                      
+                        TotalQuantity = totalQuantity,
+                        TotalCounter =  totalCounter                      
                     };
                     wlProgress.Add(oneProgress);
                 }           

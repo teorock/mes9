@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
+using mes.Models.Services.Infrastructures;
+using Microsoft.Extensions.Logging;
 
 namespace intranet.Areas.Identity.Pages.Account
 {
@@ -56,10 +58,25 @@ namespace intranet.Areas.Identity.Pages.Account
                     values: new { area = "Identity", code },
                     protocol: Request.Scheme);
 
+
+
                 await _emailSender.SendEmailAsync(
                     Input.Email,
                     "Reset Password",
                     $"Per favore resetta la tua password <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>cliccando qui</a>.");
+
+                EmailSender sender = new EmailSender();
+                try
+                {
+                sender.SendEmail("Reset Password",
+                                $"Per favore resetta la tua password <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>cliccando qui</a>."
+                                ,Input.Email,
+                                "automation@intranet.gb");
+                }
+                catch(Exception excp)
+                {
+                    
+                }
 
                 return RedirectToPage("./ForgotPasswordConfirmation");
             }

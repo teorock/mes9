@@ -57,6 +57,7 @@ namespace mes.Models.Services.Application
             List<string> results= new List<string>();
             using (var ftp = new FtpClient(_host, _username, _passwd))
             {
+                //TO DO: il file potrebbe non essere presente in remoto
                 ftp.Connect();
                 var res = ftp.DownloadFile(localFile, remoteFilePath, FtpLocalExists.Overwrite);
                 if(res == FtpStatus.Success)

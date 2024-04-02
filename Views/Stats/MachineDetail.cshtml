@@ -1,0 +1,244 @@
+@{
+    string machineName = ViewBag.machineName;
+    string defaultDate = ViewBag.defaultDate;
+    string startWeek = ViewBag.startWeek;
+    string endWeek = ViewBag.endWeek;
+    string errorMsg = ViewBag.errorMsg;
+    var data1 = ViewBag.Data1;
+}
+
+<h2>Dettagli macchina per @machineName</h2>
+<br>
+<hr>
+<div class="row">
+    <div class="col-md-4">
+      <h6>settimana dal @startWeek al @endWeek</h6> 
+    </div>
+    <div class="col-md-2">
+        <h6>seleziona periodo</h6>
+    </div>
+    <div class="col-md-3">
+        <input type="date" style="width:120px;" id="selPeriod" name="selPeriod" value="@defaultDate">
+    </div>
+</div>
+<hr>
+<br>
+<br>
+
+<link href="../wwwroot/css/styles_apex.css" />
+
+<script src="https://cdn.jsdelivr.net/npm/moment@2.30.1/moment.min.js"></script>
+
+<style>
+    select, input {
+        border-radius: 0.25em;
+        border-color: rgb(196, 196, 196);
+        width: 120px;
+        height: 38px;
+    }
+
+    input {
+        font-size: 14px;
+    }
+    input:hover {
+        background-color: gold;
+    }
+    input:focus {
+        background-color: lightyellow;
+    }  
+
+    #chart {
+    max-width: 950px;
+    margin: 35px auto;
+}
+    
+</style>
+
+<script>
+    window.Promise ||
+    document.write(
+        '<script src="https://cdn.jsdelivr.net/npm/promise-polyfill@8/dist/polyfill.min.js"><\/script>'
+    )
+    window.Promise ||
+    document.write(
+        '<script src="https://cdn.jsdelivr.net/npm/eligrey-classlist-js-polyfill@1.2.20171210/classList.min.js"><\/script>'
+    )
+    window.Promise ||
+    document.write(
+        '<script src="https://cdn.jsdelivr.net/npm/findindex_polyfill_mdn"><\/script>'
+    )
+</script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>    
+
+@if(errorMsg!="" & errorMsg != null) 
+{
+  <div class = "row">
+    <div class = "col-md-2">
+      
+    </div>
+    <div class = "col-md-1">
+      <i class="fa-solid fa-computer fa-6x"></i>
+    </div>
+    <div class = "col-md-4">
+      <h3>@errorMsg</h3>
+    </div>    
+  </div>
+}
+else
+{
+  <div id="chart"></div>
+}
+
+
+<script>
+  //var data1 = [180, 55, 41, 37, 22, 43];
+
+  var test =  @Html.Raw(Json.Serialize(ViewBag.Data1));
+  console.log("test=" + test);
+
+  var options = {
+    series: [
+      {
+        name: 'Accesa',
+        data: test,
+      },
+      {
+        name: 'In lavorazione',
+        data: [53, 32, 33, 52, 13, 43],
+      },
+    ],
+    chart: {
+      type: 'bar',
+      height: 500,
+      stacked: true,
+    },
+    plotOptions: {
+      bar: {
+        horizontal: false,
+        dataLabels: {
+          total: {
+            enabled: true,
+            offsetX: 0,
+            style: {
+              fontSize: '13px',
+              fontWeight: 600,
+            },
+            formatter: 
+					function (val) {
+                        // Convert minutes to hours and minutes
+                        const hours = Math.floor(val / 60);
+                        const minutes = val % 60;
+
+				  // Format the DateTime string
+				  const formattedTime =
+					hours > 0
+					  ? `${hours}h ${minutes}'`
+					  : `${minutes}min`;
+
+				  return formattedTime;
+				},
+			},
+        },
+      },
+    },
+    stroke: {
+      width: 2,
+      colors: ['#fff'],
+    },
+    title: {
+      text: 'Fiction Books Sales',
+    },
+    xaxis: {
+      categories: ['21 Feb', '22 Feb', '23 Feb', '24 Feb', '25 Feb', '26 Feb'],
+      labels: {
+        formatter: function (val) {
+          return val;
+        },
+      },
+    },
+    yaxis: {
+      title: {
+        text: '',
+      },
+      labels: {
+        formatter: function (val) {
+          timeLabel = val / 60;
+          return timeLabel + 'h';
+        },
+      },
+    },
+    tooltip: {
+      y: {
+        formatter:
+			function (val) {
+              // Convert minutes to hours and minutes
+              const hours = Math.floor(val / 60);
+              const minutes = val % 60;
+
+              // Format the DateTime string
+              const formattedTime =
+                hours > 0
+                  ? `${hours}h ${minutes}'`
+                  : `${minutes}min`;
+
+              return formattedTime;
+        },
+      },
+    },
+    fill: {
+      opacity: 1,
+    },
+    legend: {
+      position: 'top',
+      horizontalAlign: 'left',
+      offsetX: 40,
+    },
+  };
+
+  var chart = new ApexCharts(document.querySelector('#chart'), options);
+  chart.render();
+</script>
+
+<script>
+    $("#selPeriod").on('change', function() {
+        var refString = $("#selPeriod").val();
+        var lun = getMonday(refString, 0);
+        var sab = getMonday(refString, 5);
+        //alert(lun);
+        //alert(getFormattedDate(lun));
+        //alert(sab);
+        //alert(getFormattedDate(sab));
+        var redirectUrl = '/Stats/MachineDetail?machineName=' + 'Stefani' + '&startTime=' + getFormattedDate(lun).replace(/\//g, '%2F') + '&endTime=' + getFormattedDate(sab).replace(/\//g, '%2F');
+        //alert(redirectUrl);
+        window.location.href = redirectUrl;
+    });
+
+    function getMonday(d, e) {
+        d = new Date(d);
+        var day = d.getDay(),
+            diff = d.getDate() - day + (day == 0 ? -6 : 1) + e; // adjust when day is sunday
+        return new Date(d.setDate(diff));
+    }
+
+    function getFormattedDate(d){
+        // Parse the date string
+        var parsedDate = new Date(d);
+
+        // Extract day, month, and year components
+        var day = parsedDate.getDate();
+        var month = parsedDate.getMonth() + 1; // Month is zero-based, so we add 1
+        var year = parsedDate.getFullYear();
+
+        // Format day and month to have leading zeros if necessary
+        day = day < 10 ? '0' + day : day;
+        month = month < 10 ? '0' + month : month;
+
+        // Create the formatted date string
+        var formattedDate = day + '/' + month + '/' + year;
+
+        return formattedDate;
+    }
+
+</script>
