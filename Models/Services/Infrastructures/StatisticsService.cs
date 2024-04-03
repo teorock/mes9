@@ -10,6 +10,7 @@ using mes.Models.InfrastructureConfigModels;
 using mes.Models.StatisticsModels;
 using mes.Models.ViewModels;
 using Newtonsoft.Json;
+using Org.BouncyCastle.Security;
 using ServiceStack;
 
 namespace mes.Models.Services.Infrastructures
@@ -115,9 +116,13 @@ namespace mes.Models.Services.Infrastructures
 
                 double prgPerHour = (progs / timeWorking.TotalMinutes)*60;
 
-                double totalMeters = jsonReply.Where(w => Convert.ToDateTime(w.DateTime) >= dayStart)
+                double totalMetersConsumed = jsonReply.Where(w => Convert.ToDateTime(w.DateTime) >= dayStart)
                                                 .Where(z => Convert.ToDateTime(z.DateTime) <= dayEnd)
                                                 .Sum(t => Convert.ToDouble(t.EdgeConsumptionLH))/1000;
+
+                double totalMeters = jsonReply.Where(w => Convert.ToDateTime(w.DateTime) >= dayStart)
+                                                .Where(z => Convert.ToDateTime(z.DateTime) <= dayEnd)
+                                                .Sum(t => Convert.ToDouble(t.Length))/1000;                                                
 
                 result.Add(new DayStatistic(){
                     StartTime = dayStart,
@@ -127,6 +132,7 @@ namespace mes.Models.Services.Infrastructures
                     TimeWorking = timeWorking,
                     ProgramsPerHour = Math.Round(prgPerHour,1),
                     TotalMeters = totalMeters,
+                    TotalMetersConsumed = totalMetersConsumed,
                     IsAlive = true
                 });                
             }
@@ -204,7 +210,8 @@ namespace mes.Models.Services.Infrastructures
                                         out List<string> daysNames,
                                         out List<int> progsPerDay,
                                         out List<double> progsPerHour,
-                                        out List<double> totalMeters)
+                                        out List<double> totalMeters,
+                                        out List<double> totalMetersConsumed)
         {
             onTime = new List<int>();
             workingTime = new List<int>();
@@ -212,6 +219,7 @@ namespace mes.Models.Services.Infrastructures
             progsPerDay = new List<int>();
             progsPerHour = new List<double>();
             totalMeters = new List<double>();
+            totalMetersConsumed = new List<double>();
             
             foreach(DayStatistic oneStat in inputStats)
             {
@@ -223,6 +231,7 @@ namespace mes.Models.Services.Infrastructures
                 daysNames.Add(oneStat.StartTime.ToString("dd MMM"));
                 progsPerDay.Add(oneStat.ProgramsToday);
                 progsPerHour.Add(oneStat.ProgramsPerHour);
+                totalMetersConsumed.Add(oneStat.TotalMetersConsumed);
                 totalMeters.Add(oneStat.TotalMeters);
             }
         }

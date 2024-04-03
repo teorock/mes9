@@ -76,9 +76,10 @@ namespace mes.Controllers
             List<string> daysNames;
             List<int> progsPerDay;
             List<double> progsPerHour;      
-            List<double> totalMeters;      
+            List<double> totalMeters;    
+            List<double> totalMetersConsumed;  
 
-            statService.FormatMachineData(machineStatistics,machineDetails.MachineType, out onTime, out workingTime, out daysNames, out progsPerDay, out progsPerHour, out totalMeters);
+            statService.FormatMachineData(machineStatistics,machineDetails.MachineType, out onTime, out workingTime, out daysNames, out progsPerDay, out progsPerHour, out totalMeters, out totalMetersConsumed);
 
             ViewBag.OnTime = onTime;
             ViewBag.WorkingTime = workingTime;
@@ -86,6 +87,7 @@ namespace mes.Controllers
             ViewBag.ProgsXDays = progsPerDay;
             ViewBag.ProgramsPerHour = progsPerHour;
             ViewBag.TotalMeters = totalMeters;
+            ViewBag.TotalMetersConsumed = totalMetersConsumed;
 
             ViewBag.Comment = $"Dati per {machineName} dal {Convert.ToDateTime(startTime).ToString("dd/MMM")} al {Convert.ToDateTime(endTime).ToString("dd/MMM")}";
 

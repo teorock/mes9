@@ -8,23 +8,25 @@
 <h2>Dettagli macchina per @machineName</h2>
 <br>
 <hr>
-<div class="row">
-    <div class="col-md-1">
-      <h6>periodo dal</h6> 
-    </div>
-    <div class="col-md-2">
-        <input type="date" style="width:120px;" id="periodStart" name="selPeriod" value="@startWeek">
-    </div>
-    <div class="col-md-1">
-        <h6>al</h6>
-    </div>    
-    <div class="col-md-2">
-        <input type="date" style="width:120px;" id="periodEnd" name="selPeriod" value="@endWeek">
-    </div>
-    <div class="col-md-2">
-        <a class="btn btn-outline-primary" id="update">aggiorna</a>
-    </div>        
-</div>
+<table>
+  <tr>
+    <td>
+      <h5>periodo dal</h5>
+    </td>
+    <td>
+      <input type="date" style="width:120px;" id="periodStart" name="selPeriod" value="@startWeek">
+    </td>
+    <td>
+      <h5>al</h5>
+    </td>
+    <td>
+      <input type="date" style="width:120px;" id="periodEnd" name="selPeriod" value="@endWeek">
+    </td>
+    <td>
+      <a class="btn btn-outline-primary" id="update">aggiorna</a>
+    </td>
+  </tr>
+</table>
 <hr>
 <br>
 <br>
@@ -54,7 +56,14 @@
     #chart {
     max-width: 950px;
     margin: 35px auto;
-}
+    }
+
+    table {
+    margin: auto;
+    width: 50%;
+    text-align: center; 
+    }    
+
     
 </style>
 
@@ -82,10 +91,10 @@
     <div class = "col-md-2">
       
     </div>
-    <div class = "col-md-1">
+    <div class = "col-md-2">
       <i class="fa-solid fa-computer fa-6x"></i>
     </div>
-    <div class = "col-md-4">
+    <div class = "col-md-5">
       <h3>@errorMsg</h3>
     </div>    
   </div>
@@ -97,22 +106,24 @@ else
 
 
 <script>
-//debug
-  var onTime =  @Html.Raw(Json.Serialize(ViewBag.OnTime));
-  console.log("onTime=" + onTime);
-  var workingTime =  @Html.Raw(Json.Serialize(ViewBag.WorkingTime));
-  console.log("workingTime=" + workingTime);
-  var days =  @Html.Raw(Json.Serialize(ViewBag.Days));
-  console.log("days=" + days);
-  var progs = @Html.Raw(Json.Serialize(ViewBag.ProgsXDays));
-  console.log("progrs per day=" + progs);
-  var progsHour = @Html.Raw(Json.Serialize(ViewBag.ProgramsPerHour));
-  console.log("progrs per hour=" + progsHour);
-  var comment = '@ViewBag.Comment';
-  console.log(comment);
-  var totalMeters = @Html.Raw(Json.Serialize(ViewBag.TotalMeters));
-  console.log("metri totali" + totalMeters);
-//-------------------------------
+      //debug
+        var onTime =  @Html.Raw(Json.Serialize(ViewBag.OnTime));
+        console.log("onTime=" + onTime);
+        var workingTime =  @Html.Raw(Json.Serialize(ViewBag.WorkingTime));
+        console.log("workingTime=" + workingTime);
+        var days =  @Html.Raw(Json.Serialize(ViewBag.Days));
+        console.log("days=" + days);
+        var progs = @Html.Raw(Json.Serialize(ViewBag.ProgsXDays));
+        console.log("progrs per day=" + progs);
+        var progsHour = @Html.Raw(Json.Serialize(ViewBag.ProgramsPerHour));
+        console.log("progrs per hour=" + progsHour);
+        var comment = '@ViewBag.Comment';
+        console.log(comment);
+        var totalMeters = @Html.Raw(Json.Serialize(ViewBag.TotalMeters));
+        console.log("metri bordati" + totalMeters);
+        var totalMetersConsumed = @Html.Raw(Json.Serialize(ViewBag.TotalMetersConsumed));
+        console.log("metri consumati " + totalMetersConsumed);        
+      //-------------------------------
 
   var options = {
     series: [
@@ -211,13 +222,15 @@ else
           const nPezzi = progs[dataPointIndex] + ' pezzi';
           const nPezziOra = progsHour[dataPointIndex] + ' pezzi ora';
           const totMeters = totalMeters[dataPointIndex] + ' metri totali';
+          const totMetersConsumed = totalMetersConsumed[dataPointIndex] + ' metri consumati';
 
           // Multiline tooltip with custom text
           return [
             formattedTooltip,
             nPezzi,
             nPezziOra,
-            totMeters
+            totMeters,
+            totMetersConsumed
           ].join('<br>');
         },
       },
