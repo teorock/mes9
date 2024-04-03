@@ -68,30 +68,24 @@ namespace mes.Controllers
 
             if(!machineStatistics[0].IsAlive)
             {
-                //ViewBag.errorMsg = "macchina spenta o scollegata";
+                ViewBag.errorMsg = "macchina spenta o scollegata";
             }
-
-            //TO DO: creare tre liste
-            //
-            // minuti di macchina accesa per ogni giorno
-            // minuti di lavorazione (quando disponibili) per ogni 
-            // giorni della settimana nel periodo
-            // text: pannelli stefani
-            // toolTipBox per ogni barra con pezzi totali di quel giorno e pezzi/ora
 
             List<int> onTime;
             List<int> workingTime;
             List<string> daysNames;
             List<int> progsPerDay;
-            List<double> progsPerHour;            
+            List<double> progsPerHour;      
+            List<double> totalMeters;      
 
-            statService.FormatMachineData(machineStatistics,machineDetails.MachineType, out onTime, out workingTime, out daysNames, out progsPerDay, out progsPerHour);
+            statService.FormatMachineData(machineStatistics,machineDetails.MachineType, out onTime, out workingTime, out daysNames, out progsPerDay, out progsPerHour, out totalMeters);
 
             ViewBag.OnTime = onTime;
             ViewBag.WorkingTime = workingTime;
             ViewBag.Days = daysNames;
             ViewBag.ProgsXDays = progsPerDay;
             ViewBag.ProgramsPerHour = progsPerHour;
+            ViewBag.TotalMeters = totalMeters;
 
             ViewBag.Comment = $"Dati per {machineName} dal {Convert.ToDateTime(startTime).ToString("dd/MMM")} al {Convert.ToDateTime(endTime).ToString("dd/MMM")}";
 
@@ -103,7 +97,5 @@ namespace mes.Controllers
         {
             return View("Error!");
         }
-
-
     }
 }

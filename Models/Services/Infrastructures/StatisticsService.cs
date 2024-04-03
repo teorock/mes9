@@ -85,7 +85,7 @@ namespace mes.Models.Services.Infrastructures
 
             string requestUrl = $"http://{oneMachine.ServerAddress}:{oneMachine.ServerPort}/api/v1/report/production?from={startPeriod}&to={endPeriod}";
 
-            List<SCM2ResultBody> jsonReply = GetWebResponse(requestUrl);
+            List<SCM2ReportBody> jsonReply = GetWebResponse(requestUrl);
             // TO DO : gestire errore di connessione o di risposta
             //----------------------------------------------
             //trasformazione dati
@@ -115,6 +115,10 @@ namespace mes.Models.Services.Infrastructures
 
                 double prgPerHour = (progs / timeWorking.TotalMinutes)*60;
 
+                double totalMeters = jsonReply.Where(w => Convert.ToDateTime(w.DateTime) >= dayStart)
+                                                .Where(z => Convert.ToDateTime(z.DateTime) <= dayEnd)
+                                                .Sum(t => Convert.ToDouble(t.EdgeConsumptionLH))/1000;
+
                 result.Add(new DayStatistic(){
                     StartTime = dayStart,
                     EndTime = dayEnd,
@@ -122,6 +126,7 @@ namespace mes.Models.Services.Infrastructures
                     TimeOn = dayEnd - dayStart,
                     TimeWorking = timeWorking,
                     ProgramsPerHour = Math.Round(prgPerHour,1),
+                    TotalMeters = totalMeters,
                     IsAlive = true
                 });                
             }
@@ -129,9 +134,9 @@ namespace mes.Models.Services.Infrastructures
             return result;
         }
 
-        public List<SCM2ResultBody> GetWebResponse(string requestUrl)
+        public List<SCM2ReportBody> GetWebResponse(string requestUrl)
         {
-            List<SCM2ResultBody> results = new List<SCM2ResultBody>();
+            List<SCM2ReportBody> results = new List<SCM2ReportBody>();
             var request = WebRequest.Create(requestUrl);
 
             HttpWebResponse response;
@@ -154,7 +159,7 @@ namespace mes.Models.Services.Infrastructures
 
             }
 
-            results = JsonConvert.DeserializeObject<List<SCM2ResultBody>>(StatusCutter(text.Replace("'","-")));
+            results = JsonConvert.DeserializeObject<List<SCM2ReportBody>>(StatusCutter(text.Replace("'","-")));
 
             return results;
 
@@ -198,13 +203,15 @@ namespace mes.Models.Services.Infrastructures
                                         out List<int> workingTime,
                                         out List<string> daysNames,
                                         out List<int> progsPerDay,
-                                        out List<double> progsPerHour)
+                                        out List<double> progsPerHour,
+                                        out List<double> totalMeters)
         {
             onTime = new List<int>();
             workingTime = new List<int>();
             daysNames = new List<string>();
             progsPerDay = new List<int>();
             progsPerHour = new List<double>();
+            totalMeters = new List<double>();
             
             foreach(DayStatistic oneStat in inputStats)
             {
@@ -216,6 +223,7 @@ namespace mes.Models.Services.Infrastructures
                 daysNames.Add(oneStat.StartTime.ToString("dd MMM"));
                 progsPerDay.Add(oneStat.ProgramsToday);
                 progsPerHour.Add(oneStat.ProgramsPerHour);
+                totalMeters.Add(oneStat.TotalMeters);
             }
         }
     }

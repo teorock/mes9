@@ -97,7 +97,7 @@ else
 
 
 <script>
-
+//debug
   var onTime =  @Html.Raw(Json.Serialize(ViewBag.OnTime));
   console.log("onTime=" + onTime);
   var workingTime =  @Html.Raw(Json.Serialize(ViewBag.WorkingTime));
@@ -110,6 +110,9 @@ else
   console.log("progrs per hour=" + progsHour);
   var comment = '@ViewBag.Comment';
   console.log(comment);
+  var totalMeters = @Html.Raw(Json.Serialize(ViewBag.TotalMeters));
+  console.log("metri totali" + totalMeters);
+//-------------------------------
 
   var options = {
     series: [
@@ -206,13 +209,15 @@ else
 
           // Get the tooltip for the current bar
           const nPezzi = progs[dataPointIndex] + ' pezzi';
-          const nPezziOra = progsHour[dataPointIndex] + ' pezzi ora'
+          const nPezziOra = progsHour[dataPointIndex] + ' pezzi ora';
+          const totMeters = totalMeters[dataPointIndex] + ' metri totali';
 
           // Multiline tooltip with custom text
           return [
             formattedTooltip,
             nPezzi,
-            nPezziOra
+            nPezziOra,
+            totMeters
           ].join('<br>');
         },
       },

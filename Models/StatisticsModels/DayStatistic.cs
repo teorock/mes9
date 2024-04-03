@@ -13,6 +13,7 @@ namespace mes.Models.StatisticsModels
         public TimeSpan TimeOn { get; set; }
         public TimeSpan TimeWorking { get; set; }
         public double ProgramsPerHour { get; set; }
+        public double TotalMeters { get; set; }
         public bool IsAlive { get; set; }  
     }
 }
