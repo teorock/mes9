@@ -14,13 +14,13 @@
       <h5>periodo dal</h5>
     </td>
     <td>
-      <input type="date" style="width:120px;" id="periodStart" name="selPeriod" value="@startWeek">
+      <input type="date" style="width:120px;" id="periodStart" name="selPeriod" value="@startWeek" max=@ViewBag.MaxDate>
     </td>
     <td>
       <h5>al</h5>
     </td>
     <td>
-      <input type="date" style="width:120px;" id="periodEnd" name="selPeriod" value="@endWeek">
+      <input type="date" style="width:120px;" id="periodEnd" name="selPeriod" value="@endWeek" max=@ViewBag.MaxDate>
     </td>
     <td>
       <a class="btn btn-outline-primary" id="update">aggiorna</a>
@@ -271,6 +271,11 @@ var machineName = '@machineName';
     window.location.href = redirectUrl;
   });
 
+  $("#periodEnd").on('change', function(){
+    var selectedDate = $(this).val();
+    $("#periodStart").attr('max', selectedDate);
+    $("#periodStart").val(selectedDate);
+  });
 
   function getMonday(d, e) {
       d = new Date(d);

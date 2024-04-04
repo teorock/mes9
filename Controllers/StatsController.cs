@@ -92,6 +92,8 @@ namespace mes.Controllers
             ViewBag.TotalMeters = totalMeters;
             ViewBag.TotalMetersConsumed = totalMetersConsumed;
 
+            ViewBag.MaxDate = DateTime.Now.ToString("yyyy-MM-dd");
+
             ViewBag.Comment = $"Dati per {machineName} dal {Convert.ToDateTime(startTime).ToString("dd/MMM")} al {Convert.ToDateTime(endTime).ToString("dd/MMM")}";
 
             return View(machineStatistics);
