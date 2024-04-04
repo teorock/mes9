@@ -1,12 +1,10 @@
 using FluentFTP;
 using Renci.SshNet;
-using Renci.SshNet.Sftp;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Net;
+
 
 namespace mes.Models.Services.Application
 {
@@ -75,30 +73,26 @@ namespace mes.Models.Services.Application
             return results;         
         }        
 
+        public List<FtpListItem> FtpDir(string remoteFolder)
+        {
+            List<FtpListItem> result = new List<FtpListItem>();
+            try
+            {
+                using (var ftp = new FtpClient(_host, _username, _passwd))
+                {
+                    ftp.Connect();
+                    result = ftp.GetListing(remoteFolder).ToList();  
+                    ftp.Disconnect();                  
+                }
+            }
+            catch (Exception ex)
+            {
 
-        //public List<FtpListItem> FtpRemoteDir(List<string> remoteFolder, bool getFiles)
-        //{
-        //    List<FtpListItem> remoteDir = new List<FtpListItem>();
-//
-        //    using (var ftp = new FtpClient(_host, _username, _passwd))
-        //    {
-        //        ftp.Connect();
-        //        foreach(var oneFolder in remoteFolder)
-        //        {
-        //            foreach(FtpListItem item in ftp.GetListing(oneFolder))
-        //            {
-        //                if(getFiles)
-        //                {
-        //                    if(item.Type== FtpFileSystemObjectType.File) remoteDir.Add(item);
-        //                    } else {
-        //                    remoteDir.Add(item);
-        //                }
-        //            }
-        //        }
-        //        ftp.Disconnect();
-        //    }    
-        //    return remoteDir;
-        //}
+            }
+    
+            return result;
+        }
+
 
         //public List<FtpListItem> FtpListTransformer(List<Renci.SshNet.Sftp.SftpFile> inputList)
         //{

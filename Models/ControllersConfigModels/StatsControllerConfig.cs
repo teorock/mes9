@@ -21,5 +21,6 @@ namespace mes.Models.ControllersConfigModels
         public string UserName  { get; set; }
         public string WebGetString { get; set; }
         public int DaysDisplayedDefault { get; set; }
+        public string FtpTempFolder { get; set; }
     }
 }

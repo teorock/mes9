@@ -9,10 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Linq;
 using System.Threading;
-using System.Globalization;
 using Newtonsoft.Json;
 using System.IO;
-using mes.Models.Services.Application;
 using System.Drawing;
 using ServiceStack.Text;
 using System.Text;
@@ -42,7 +40,6 @@ namespace mes.Controllers
                 rawConf = sr.ReadToEnd();
             }
             config = JsonConvert.DeserializeObject<ProgramsControllerConfig>(rawConf);  
-
         }
 
         public IActionResult Index()
@@ -291,7 +288,7 @@ namespace mes.Controllers
             List<CollaViewModel> collePreviousState = dbAccessor.Queryer<CollaViewModel>(config.ConnectionString, config.ColleDbTable)
                                                                 .Where(x => x.Enabled == "1")
                                                                 .ToList();                
-            //estraggo solo quelli dove la quantità è camnbiata
+            //estraggo solo quelli dove la quantità è cambiata
                 List<CollaViewModel> changed = collePreviousState
                     .Join(colle,
                     item1 => item1.id,
@@ -415,7 +412,6 @@ namespace mes.Controllers
 
         public IActionResult ExportCsvColle ()
         {
-
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<CollaViewModel> colle = (List<CollaViewModel>)dbAccessor.Queryer<CollaViewModel>(config.ConnectionString, config.ColleDbTable)
                                             .Where(x => x.Enabled == "1").ToList();

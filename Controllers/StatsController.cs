@@ -4,7 +4,9 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
 using mes.Models.ControllersConfigModels;
 using mes.Models.Services.Infrastructures;
 using mes.Models.StatisticsModels;
@@ -12,6 +14,7 @@ using mes.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using ServiceStack.Text;
 
 namespace mes.Controllers
 {
@@ -92,6 +95,26 @@ namespace mes.Controllers
             ViewBag.Comment = $"Dati per {machineName} dal {Convert.ToDateTime(startTime).ToString("dd/MMM")} al {Convert.ToDateTime(endTime).ToString("dd/MMM")}";
 
             return View(machineStatistics);
+        }
+
+        public IActionResult ExportStats2Csv(string machineName, string startTime, string endTime)
+        {
+            StatisticsService statService = new StatisticsService();
+            GeneralPurpose genPurpose = new GeneralPurpose();
+
+            MachineDetails machineDetails = config.AvailableMachines.Where(m =>m.MachineName == machineName).FirstOrDefault();                        
+            
+            List<DayStatistic> machineStatistics = statService.GetMachineStats(machineDetails, startTime, endTime);
+
+            //string csv = CsvSerializer.SerializeToCsv(exportBordi);
+            List<string> csvList = genPurpose.ExportObj2CsvList<DayStatistic>(machineStatistics);
+            string csvContent = genPurpose.List2Csv(csvList);
+
+            string outputFile = $"{machineName}_{startTime}_{endTime}.csv";
+
+            byte[] bytes = Encoding.UTF8.GetBytes(csvContent.ToString());
+
+            return File(bytes, "text/csv", outputFile);                   
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

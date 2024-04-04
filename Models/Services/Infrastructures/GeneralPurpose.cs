@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace mes.Models.Services.Infrastructures
 {
@@ -166,25 +167,44 @@ namespace mes.Models.Services.Infrastructures
             return res;
         }
 
-        public List<string> ObjectList2Csv<T>(List<T> inputList)
+
+        public List<string> ExportObj2CsvList<T>(List<T> genericList)
         {
             List<string> result = new List<string>();
-            var properties = typeof(T).GetProperties();
-            List<string> allProperties = new List<string>();
 
-            string csvHead = String.Join(",", properties.Select(x => x.ToString()).ToArray());
-            result.Add(csvHead);
+            var header = "";
+            var info = typeof(T).GetProperties();
 
-            foreach(var oneLine in inputList)
+            foreach (var prop in typeof(T).GetProperties())
             {
-                foreach(var property in properties)
+                header += prop.Name + "; ";
+            }
+            header = header.Substring(0, header.Length - 2);
+            result.Add(header);
+
+            foreach (var obj in genericList)
+            {
+                var line = "";
+                foreach (var prop in info)
                 {
-                    allProperties.Add(property.Name);
-                    //allValues.Add(property.GetValue(inputList).ToString());   
-                }
+                    line += prop.GetValue(obj, null) + "; ";
+                }                    
+                line = line.Substring(0, line.Length - 2);
+                result.Add(line); 
             }
 
-            return new List<string>();
+            return result;
+        }
+
+        public string List2Csv(List<string> inputString)
+        {
+            var csvContent = new StringBuilder();
+            foreach (var item in inputString)
+            {
+                csvContent.AppendLine(item);
+            }
+
+            return csvContent.ToString(); 
         }
 
         public DateTime GetWeeksMonday(int addDays)

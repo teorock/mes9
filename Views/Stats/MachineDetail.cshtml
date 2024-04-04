@@ -25,6 +25,9 @@
     <td>
       <a class="btn btn-outline-primary" id="update">aggiorna</a>
     </td>
+    <td>
+      <a class="btn btn-outline-primary" id="exportcsv">esporta .csv</a>
+    </td>    
   </tr>
 </table>
 <hr>
@@ -256,9 +259,18 @@ var machineName = '@machineName';
     var perStart = $("#periodStart").val();
     var perEnd = $("#periodEnd").val();
     var redirectUrl = '/Stats/MachineDetail?machineName=' + machineName + '&startTime=' + perStart + '&endTime=' + perEnd;
-    alert(redirectUrl);
+    //alert(redirectUrl);
     window.location.href = redirectUrl;
   });
+
+  $("#exportcsv").on('click', function() {
+    var perStart = $("#periodStart").val();
+    var perEnd = $("#periodEnd").val();
+    var redirectUrl = '/Stats/ExportStats2Csv?machineName=' + machineName + '&startTime=' + perStart + '&endTime=' + perEnd;
+    //alert(redirectUrl);
+    window.location.href = redirectUrl;
+  });
+
 
   function getMonday(d, e) {
       d = new Date(d);

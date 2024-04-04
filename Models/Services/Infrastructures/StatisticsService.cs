@@ -4,25 +4,29 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
-using System.Threading.Tasks;
+using FluentFTP;
 using mes.Models.ControllersConfigModels;
-using mes.Models.InfrastructureConfigModels;
+using mes.Models.Services.Application;
 using mes.Models.StatisticsModels;
-using mes.Models.ViewModels;
+using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json;
-using Org.BouncyCastle.Security;
-using ServiceStack;
+using Org.BouncyCastle.Utilities;
 
 namespace mes.Models.Services.Infrastructures
 {
     public class StatisticsService
     {
+        public StatisticsService()
+        {
+            
+        }
         public List<DayStatistic> GetMachineStats(MachineDetails oneMachine, string startTime, string endTime)
         {
             List<DayStatistic> result = new List<DayStatistic>();
             string machineName = oneMachine.MachineName;
             string retrieveMethod = oneMachine.RetrieveMethod;
             string machineType = oneMachine.MachineType;
+            string ftpTemp = oneMachine.FtpTempFolder;
             //string machineType = oneMachine.MachineType;
             //string retrieveMethod = config.AvailableMachines.Select(machine => machine.RetrieveMethod).FirstOrDefault();
             //string dataTypes = config.AvailableMachines.Select(machine => machine.DataTypes).FirstOrDefault();
@@ -43,6 +47,7 @@ namespace mes.Models.Services.Infrastructures
                     break;
 
                 case "BIESSE1":
+                    result = GetBIESSE1Data(oneMachine, startTime, endTime, ftpTemp);
                     break;
 
                 case "SCM1":
@@ -55,6 +60,7 @@ namespace mes.Models.Services.Infrastructures
             return result;
         }
 
+    #region SCM2
         public List<DayStatistic> GetSCM2WebData(MachineDetails oneMachine, string startTime, string endTime)
         {
             bool isALive = PingHost(oneMachine.ServerAddress);            
@@ -105,8 +111,8 @@ namespace mes.Models.Services.Infrastructures
                 
                 int progs = jsonReply.Where(d => Convert.ToDateTime(d.DateTime).Date == oneDay).Count();
 
-            //27/03/2024
-            //qui calcola la somma dei dati per ogni giorno
+                //27/03/2024
+                //qui calcola la somma dei dati per ogni giorno
                 TimeSpan timeWorking = new TimeSpan(0);
 
                 if(oneMachine.MachineType == "SCM2") 
@@ -116,13 +122,13 @@ namespace mes.Models.Services.Infrastructures
 
                 double prgPerHour = (progs / timeWorking.TotalMinutes)*60;
 
-                double totalMetersConsumed = jsonReply.Where(w => Convert.ToDateTime(w.DateTime) >= dayStart)
+                double totalMetersConsumed = Math.Round(jsonReply.Where(w => Convert.ToDateTime(w.DateTime) >= dayStart)
                                                 .Where(z => Convert.ToDateTime(z.DateTime) <= dayEnd)
-                                                .Sum(t => Convert.ToDouble(t.EdgeConsumptionLH))/1000;
+                                                .Sum(t => Convert.ToDouble(t.EdgeConsumptionLH))/1000,2);
 
-                double totalMeters = jsonReply.Where(w => Convert.ToDateTime(w.DateTime) >= dayStart)
+                double totalMeters = Math.Round(jsonReply.Where(w => Convert.ToDateTime(w.DateTime) >= dayStart)
                                                 .Where(z => Convert.ToDateTime(z.DateTime) <= dayEnd)
-                                                .Sum(t => Convert.ToDouble(t.Length))/1000;                                                
+                                                .Sum(t => Convert.ToDouble(t.Length))/1000,2);                                                
 
                 result.Add(new DayStatistic(){
                     StartTime = dayStart,
@@ -203,6 +209,80 @@ namespace mes.Models.Services.Infrastructures
             return pingable;
         }
 
+    #endregion 
+
+    #region BIESSE1
+        public List<DayStatistic> GetBIESSE1Data(MachineDetails oneMachine, string startTime, string endTime, string ftpTemp)
+        {
+            List<DayStatistic> result = new List<DayStatistic>();
+            GeneralPurpose genPurpose = new GeneralPurpose();
+
+            bool isALive = PingHost(oneMachine.ServerAddress); 
+            
+            FtpService ftp = new FtpService(oneMachine.ServerAddress, oneMachine.UserName, genPurpose.ImplicitPwd(oneMachine.UserName));
+            //si collega
+            //directory
+            List<FtpListItem> remoteFilesItem =  ftp.FtpDir($"/{oneMachine.MachineName}/")
+                                                    .Where(d => d.Created >= Convert.ToDateTime(startTime))
+                                                    .Where(d2 => d2.Created >= Convert.ToDateTime(endTime))
+                                                    .ToList();
+
+            List<string> remoteFiles = remoteFilesItem.Select(x => x.Name).ToList();
+            
+            foreach(string oneFile in remoteFiles)
+            {
+                List<BiesseReportModel> reportList = GetReportContent(oneFile);
+                //elabora
+            }
+
+
+            return result;
+        }
+
+        public List<BiesseReportModel> GetReportContent(string fileName)
+        {
+            List<BiesseReportModel> report = new List<BiesseReportModel>();
+            List<string> rawFile = new List<string>(File.ReadAllLines(fileName));
+
+            for(int i=1; i<rawFile.Count; i++)
+            {
+                string[] parts = rawFile[i].Split("\t");
+
+                BiesseReportModel oneModel = new BiesseReportModel(){
+                    StartDate = Convert.ToDateTime($"{parts[0]} {parts[2]}"),
+                    EndDate = Convert.ToDateTime($"{parts[1]} {parts[3]}"),
+                    StartTime = TimeSpan.Parse(parts[2]),
+                    EndTime = TimeSpan.Parse(parts[3]),
+                    Worklist = parts[4],
+                    Program = parts[5],
+                    Time = TimeSpan.Parse(parts[6]),
+                    Origin = Convert.ToInt16(parts[7]),
+                    Result = Convert.ToInt16(parts[8])                    
+                };
+                report.Add(oneModel);
+            }
+            return report;
+        }
+
+        public DayStatistic GetDayStatisticsFromBSReport(List<BiesseReportModel> inputList)
+        {
+            /// completa oggetto
+
+            //TimeOn
+            //TimeWorking
+            //ProgramsPerHour
+            DayStatistic oneDay = new DayStatistic()
+            {
+                StartTime = inputList.Min(d => d.StartDate),
+                EndTime = inputList.Max(e=> e.EndDate),
+                ProgramsToday = inputList.Count(),
+                IsAlive = true    
+            };
+
+            return oneDay;
+        }
+
+    #endregion
         public void FormatMachineData(List<DayStatistic> inputStats,
                                         string machineType,
                                         out List<int>onTime,
@@ -230,9 +310,9 @@ namespace mes.Models.Services.Infrastructures
                 workingTime.Add(Convert.ToInt32(oneStat.TimeWorking.TotalMinutes));
                 daysNames.Add(oneStat.StartTime.ToString("dd MMM"));
                 progsPerDay.Add(oneStat.ProgramsToday);
-                progsPerHour.Add(oneStat.ProgramsPerHour);
-                totalMetersConsumed.Add(oneStat.TotalMetersConsumed);
-                totalMeters.Add(oneStat.TotalMeters);
+                progsPerHour.Add(Math.Round(oneStat.ProgramsPerHour,1));
+                totalMetersConsumed.Add(Math.Round(oneStat.TotalMetersConsumed,2));
+                totalMeters.Add(Math.Round(oneStat.TotalMeters,2));
             }
         }
     }
