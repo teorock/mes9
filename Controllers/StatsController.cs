@@ -11,6 +11,7 @@ using mes.Models.ControllersConfigModels;
 using mes.Models.Services.Infrastructures;
 using mes.Models.StatisticsModels;
 using mes.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Razor.Language;
 using Microsoft.Extensions.Logging;
@@ -41,6 +42,7 @@ namespace mes.Controllers
             _logger = logger;
         }
 
+        [Authorize(Roles ="root, StatistiViewer")]
         public IActionResult Index()
         {
             List<string> machineNames = config.AvailableMachines
@@ -56,6 +58,7 @@ namespace mes.Controllers
             return View();
         }        
 
+        [Authorize(Roles ="root, StatistiViewer")]
         public IActionResult MachineDetail(string machineName, string startTime, string endTime)
         {
             StatisticsService statService = new StatisticsService();
@@ -101,6 +104,7 @@ namespace mes.Controllers
             return View(machineStatistics);
         }
 
+        [Authorize(Roles ="root, StatistiViewer")]
         public IActionResult ExportStats2Csv(string machineName, string startTime, string endTime)
         {
             //per poter suddividere i risultati per bordi, è necessario riestrarre i dati grezzi dalla macchina e dividerli per giorno/spessore
