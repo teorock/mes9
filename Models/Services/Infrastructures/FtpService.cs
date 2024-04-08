@@ -45,6 +45,7 @@ namespace mes.Models.Services.Application
             using (var ftp = new FtpClient(_host, _username, _passwd))
             {
                 ftp.Connect();
+                //ftp.SetWorkingDirectory(remoteFolder);
                 var res = ftp.DownloadFile(localFile, remoteFile);
                 ftp.Disconnect();
             }            

@@ -73,9 +73,10 @@ namespace mes.Models.Services.Infrastructures
                     EndTime = DateTime.Now,
                     ProgramsToday = 0,
                     TimeOn = new TimeSpan(0,0,0),
-                    TimeWorking = new TimeSpan(0,0,0),
+                    TimeWorking = new TimeSpan(0,0,0),                
                     ProgramsPerHour = 0,
-                    IsAlive = false
+                    IsAlive = false,
+                    ThicknessPieces = new List<KeyValuePair<int, double>>(){new KeyValuePair<int, double>(0,0)}
                 };
                 result.Add(oneStat);
                 return result;           
@@ -96,8 +97,10 @@ namespace mes.Models.Services.Infrastructures
             // TO DO : gestire errore di connessione o di risposta
             //----------------------------------------------
             //trasformazione dati
+            //08/04/24
+            //gestione responso spessori bordati per giorno
             
-            List<DateTime> daysInInterval = jsonReply.Select(d => Convert.ToDateTime(d.DateTime).Date).Distinct().ToList();
+            List<DateTime> daysInInterval = jsonReply.Select(d => Convert.ToDateTime(d.DateTime).Date).Distinct().ToList();            
 
             foreach(DateTime oneDay in daysInInterval)
             {
@@ -109,12 +112,15 @@ namespace mes.Models.Services.Infrastructures
                                             .Select(m => Convert.ToDateTime(m.DateTime))
                                             .Max();
                 
-                int progs = jsonReply.Where(d => Convert.ToDateTime(d.DateTime).Date == oneDay).Count();
-
-                //27/03/2024
-                //qui calcola la somma dei dati per ogni giorno
+                int progs = jsonReply.Where(d => Convert.ToDateTime(d.DateTime).Date == oneDay).Count();            
+                
+                //08/04/2024
+                //richiesta divisione per spessore
+                List<KeyValuePair<int, double>> thicknessPieces = GetThicknessPieces(jsonReply, oneDay);
+                
                 TimeSpan timeWorking = new TimeSpan(0);
 
+                //superfluo, sappiamo già che MachineType == "SCM2"
                 if(oneMachine.MachineType == "SCM2") 
                 {
                     timeWorking = dayEnd - dayStart;
@@ -139,13 +145,38 @@ namespace mes.Models.Services.Infrastructures
                     ProgramsPerHour = Math.Round(prgPerHour,1),
                     TotalMeters = totalMeters,
                     TotalMetersConsumed = totalMetersConsumed,
-                    IsAlive = true
+                    IsAlive = true,
+                    ThicknessPieces = thicknessPieces
                 });                
             }
 
             return result;
         }
 
+        public List<KeyValuePair<int, double>> GetThicknessPieces(List<SCM2ReportBody> jsonReply, DateTime queryDay)
+        {
+            List<KeyValuePair<int, double>> result = new List<KeyValuePair<int, double>>();
+            // quanti spessori quel giorno
+            // quanti pezzi per spessore
+
+            var debug1 = Convert.ToDateTime(jsonReply[0].DateTime).Date;
+            var debug2 = queryDay.Date;
+
+            List<SCM2ReportBody> rawBody = jsonReply.Where(w => Convert.ToDateTime(w.DateTime).Date == queryDay.Date).ToList();
+
+            List<double> thicknessesThatDay = rawBody.Select(t => t.Thickness).Distinct().ToList();
+
+            foreach(double onethickness in thicknessesThatDay)                                                
+            {
+                int piecesThatThickThatDay = rawBody.Where(t => t.Thickness == onethickness).Count();
+                
+                KeyValuePair<int, double> oneResult = new KeyValuePair<int, double>(piecesThatThickThatDay, onethickness);
+                
+                result.Add(oneResult);
+            }
+
+            return result;
+        }
         public List<SCM2ReportBody> GetWebResponse(string requestUrl)
         {
             List<SCM2ReportBody> results = new List<SCM2ReportBody>();
@@ -217,21 +248,28 @@ namespace mes.Models.Services.Infrastructures
             List<DayStatistic> result = new List<DayStatistic>();
             GeneralPurpose genPurpose = new GeneralPurpose();
 
-            bool isALive = PingHost(oneMachine.ServerAddress); 
+            //bool isALive = PingHost(oneMachine.ServerAddress); 
             
             FtpService ftp = new FtpService(oneMachine.ServerAddress, oneMachine.UserName, genPurpose.ImplicitPwd(oneMachine.UserName));
             //si collega
             //directory
+
+            List<FtpListItem> remoteFilesItemRaw =  ftp.FtpDir($"/{oneMachine.MachineName}/");
+
             List<FtpListItem> remoteFilesItem =  ftp.FtpDir($"/{oneMachine.MachineName}/")
-                                                    .Where(d => d.Created >= Convert.ToDateTime(startTime))
-                                                    .Where(d2 => d2.Created >= Convert.ToDateTime(endTime))
+                                                    .Where(d => d.Modified >= Convert.ToDateTime(startTime))
+                                                    .Where(d2 => d2.Modified <= Convert.ToDateTime(endTime))
                                                     .ToList();
 
             List<string> remoteFiles = remoteFilesItem.Select(x => x.Name).ToList();
             
+            if(!Directory.Exists(oneMachine.FtpTempFolder)) Directory.CreateDirectory(oneMachine.FtpTempFolder);
+
             foreach(string oneFile in remoteFiles)
             {
-                List<BiesseReportModel> reportList = GetReportContent(oneFile);
+                string localFile = Path.Combine(oneMachine.FtpTempFolder, oneFile);
+                ftp.FtpDownloadFile($"/{oneMachine.MachineName}/{oneFile}/", localFile);
+                List<BiesseReportModel> reportList = GetReportContent(localFile);
                 //elabora
             }
 
@@ -283,6 +321,7 @@ namespace mes.Models.Services.Infrastructures
         }
 
     #endregion
+
         public void FormatMachineData(List<DayStatistic> inputStats,
                                         string machineType,
                                         out List<int>onTime,

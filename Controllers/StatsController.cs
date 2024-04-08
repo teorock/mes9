@@ -69,9 +69,9 @@ namespace mes.Controllers
             ViewBag.startWeek = Convert.ToDateTime(startTime).ToString("yyyy-MM-dd");
             ViewBag.endWeek = Convert.ToDateTime(endTime).ToString("yyyy-MM-dd");
 
-            if(!machineStatistics[0].IsAlive)
+            if(machineStatistics.Count()==0)
             {
-                ViewBag.errorMsg = "macchina spenta o scollegata";
+                ViewBag.errorMsg = "Nessun dato per il periodo selezionato oppure macchina spenta o scollegata";
             }
 
             List<int> onTime;
