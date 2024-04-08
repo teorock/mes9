@@ -61,97 +61,112 @@ namespace mes.Models.Services.Infrastructures
         }
 
     #region SCM2
-        public List<DayStatistic> GetSCM2WebData(MachineDetails oneMachine, string startTime, string endTime)
+
+    public List<SCM2ReportBody> GetSCM2WebRawData(MachineDetails oneMachine, string startTime, string endTime)
+    {
+        bool isALive = PingHost(oneMachine.ServerAddress);            
+
+        DateTime startT = Convert.ToDateTime(startTime);
+        DateTime endT = Convert.ToDateTime(endTime);
+
+        string startPeriod = $"{startT.Year}-{startT.Month.ToString("00")}-{startT.Day.ToString("00")}T04%3A00%3A00";
+        string endPeriod = $"{endT.Year}-{endT.Month.ToString("00")}-{endT.Day.ToString("00")}T21%3A00%3A00";
+
+        string requestUrl = $"http://{oneMachine.ServerAddress}:{oneMachine.ServerPort}/api/v1/report/production?from={startPeriod}&to={endPeriod}";
+
+        List<SCM2ReportBody> jsonReply = GetWebResponse(requestUrl);
+        
+        return jsonReply;
+    }
+
+    public List<DayStatistic> GetSCM2WebData(MachineDetails oneMachine, string startTime, string endTime)
+    {
+        bool isALive = PingHost(oneMachine.ServerAddress);            
+
+        List<DayStatistic> result = new List<DayStatistic>();
+        if(!isALive)
         {
-            bool isALive = PingHost(oneMachine.ServerAddress);            
-
-            List<DayStatistic> result = new List<DayStatistic>();
-            if(!isALive)
-            {
-                DayStatistic oneStat = new DayStatistic(){
-                    StartTime = DateTime.Now,
-                    EndTime = DateTime.Now,
-                    ProgramsToday = 0,
-                    TimeOn = new TimeSpan(0,0,0),
-                    TimeWorking = new TimeSpan(0,0,0),                
-                    ProgramsPerHour = 0,
-                    IsAlive = false,
-                    ThicknessPieces = new List<KeyValuePair<int, double>>(){new KeyValuePair<int, double>(0,0)}
-                };
-                result.Add(oneStat);
-                return result;           
-            }
-
-            DateTime startT = Convert.ToDateTime(startTime);
-            DateTime endT = Convert.ToDateTime(endTime);
-
-            //string startPeriod = $"{startT.Year}-{startT.Month}-{startT.Day}T{startT.Hour}%3A{startT.Minute}%3A{startT.Second}";
-            //string endPeriod = $"{endT.Year}-{endT.Month}-{endT.Day}T{endT.Hour}%3A{endT.Minute}%3A{endT.Second}";
-
-            string startPeriod = $"{startT.Year}-{startT.Month.ToString("00")}-{startT.Day.ToString("00")}T04%3A00%3A00";
-            string endPeriod = $"{endT.Year}-{endT.Month.ToString("00")}-{endT.Day.ToString("00")}T21%3A00%3A00";
-
-            string requestUrl = $"http://{oneMachine.ServerAddress}:{oneMachine.ServerPort}/api/v1/report/production?from={startPeriod}&to={endPeriod}";
-
-            List<SCM2ReportBody> jsonReply = GetWebResponse(requestUrl);
-            // TO DO : gestire errore di connessione o di risposta
-            //----------------------------------------------
-            //trasformazione dati
-            //08/04/24
-            //gestione responso spessori bordati per giorno
-            
-            List<DateTime> daysInInterval = jsonReply.Select(d => Convert.ToDateTime(d.DateTime).Date).Distinct().ToList();            
-
-            foreach(DateTime oneDay in daysInInterval)
-            {
-                DateTime dayStart = jsonReply.Where(d => Convert.ToDateTime(d.DateTime).Date == oneDay)
-                                            .Select(m => Convert.ToDateTime(m.DateTime))
-                                            .Min();
-
-                DateTime dayEnd = jsonReply.Where(d => Convert.ToDateTime(d.DateTime).Date == oneDay)
-                                            .Select(m => Convert.ToDateTime(m.DateTime))
-                                            .Max();
-                
-                int progs = jsonReply.Where(d => Convert.ToDateTime(d.DateTime).Date == oneDay).Count();            
-                
-                //08/04/2024
-                //richiesta divisione per spessore
-                List<KeyValuePair<int, double>> thicknessPieces = GetThicknessPieces(jsonReply, oneDay);
-                
-                TimeSpan timeWorking = new TimeSpan(0);
-
-                //superfluo, sappiamo già che MachineType == "SCM2"
-                if(oneMachine.MachineType == "SCM2") 
-                {
-                    timeWorking = dayEnd - dayStart;
-                }
-
-                double prgPerHour = (progs / timeWorking.TotalMinutes)*60;
-
-                double totalMetersConsumed = Math.Round(jsonReply.Where(w => Convert.ToDateTime(w.DateTime) >= dayStart)
-                                                .Where(z => Convert.ToDateTime(z.DateTime) <= dayEnd)
-                                                .Sum(t => Convert.ToDouble(t.EdgeConsumptionLH))/1000,2);
-
-                double totalMeters = Math.Round(jsonReply.Where(w => Convert.ToDateTime(w.DateTime) >= dayStart)
-                                                .Where(z => Convert.ToDateTime(z.DateTime) <= dayEnd)
-                                                .Sum(t => Convert.ToDouble(t.Length))/1000,2);                                                
-
-                result.Add(new DayStatistic(){
-                    StartTime = dayStart,
-                    EndTime = dayEnd,
-                    ProgramsToday = progs,
-                    TimeOn = dayEnd - dayStart,
-                    TimeWorking = timeWorking,
-                    ProgramsPerHour = Math.Round(prgPerHour,1),
-                    TotalMeters = totalMeters,
-                    TotalMetersConsumed = totalMetersConsumed,
-                    IsAlive = true,
-                    ThicknessPieces = thicknessPieces
-                });                
-            }
-
-            return result;
+            DayStatistic oneStat = new DayStatistic(){
+                StartTime = DateTime.Now,
+                EndTime = DateTime.Now,
+                ProgramsToday = 0,
+                TimeOn = new TimeSpan(0,0,0),
+                TimeWorking = new TimeSpan(0,0,0),                
+                ProgramsPerHour = 0,
+                IsAlive = false,
+                ThicknessPieces = new List<KeyValuePair<int, double>>(){new KeyValuePair<int, double>(0,0)}
+            };
+            result.Add(oneStat);
+            return result;           
         }
+
+        DateTime startT = Convert.ToDateTime(startTime);
+        DateTime endT = Convert.ToDateTime(endTime);
+
+        string startPeriod = $"{startT.Year}-{startT.Month.ToString("00")}-{startT.Day.ToString("00")}T04%3A00%3A00";
+        string endPeriod = $"{endT.Year}-{endT.Month.ToString("00")}-{endT.Day.ToString("00")}T21%3A00%3A00";
+
+        string requestUrl = $"http://{oneMachine.ServerAddress}:{oneMachine.ServerPort}/api/v1/report/production?from={startPeriod}&to={endPeriod}";
+
+        List<SCM2ReportBody> jsonReply = GetWebResponse(requestUrl);
+        // TO DO : gestire errore di connessione o di risposta
+        //----------------------------------------------
+        //trasformazione dati
+        //08/04/24
+        //gestione responso spessori bordati per giorno
+        
+        List<DateTime> daysInInterval = jsonReply.Select(d => Convert.ToDateTime(d.DateTime).Date).Distinct().ToList();            
+
+        foreach(DateTime oneDay in daysInInterval)
+        {
+            DateTime dayStart = jsonReply.Where(d => Convert.ToDateTime(d.DateTime).Date == oneDay)
+                                        .Select(m => Convert.ToDateTime(m.DateTime))
+                                        .Min();
+
+            DateTime dayEnd = jsonReply.Where(d => Convert.ToDateTime(d.DateTime).Date == oneDay)
+                                        .Select(m => Convert.ToDateTime(m.DateTime))
+                                        .Max();
+            
+            int progs = jsonReply.Where(d => Convert.ToDateTime(d.DateTime).Date == oneDay).Count();            
+            
+            //08/04/2024
+            //richiesta divisione per spessore
+            List<KeyValuePair<int, double>> thicknessPieces = GetThicknessPieces(jsonReply, oneDay);
+            
+            TimeSpan timeWorking = new TimeSpan(0);
+
+            //superfluo, sappiamo già che MachineType == "SCM2"
+            if(oneMachine.MachineType == "SCM2") 
+            {
+                timeWorking = dayEnd - dayStart;
+            }
+
+            double prgPerHour = (progs / timeWorking.TotalMinutes)*60;
+
+            double totalMetersConsumed = Math.Round(jsonReply.Where(w => Convert.ToDateTime(w.DateTime) >= dayStart)
+                                            .Where(z => Convert.ToDateTime(z.DateTime) <= dayEnd)
+                                            .Sum(t => Convert.ToDouble(t.EdgeConsumptionLH))/1000,2);
+
+            double totalMeters = Math.Round(jsonReply.Where(w => Convert.ToDateTime(w.DateTime) >= dayStart)
+                                            .Where(z => Convert.ToDateTime(z.DateTime) <= dayEnd)
+                                            .Sum(t => Convert.ToDouble(t.Length))/1000,2);                                                
+
+            result.Add(new DayStatistic(){
+                StartTime = dayStart,
+                EndTime = dayEnd,
+                ProgramsToday = progs,
+                TimeOn = dayEnd - dayStart,
+                TimeWorking = timeWorking,
+                ProgramsPerHour = Math.Round(prgPerHour,1),
+                TotalMeters = totalMeters,
+                TotalMetersConsumed = totalMetersConsumed,
+                IsAlive = true,
+                ThicknessPieces = thicknessPieces
+            });                
+        }
+
+        return result;
+    }
 
         public List<KeyValuePair<int, double>> GetThicknessPieces(List<SCM2ReportBody> jsonReply, DateTime queryDay)
         {

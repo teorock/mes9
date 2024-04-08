@@ -15,7 +15,7 @@ namespace mes.Models.StatisticsModels
         public string EdgeNameLH { get; set; }
         public double EdgeConsumptionLH { get; set; }
         public string EdgeNameRH { get; set; }
-        public string DateTime { get; set; }
+        public DateTime DateTime { get; set; }
         public string OperatorName { get; set; }
         public string Workshift { get; set; }        
     }

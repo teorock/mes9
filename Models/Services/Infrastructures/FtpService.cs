@@ -1,4 +1,5 @@
 using FluentFTP;
+using Microsoft.Extensions.Logging;
 using Renci.SshNet;
 using System;
 using System.Collections.Generic;
@@ -42,13 +43,20 @@ namespace mes.Models.Services.Application
 
         public void FtpDownloadFile(string remoteFile, string localFile)
         {
-            using (var ftp = new FtpClient(_host, _username, _passwd))
+            try
             {
-                ftp.Connect();
-                //ftp.SetWorkingDirectory(remoteFolder);
-                var res = ftp.DownloadFile(localFile, remoteFile);
-                ftp.Disconnect();
-            }            
+                using (var ftp = new FtpClient(_host, _username, _passwd))
+                {
+                    ftp.Connect();
+                    //ftp.SetWorkingDirectory(remoteFolder);
+                    var res = ftp.DownloadFile(localFile, remoteFile);
+                    ftp.Disconnect();
+                }
+            }
+            catch (Exception ex)        
+            {
+                
+            }
         }
 
         public List<string> ReadRemoteFtpFile (string remoteFilePath, string localFile)

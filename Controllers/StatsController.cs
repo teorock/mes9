@@ -12,8 +12,10 @@ using mes.Models.Services.Infrastructures;
 using mes.Models.StatisticsModels;
 using mes.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Razor.Language;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Org.BouncyCastle.Asn1.Cms;
 using ServiceStack.Text;
 
 namespace mes.Controllers
@@ -101,22 +103,67 @@ namespace mes.Controllers
 
         public IActionResult ExportStats2Csv(string machineName, string startTime, string endTime)
         {
+            //per poter suddividere i risultati per bordi, è necessario riestrarre i dati grezzi dalla macchina e dividerli per giorno/spessore
             StatisticsService statService = new StatisticsService();
             GeneralPurpose genPurpose = new GeneralPurpose();
 
             MachineDetails machineDetails = config.AvailableMachines.Where(m =>m.MachineName == machineName).FirstOrDefault();                        
             
-            List<DayStatistic> machineStatistics = statService.GetMachineStats(machineDetails, startTime, endTime);
+            List<SCM2ReportBody> rawReportBodies = statService.GetSCM2WebRawData(machineDetails, startTime, endTime);
 
-            //string csv = CsvSerializer.SerializeToCsv(exportBordi);
-            List<string> csvList = genPurpose.ExportObj2CsvList<DayStatistic>(machineStatistics);
+            //lista dei giorni
+            List<DateTime> days = rawReportBodies.Select(d => Convert.ToDateTime(d.DateTime).Date).Distinct().ToList();
+
+            List<SCM2ReportToFile> report = new List<SCM2ReportToFile>();
+            
+            //per ogni giorno creo una lista
+            foreach(DateTime oneDay in days)
+            {
+                List<SCM2ReportBody> oneDayList = rawReportBodies.Where(d => d.DateTime.Date == oneDay.Date).ToList();                
+                //estraggo il numero d bordi in questa lista
+                List<KeyValuePair<int, double>> thicknessPieces = statService.GetThicknessPieces(rawReportBodies, oneDay);
+                //estraggo la lista raw solo per quello spessore
+                foreach(var oneCouple in thicknessPieces)
+                {
+                    List<SCM2ReportBody> oneDayOneThick = oneDayList.Where(t => t.Thickness == oneCouple.Value).ToList();
+                    //calcolo i totali e li aggiungo al report
+                    SCM2ReportToFile oneLine = SCM2Mapper(oneDayOneThick);
+                    report.Add(oneLine);
+                }           
+            }    
+
+            List<string>csvList = genPurpose.ExportObj2CsvList<SCM2ReportToFile>(report);
             string csvContent = genPurpose.List2Csv(csvList);
-
             string outputFile = $"{machineName}_{startTime}_{endTime}.csv";
-
             byte[] bytes = Encoding.UTF8.GetBytes(csvContent.ToString());
-
             return File(bytes, "text/csv", outputFile);                   
+        }
+
+        public SCM2ReportToFile SCM2Mapper(List<SCM2ReportBody> inputList)
+        {
+            TimeSpan oraInizioLavoro = inputList.Select(d => d.DateTime.TimeOfDay).Min();
+            TimeSpan oraFineLavoro  = inputList.Select(df => df.DateTime.TimeOfDay).Max();
+            TimeSpan totaleOreLavoro = oraFineLavoro- oraInizioLavoro;
+            TimeSpan totaleMinutiLavoro = TimeSpan.FromMinutes(totaleOreLavoro.TotalMinutes);
+            
+            double totaleMetri = Math.Round(inputList.Sum(tm => tm.Length)/1000, 2);
+            double totaleMetriConsumati = Math.Round(inputList.Sum(tmc => tmc.EdgeConsumptionLH)/1000,2);
+            int totalePezzi = inputList.Count();
+            double spessore = inputList[0].Thickness;
+
+            SCM2ReportToFile report = new SCM2ReportToFile(){
+                Data = inputList[0].DateTime,
+                OraInizioLavoro = oraInizioLavoro,
+                OraFineLavoro = oraFineLavoro,
+                TotaleOreLavoro = totaleOreLavoro,
+                TotaleMinutiLavoro = totaleMinutiLavoro,
+                TotaleMetri = totaleMetri,
+                TotaleMetriBordoConsumati = totaleMetriConsumati,
+                TotalePezzi = totalePezzi,
+                Spessore = spessore
+            };
+
+            return report;
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
