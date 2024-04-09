@@ -42,7 +42,7 @@ namespace mes.Controllers
             _logger = logger;
         }
 
-        [Authorize(Roles ="root, StatistiViewer")]
+        [Authorize(Roles ="root, StatisticViewer")]
         public IActionResult Index()
         {
             List<string> machineNames = config.AvailableMachines
@@ -58,7 +58,7 @@ namespace mes.Controllers
             return View();
         }        
 
-        [Authorize(Roles ="root, StatistiViewer")]
+        [Authorize(Roles ="root, StatisticViewer")]
         public IActionResult MachineDetail(string machineName, string startTime, string endTime)
         {
             StatisticsService statService = new StatisticsService();
@@ -104,7 +104,7 @@ namespace mes.Controllers
             return View(machineStatistics);
         }
 
-        [Authorize(Roles ="root, StatistiViewer")]
+        [Authorize(Roles ="root, StatisticViewer")]
         public IActionResult ExportStats2Csv(string machineName, string startTime, string endTime)
         {
             //per poter suddividere i risultati per bordi, è necessario riestrarre i dati grezzi dalla macchina e dividerli per giorno/spessore
@@ -148,15 +148,18 @@ namespace mes.Controllers
             TimeSpan oraInizioLavoro = inputList.Select(d => d.DateTime.TimeOfDay).Min();
             TimeSpan oraFineLavoro  = inputList.Select(df => df.DateTime.TimeOfDay).Max();
             TimeSpan totaleOreLavoro = oraFineLavoro- oraInizioLavoro;
-            TimeSpan totaleMinutiLavoro = TimeSpan.FromMinutes(totaleOreLavoro.TotalMinutes);
+            double totaleMinutiLavoro = Math.Round(TimeSpan.FromMinutes(totaleOreLavoro.TotalMinutes).TotalMinutes,2);
             
             double totaleMetri = Math.Round(inputList.Sum(tm => tm.Length)/1000, 2);
             double totaleMetriConsumati = Math.Round(inputList.Sum(tmc => tmc.EdgeConsumptionLH)/1000,2);
             int totalePezzi = inputList.Count();
             double spessore = inputList[0].Thickness;
 
+            double metriAlMinuto = Math.Round(totaleMetri/totaleMinutiLavoro,2);
+            double metriAllOra = metriAlMinuto*60;
+
             SCM2ReportToFile report = new SCM2ReportToFile(){
-                Data = inputList[0].DateTime,
+                Data = inputList[0].DateTime.ToString("dd/MM/yyyy"),
                 OraInizioLavoro = oraInizioLavoro,
                 OraFineLavoro = oraFineLavoro,
                 TotaleOreLavoro = totaleOreLavoro,
@@ -164,7 +167,9 @@ namespace mes.Controllers
                 TotaleMetri = totaleMetri,
                 TotaleMetriBordoConsumati = totaleMetriConsumati,
                 TotalePezzi = totalePezzi,
-                Spessore = spessore
+                Spessore = spessore,
+                MetriAlMinuto = metriAlMinuto,
+                MetriAllOra = metriAllOra
             };
 
             return report;

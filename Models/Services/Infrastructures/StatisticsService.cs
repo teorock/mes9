@@ -16,9 +16,11 @@ namespace mes.Models.Services.Infrastructures
 {
     public class StatisticsService
     {
+        GeneralPurpose genP;
+        const string intranetLog=@"c:\temp\intranet.log"; 
         public StatisticsService()
         {
-            
+            genP = new GeneralPurpose();
         }
         public List<DayStatistic> GetMachineStats(MachineDetails oneMachine, string startTime, string endTime)
         {
@@ -214,7 +216,7 @@ namespace mes.Models.Services.Infrastructures
             }
             catch( Exception ex)
             {
-
+                genP.Log2File($"StatisticService.GetWebResponse: {ex.Message}", intranetLog);
             }
 
             results = JsonConvert.DeserializeObject<List<SCM2ReportBody>>(StatusCutter(text.Replace("'","-")));
@@ -277,7 +279,7 @@ namespace mes.Models.Services.Infrastructures
                                                     .ToList();
 
             List<string> remoteFiles = remoteFilesItem.Select(x => x.Name).ToList();
-            
+
             if(!Directory.Exists(oneMachine.FtpTempFolder)) Directory.CreateDirectory(oneMachine.FtpTempFolder);
 
             foreach(string oneFile in remoteFiles)

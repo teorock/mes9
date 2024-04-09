@@ -1,4 +1,5 @@
 using FluentFTP;
+using mes.Models.Services.Infrastructures;
 using Microsoft.Extensions.Logging;
 using Renci.SshNet;
 using System;
@@ -15,11 +16,15 @@ namespace mes.Models.Services.Application
         public string _username="";
         public string _passwd="";
 
+        GeneralPurpose generalPurpose;
+        const string intranetLog=@"c:\temp\intranet.log"; 
+
         public FtpService(string host, string username, string passwd)
         {
             _host= host;
             _username = username;
             _passwd = passwd;
+            generalPurpose = new GeneralPurpose();
         }
         
         public string FtpUploadFile(string filePath, string destFile)        
@@ -55,7 +60,7 @@ namespace mes.Models.Services.Application
             }
             catch (Exception ex)        
             {
-                
+                generalPurpose.Log2File($"FtpService.FtpDownloadFile: {ex.Message}", intranetLog);
             }
         }
 
@@ -91,12 +96,12 @@ namespace mes.Models.Services.Application
                 {
                     ftp.Connect();
                     result = ftp.GetListing(remoteFolder).ToList();  
-                    ftp.Disconnect();                  
+                    ftp.Disconnect();
                 }
             }
             catch (Exception ex)
             {
-
+                generalPurpose.Log2File($"FtpService.FtpDir {remoteFolder}: {ex.Message}", intranetLog);
             }
     
             return result;

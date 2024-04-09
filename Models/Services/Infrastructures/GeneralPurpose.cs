@@ -214,5 +214,13 @@ namespace mes.Models.Services.Infrastructures
             return firstDayOfThisWeek.AddDays(addDays);
         }
 
+        public void Log2File(string line2log, string filePath)
+        {
+            using(StreamWriter sw = new StreamWriter(filePath, true))
+            {
+                sw.WriteLine($"{DateTime.Now} -> {line2log}");
+            }
+        }  
+
     }
 }
