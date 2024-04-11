@@ -10,6 +10,7 @@ using mes.Models.Services.Application;
 using mes.Models.StatisticsModels;
 using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json;
+using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Utilities;
 
 namespace mes.Models.Services.Infrastructures
@@ -371,5 +372,90 @@ namespace mes.Models.Services.Infrastructures
                 totalMeters.Add(Math.Round(oneStat.TotalMeters,2));
             }
         }
+
+        public List<HourStatistics> FormatMachineDailyData(MachineDetails oneMachine, string startTime, string endTime, out List<string> xLabels, out string title)
+        {
+            List<HourStatistics> result = new List<HourStatistics>();
+            xLabels = new List<string>();
+
+            List<SCM2ReportBody> dayData = GetSCM2WebRawData(oneMachine, startTime, endTime);
+
+            List<int> hoursInInterval = dayData.Select(h => h.DateTime.Hour).Distinct().ToList();
+            //____ composizione titolo pagina --------------------
+            string oraInizio = dayData.Min(d => d.DateTime).ToString("HH:mm:ss");
+            string oraFine = dayData.Max(d=> d.DateTime).ToString("HH:mm:ss");
+            int latiTotali = dayData.Count();
+            double metriTotali = Math.Round(dayData.Sum(m => m.Length)/1000,2);
+            double metriConsumati = Math.Round(dayData.Sum(m=> m.EdgeConsumptionLH)/1000,2);
+
+            title =$"orario di lavoro: {oraInizio}-{oraFine}, {latiTotali} lati, {metriTotali} metri bordati, {metriConsumati} bordo consumato";
+
+            List<double> thicknesses = dayData.Select(t => t.Thickness).Distinct().ToList();
+            //ottieni il massimo e il minimo di ogni ora nell'intervallo
+            //----------------------------------------------------
+            DateTime today = Convert.ToDateTime(startTime);
+
+            foreach(double oneThick in thicknesses)
+            {
+                foreach(int oneHour in hoursInInterval)
+                {
+                    DateTime thisHourStart = new DateTime(today.Year, today.Month, today.Day, oneHour, 0, 0);
+                    DateTime thisHourEnd = new DateTime(today.Year, today.Month, today.Day, oneHour, 59, 59);
+                    List<SCM2ReportBody> oneHourData = dayData.Where(d => Convert.ToDateTime(d.DateTime)>= thisHourStart)
+                                                                .Where(d2 => Convert.ToDateTime(d2.DateTime)<= thisHourEnd)
+                                                                .Where(t => t.Thickness == oneThick).ToList();
+
+                    List<SCM2ReportBody> oneHourDataLabel = dayData.Where(d => Convert.ToDateTime(d.DateTime)>= thisHourStart)
+                                                                .Where(d2 => Convert.ToDateTime(d2.DateTime)<= thisHourEnd).ToList();                                                                
+                    
+                    string intervalMax = oneHourDataLabel.Max(d => d.DateTime).ToString("HH:mm");
+                    string intervalMin = oneHourDataLabel.Min(d => d.DateTime).ToString("HH:mm");
+                    string label2add = $"{intervalMin}-{intervalMax}";
+                    if(!xLabels.Contains(label2add)) xLabels.Add(label2add);
+
+                    double totalMeters = oneHourData.Sum(t => t.Length)/1000;
+                    int totalSides = oneHourData.Count();
+                    double consumedMeters = oneHourData.Sum(c => c.EdgeConsumptionLH)/1000;
+
+                    HourStatistics oneHourStat = new HourStatistics(){
+                        Hour = oneHour,
+                        TotalMeters = totalMeters,
+                        TotalSides = totalSides,
+                        ConsumedMeters = consumedMeters,
+                        Thickness = oneThick
+                    };
+                    result.Add(oneHourStat);
+                }
+
+
+
+            }        
+            return result;
+        }
+
+        public string SeriesDataStringBuilder(List<HourStatistics> input)
+        {
+            string tempString = "";
+            tempString += "[{";
+            List<double> thicknesses = input.Select(t => t.Thickness).Distinct().ToList();
+            foreach(var oneThick in thicknesses)
+            {
+                tempString +=$"name:'{oneThick} mm', data: [";
+                List<int> thisThickSides = input.Where(t => t.Thickness == oneThick).Select(s => s.TotalSides).ToList();
+                //string actualLast = tempString.Last();
+                foreach(int sideN in thisThickSides)
+                {                    
+                    tempString += $"'{sideN}',";
+                }
+                tempString = tempString.Substring(0,tempString.Length-1);
+                tempString += "]}, {";
+
+            }            
+            tempString = tempString.Substring(0,tempString.Length-3);
+            tempString +="]";
+
+            return tempString;
+        }
+
     }
 }

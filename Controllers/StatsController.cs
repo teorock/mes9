@@ -61,47 +61,72 @@ namespace mes.Controllers
         [Authorize(Roles ="root, StatisticViewer")]
         public IActionResult MachineDetail(string machineName, string startTime, string endTime)
         {
+            int daysGap = (Convert.ToDateTime(endTime) - Convert.ToDateTime(startTime)).Days;
+
             StatisticsService statService = new StatisticsService();
             GeneralPurpose genPurpose = new GeneralPurpose();
 
-            MachineDetails machineDetails = config.AvailableMachines.Where(m =>m.MachineName == machineName).FirstOrDefault();                        
-            
+            MachineDetails machineDetails = config.AvailableMachines.Where(m =>m.MachineName == machineName).FirstOrDefault();
             List<DayStatistic> machineStatistics = statService.GetMachineStats(machineDetails, startTime, endTime);
-            //dati arrivati
-            ViewBag.machineName = machineName;
-            ViewBag.defaultDate = DateTime.Now.ToString("yyyy-MM-dd");
 
-            ViewBag.startWeek = Convert.ToDateTime(startTime).ToString("yyyy-MM-dd");
-            ViewBag.endWeek = Convert.ToDateTime(endTime).ToString("yyyy-MM-dd");
-
-            if(machineStatistics.Count()==0)
+            if(daysGap != 0)
             {
-                ViewBag.errorMsg = "Nessun dato per il periodo selezionato oppure macchina spenta o scollegata";
+                ViewBag.machineName = machineName;
+                ViewBag.defaultDate = DateTime.Now.ToString("yyyy-MM-dd");
+
+                ViewBag.startWeek = Convert.ToDateTime(startTime).ToString("yyyy-MM-dd");
+                ViewBag.endWeek = Convert.ToDateTime(endTime).ToString("yyyy-MM-dd");
+
+                if(machineStatistics.Count()==0)
+                {
+                    ViewBag.errorMsg = "Nessun dato per il periodo selezionato oppure macchina spenta o scollegata";
+                }
+
+                List<int> onTime;
+                List<int> workingTime;
+                List<string> daysNames;
+                List<int> progsPerDay;
+                List<double> progsPerHour;      
+                List<double> totalMeters;    
+                List<double> totalMetersConsumed;  
+
+                statService.FormatMachineData(machineStatistics,machineDetails.MachineType, out onTime, out workingTime, out daysNames, out progsPerDay, out progsPerHour, out totalMeters, out totalMetersConsumed);
+
+                ViewBag.OnTime = onTime;
+                ViewBag.WorkingTime = workingTime;
+                ViewBag.Days = daysNames;
+                ViewBag.ProgsXDays = progsPerDay;
+                ViewBag.ProgramsPerHour = progsPerHour;
+                ViewBag.TotalMeters = totalMeters;
+                ViewBag.TotalMetersConsumed = totalMetersConsumed;
+
+                ViewBag.MaxDate = DateTime.Now.ToString("yyyy-MM-dd");
+
+                ViewBag.Comment = $"Dati per {machineName} dal {Convert.ToDateTime(startTime).ToString("dd/MMM")} al {Convert.ToDateTime(endTime).ToString("dd/MMM")}";
+
+                return View(machineStatistics);
+            }
+            else
+            {
+                List<HourStatistics> hourStats = statService.FormatMachineDailyData(machineDetails, startTime, endTime, out List<string> xLabels, out string title);
+                //area test e debug
+                string series = statService.SeriesDataStringBuilder(hourStats);
+                ViewBag.Series = series;
+
+                string categories = "[" + string.Join(", ", xLabels.Select(x => "\"" + x + "\"")) + "]";
+                ViewBag.Categories = categories;
+
+                // stringa di titolo con totale giornaliero
+                ViewBag.title = title;
+                // data di default per widget calendario
+                ViewBag.defaultDate = Convert.ToDateTime(startTime).ToString("yyyy-MM-dd");
+                ViewBag.machineName = $"{machineName}";
+                ViewBag.MaxDate = DateTime.Now.ToString("yyyy-MM-dd");
+
+                return View("MachineDailyDetail", machineStatistics);
             }
 
-            List<int> onTime;
-            List<int> workingTime;
-            List<string> daysNames;
-            List<int> progsPerDay;
-            List<double> progsPerHour;      
-            List<double> totalMeters;    
-            List<double> totalMetersConsumed;  
-
-            statService.FormatMachineData(machineStatistics,machineDetails.MachineType, out onTime, out workingTime, out daysNames, out progsPerDay, out progsPerHour, out totalMeters, out totalMetersConsumed);
-
-            ViewBag.OnTime = onTime;
-            ViewBag.WorkingTime = workingTime;
-            ViewBag.Days = daysNames;
-            ViewBag.ProgsXDays = progsPerDay;
-            ViewBag.ProgramsPerHour = progsPerHour;
-            ViewBag.TotalMeters = totalMeters;
-            ViewBag.TotalMetersConsumed = totalMetersConsumed;
-
-            ViewBag.MaxDate = DateTime.Now.ToString("yyyy-MM-dd");
-
-            ViewBag.Comment = $"Dati per {machineName} dal {Convert.ToDateTime(startTime).ToString("dd/MMM")} al {Convert.ToDateTime(endTime).ToString("dd/MMM")}";
-
-            return View(machineStatistics);
+            //return View(machineStatistics);
         }
 
         [Authorize(Roles ="root, StatisticViewer")]
