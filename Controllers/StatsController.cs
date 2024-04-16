@@ -1,23 +1,15 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Common;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
 using mes.Models.ControllersConfigModels;
 using mes.Models.Services.Infrastructures;
 using mes.Models.StatisticsModels;
-using mes.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Razor.Language;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Org.BouncyCastle.Asn1.Cms;
-using ServiceStack.Text;
 
 namespace mes.Controllers
 {
@@ -69,6 +61,15 @@ namespace mes.Controllers
             MachineDetails machineDetails = config.AvailableMachines.Where(m =>m.MachineName == machineName).FirstOrDefault();
             List<DayStatistic> machineStatistics = statService.GetMachineStats(machineDetails, startTime, endTime);
 
+            if(machineStatistics.Count()==0)
+            {
+                ViewBag.errorMsg = "Nessun dato per il periodo selezionato oppure macchina spenta o scollegata";
+                ViewBag.startWeek = Convert.ToDateTime(startTime).ToString("yyyy-MM-dd");
+                ViewBag.endWeek = Convert.ToDateTime(endTime).ToString("yyyy-MM-dd");  
+                ViewBag.machineName = machineName;              
+                return View(machineStatistics);
+            }            
+
             if(daysGap != 0)
             {
                 ViewBag.machineName = machineName;
@@ -76,11 +77,6 @@ namespace mes.Controllers
 
                 ViewBag.startWeek = Convert.ToDateTime(startTime).ToString("yyyy-MM-dd");
                 ViewBag.endWeek = Convert.ToDateTime(endTime).ToString("yyyy-MM-dd");
-
-                if(machineStatistics.Count()==0)
-                {
-                    ViewBag.errorMsg = "Nessun dato per il periodo selezionato oppure macchina spenta o scollegata";
-                }
 
                 List<int> onTime;
                 List<int> workingTime;
