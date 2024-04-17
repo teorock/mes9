@@ -223,7 +223,6 @@ namespace mes.Models.Services.Infrastructures
             results = JsonConvert.DeserializeObject<List<SCM2ReportBody>>(StatusCutter(text.Replace("'","-")));
 
             return results;
-
         }
 
         private string StatusCutter(string jsonInput)
@@ -286,11 +285,12 @@ namespace mes.Models.Services.Infrastructures
             foreach(string oneFile in remoteFiles)
             {
                 string localFile = Path.Combine(oneMachine.FtpTempFolder, oneFile);
-                ftp.FtpDownloadFile($"/{oneMachine.MachineName}/{oneFile}/", localFile);
+                if(!File.Exists(localFile))
+                {
+                    ftp.FtpDownloadFile($"/{oneMachine.MachineName}/{oneFile}/", localFile);
+                }
                 List<BiesseReportModel> reportList = GetReportContent(localFile);
-                //elabora
             }
-
 
             return result;
         }

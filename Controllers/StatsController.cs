@@ -59,6 +59,7 @@ namespace mes.Controllers
             GeneralPurpose genPurpose = new GeneralPurpose();
 
             MachineDetails machineDetails = config.AvailableMachines.Where(m =>m.MachineName == machineName).FirstOrDefault();
+            //semaforo qui-------------------- qui decide come e dove andare a prendere i dati
             List<DayStatistic> machineStatistics = statService.GetMachineStats(machineDetails, startTime, endTime);
 
             if(machineStatistics.Count()==0)
