@@ -130,11 +130,22 @@ namespace mes.Controllers
 
                     case "BIESSE1":
                         hourStats = statService.FormatBIESSE1MachineDailyData(machineDetails, startTime, endTime, out List<string> biesseXLabels, out string biessetitle);
+
+                        string bsSeries = statService.SeriesDataStringBuilder(hourStats);
+                        ViewBag.Series = bsSeries;
+
+                        string biesseCategories = "[" + string.Join(", ", biesseXLabels.Select(x => "\"" + x + "\"")) + "]";
+                        ViewBag.Categories = biesseCategories;
+
+                        // stringa di titolo con totale giornaliero
+                        ViewBag.title = biessetitle;
+                        // data di default per widget calendario
+                        ViewBag.defaultDate = Convert.ToDateTime(startTime).ToString("yyyy-MM-dd");
+                        ViewBag.machineName = $"{machineName}";
+                        ViewBag.MaxDate = DateTime.Now.ToString("yyyy-MM-dd");                         
                         break;
                 }
                 
-
-
                 return View("MachineDailyDetail", machineStatistics);
             }
 

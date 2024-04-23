@@ -321,7 +321,6 @@ namespace mes.Models.Services.Infrastructures
             for(int i=1; i<rawFile.Count; i++)
             {
                 string[] parts = rawFile[i].Split("\t");
-                
 
                 BiesseReportModel oneModel = new BiesseReportModel(){
                     StartDate = Convert.ToDateTime($"{thisFileDate.Replace('_','-')} {parts[2]}"),
@@ -409,13 +408,13 @@ namespace mes.Models.Services.Infrastructures
         {
             List<HourStatistics> result = new List<HourStatistics>();
             xLabels = new List<string>();
-            
+            //attenzione: per avere i dettagli della giornata occorre riestrarre i dati grezzi
             List<SCM2ReportBody> dayData = GetSCM2WebRawData(oneMachine, startTime, endTime);
 
             List<int> hoursInInterval = dayData.Select(h => h.DateTime.Hour).Distinct().ToList();
             //____ composizione titolo pagina --------------------
-            string oraInizio = dayData.Min(d => d.DateTime).ToString("HH:mm:ss");
-            string oraFine = dayData.Max(d=> d.DateTime).ToString("HH:mm:ss");
+            string oraInizio = dayData.Min(d => d.DateTime).ToString("HH:mm");
+            string oraFine = dayData.Max(d=> d.DateTime).ToString("HH:mm");
             int latiTotali = dayData.Count();
             double metriTotali = Math.Round(dayData.Sum(m => m.Length)/1000,2);
             double metriConsumati = Math.Round(dayData.Sum(m=> m.EdgeConsumptionLH)/1000,2);
@@ -464,14 +463,53 @@ namespace mes.Models.Services.Infrastructures
 
         public List<HourStatistics> FormatBIESSE1MachineDailyData(MachineDetails oneMachine, string startTime, string endTime, out List<string> biesseXLabels, out string biessetitle)
         {
+            GeneralPurpose genP = new GeneralPurpose();
+            FtpService ftp = new FtpService(oneMachine.ServerAddress, oneMachine.UserName, genP.ImplicitPwd(oneMachine.UserName));
             List<HourStatistics> result = new List<HourStatistics>();
+            
             biesseXLabels = new List<string>();
             biessetitle ="";
 
-            ////ricevi i dati grezzi di quel giorno
-            //string localFile = Path.Combine(oneMachine.FtpTempFolder, oneFile);
-            //ftp.FtpDownloadFile($"/{oneMachine.MachineName}/{oneFile}/", localFile);
-            //List<BiesseReportModel> reportList = GetReportContent(localFile);            
+            string oneFilename = $"P_{startTime.Replace('-','_')}.xls"             ;
+            string localFile = Path.Combine(oneMachine.FtpTempFolder, oneFilename);
+            ftp.FtpDownloadFile($"/{oneMachine.MachineName}/{oneFilename}/", localFile);
+            List<BiesseReportModel> reportList = GetReportContent(localFile);            
+
+            //-----analisi dati e creazione --------
+            DateTime dayStart = reportList.Min(d => d.StartDate);
+            DateTime dayEnd = reportList.Max(d => d.EndDate);
+            int pezziTotali = reportList.Count();
+            TimeSpan totalWorktime = dayEnd-dayStart;
+            double minuti = totalWorktime.TotalMinutes;
+            biessetitle = $"orario di lavoro: {dayStart.ToString("HH:mm")}-{dayEnd.ToString("HH:mm")}, {pezziTotali} pezzi, {Math.Round(pezziTotali/minuti*60, 2)} pezzi/ora";
+
+            List<int> hoursInInterval = reportList.Select(h => h.StartDate.Hour).Distinct().ToList();
+            DateTime today = Convert.ToDateTime(startTime);
+
+            foreach(int oneHour in hoursInInterval)
+            {
+                DateTime thisHourStart = new DateTime(today.Year, today.Month, today.Day, oneHour, 0, 0);
+                DateTime thisHourEnd = new DateTime(today.Year, today.Month, today.Day, oneHour, 59, 59);
+
+                List<BiesseReportModel> oneHourData = reportList.Where(d => d.StartDate >= thisHourStart)
+                                                                .Where(e => e.EndDate <= thisHourEnd).ToList();
+                string inizioOra = oneHourData.Min(s => s.StartDate).ToString("HH:mm");
+                string fineOra = oneHourData.Max(e => e.EndDate).ToString("HH:mm");
+
+                string label2add = $"{inizioOra}-{fineOra}";
+
+                if(!biesseXLabels.Contains(label2add)) biesseXLabels.Add(label2add);
+
+                HourStatistics oneHourStat = new HourStatistics()
+                {
+                    Hour = oneHour,
+                    TotalMeters = 1,
+                    TotalSides = oneHourData.Count(),
+                    ConsumedMeters = 1,
+                    Thickness = 1
+                };
+                result.Add(oneHourStat);
+            }
 
             return result;
         }
