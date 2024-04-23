@@ -12,6 +12,7 @@
 <hr>
 <table>
   <tr>
+
     <td>
       <h5>giorno</h5>
     </td>
@@ -19,8 +20,11 @@
       <input type="date" style="width:120px;" id="daySelection" name="selPeriod" value="@ViewBag.defaultDate" max=@ViewBag.MaxDate>
     </td>
     <td>
-      <a class="btn btn-outline-primary" id="exportcsv" style = "visible: false;">esporta .csv</a>
-    </td>    
+      <a class="btn btn-outline-primary" id="exportcsv">esporta .csv</a>
+    </td>
+    <td>
+      <a class="btn btn-outline-primary" asp-controller="Stats" asp-action="Index" >torna a lista macchine</a>
+    </td>       
   </tr>
 </table>
 <hr>

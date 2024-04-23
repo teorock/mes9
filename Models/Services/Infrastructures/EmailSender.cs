@@ -25,19 +25,6 @@ namespace mes.Models.Services.Infrastructures
 
         public bool SendEmail(string subject, string body, string to, string from)
         {
-            //var apiKey = "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";
-            //var client = new SendGridClient(apiKey);
-            //var msg = new SendGridMessage()
-            //{
-            //    From = new EmailAddress(from, fromExtended),
-            //    Subject = subject,
-            //    PlainTextContent = body
-            //};
-            //
-            //msg.AddTo(new EmailAddress(to));
-            //var response = client.SendEmailAsync(msg);
-            //return response.IsCompletedSuccessfully;
-
             MailAddress From = new MailAddress(from);
             MailAddress To = new MailAddress(to);
             MailMessage email = new MailMessage(From, To);

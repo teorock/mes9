@@ -4,11 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Reflection.PortableExecutable;
 using FluentFTP;
 using mes.Models.ControllersConfigModels;
 using mes.Models.Services.Application;
 using mes.Models.StatisticsModels;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Utilities;
@@ -267,29 +269,43 @@ namespace mes.Models.Services.Infrastructures
 
             //bool isALive = PingHost(oneMachine.ServerAddress); 
             
-            FtpService ftp = new FtpService(oneMachine.ServerAddress, oneMachine.UserName, genPurpose.ImplicitPwd(oneMachine.UserName));
-            //si collega
-            //directory
+            FtpService ftp = new FtpService(oneMachine.ServerAddress, oneMachine.UserName, genPurpose.ImplicitPwd(oneMachine.UserName));        
+            List<FtpListItem> ftpDir = ftp.FtpDir($"/{oneMachine.MachineName}/");
+            List<string> ftpNames = ftpDir.Select(n => n.Name).ToList();
 
-            List<FtpListItem> remoteFilesItemRaw =  ftp.FtpDir($"/{oneMachine.MachineName}/");
-
-            List<FtpListItem> remoteFilesItem =  ftp.FtpDir($"/{oneMachine.MachineName}/")
-                                                    .Where(d => d.Modified >= Convert.ToDateTime(startTime))
-                                                    .Where(d2 => d2.Modified <= Convert.ToDateTime(endTime))
-                                                    .ToList();
-
-            List<string> remoteFiles = remoteFilesItem.Select(x => x.Name).ToList();
+            List<string> remoteFiles = BSReportFilesList(Convert.ToDateTime(startTime), Convert.ToDateTime(endTime));
 
             if(!Directory.Exists(oneMachine.FtpTempFolder)) Directory.CreateDirectory(oneMachine.FtpTempFolder);
 
             foreach(string oneFile in remoteFiles)
             {
-                string localFile = Path.Combine(oneMachine.FtpTempFolder, oneFile);
-                if(!File.Exists(localFile))
+                if(ftpNames.Contains(oneFile))
                 {
+                    string localFile = Path.Combine(oneMachine.FtpTempFolder, oneFile);
                     ftp.FtpDownloadFile($"/{oneMachine.MachineName}/{oneFile}/", localFile);
+                    List<BiesseReportModel> reportList = GetReportContent(localFile);
+                    DayStatistic oneDay = GetDayStatisticsFromBSReport(reportList);
+                    result.Add(oneDay);
                 }
-                List<BiesseReportModel> reportList = GetReportContent(localFile);
+            }
+
+            return result;
+        }
+
+        private List<string> BSReportFilesList(DateTime startDate, DateTime endDate)
+        {
+            List<string> result = new List<string>();
+
+            double totalDays = Math.Round((endDate-startDate).TotalDays,0) +1;
+
+            for(int i=0; i<totalDays; i++)
+            {
+                DateTime oneDate = startDate.AddDays(i);
+                string year = oneDate.Year.ToString();
+                string month = oneDate.Month.ToString("00");
+                string day = oneDate.Day.ToString("00");
+                string file2add = $"P_{year}_{oneDate.Month.ToString("00")}_{oneDate.Day.ToString("00")}.xls";
+                result.Add(file2add);
             }
 
             return result;
@@ -297,16 +313,19 @@ namespace mes.Models.Services.Infrastructures
 
         public List<BiesseReportModel> GetReportContent(string fileName)
         {
+            string onlyName = Path.GetFileNameWithoutExtension(fileName);
+            string thisFileDate= onlyName.Substring(2, onlyName.Length-2);
             List<BiesseReportModel> report = new List<BiesseReportModel>();
             List<string> rawFile = new List<string>(File.ReadAllLines(fileName));
 
             for(int i=1; i<rawFile.Count; i++)
             {
                 string[] parts = rawFile[i].Split("\t");
+                
 
                 BiesseReportModel oneModel = new BiesseReportModel(){
-                    StartDate = Convert.ToDateTime($"{parts[0]} {parts[2]}"),
-                    EndDate = Convert.ToDateTime($"{parts[1]} {parts[3]}"),
+                    StartDate = Convert.ToDateTime($"{thisFileDate.Replace('_','-')} {parts[2]}"),
+                    EndDate = Convert.ToDateTime($"{thisFileDate.Replace('_','-')} {parts[3]}"),
                     StartTime = TimeSpan.Parse(parts[2]),
                     EndTime = TimeSpan.Parse(parts[3]),
                     Worklist = parts[4],
@@ -322,16 +341,24 @@ namespace mes.Models.Services.Infrastructures
 
         public DayStatistic GetDayStatisticsFromBSReport(List<BiesseReportModel> inputList)
         {
-            /// completa oggetto
+            DateTime startTime = inputList.Min(d => d.StartDate);
+            DateTime endTime = inputList.Max(e=> e.EndDate);
+            TimeSpan totaleOre = endTime.TimeOfDay - startTime.TimeOfDay;
+            double progPerOra = Math.Round((inputList.Count()/totaleOre.TotalMinutes)*60,2);
+            var totaleTempoProgrammi = new TimeSpan(inputList.Sum(r => r.Time.Ticks));
+            List<TimeSpan> test = inputList.Select(t => t.Time).ToList();
 
-            //TimeOn
-            //TimeWorking
-            //ProgramsPerHour
             DayStatistic oneDay = new DayStatistic()
             {
-                StartTime = inputList.Min(d => d.StartDate),
-                EndTime = inputList.Max(e=> e.EndDate),
+                StartTime = startTime,
+                EndTime = endTime,
                 ProgramsToday = inputList.Count(),
+                ProgramsPerHour = progPerOra,
+                TimeOn = totaleOre - totaleTempoProgrammi,
+                TimeWorking = totaleTempoProgrammi,
+                ThicknessPieces = new List<KeyValuePair<int, double>>(){new KeyValuePair<int, double>(1,1)},
+                TotalMeters = 1,
+                TotalMetersConsumed = 1,
                 IsAlive = true    
             };
 
@@ -361,8 +388,13 @@ namespace mes.Models.Services.Infrastructures
             foreach(DayStatistic oneStat in inputStats)
             {
                 if(machineType =="SCM2")
-                { onTime.Add(0);}
-                else{ onTime.Add(Convert.ToInt32(oneStat.TimeOn.TotalMinutes));}
+                {
+                    onTime.Add(0);
+                }
+                else
+                {
+                    onTime.Add(Convert.ToInt32(oneStat.TimeOn.TotalMinutes));
+                }
                 
                 workingTime.Add(Convert.ToInt32(oneStat.TimeWorking.TotalMinutes));
                 daysNames.Add(oneStat.StartTime.ToString("dd MMM"));
@@ -373,11 +405,11 @@ namespace mes.Models.Services.Infrastructures
             }
         }
 
-        public List<HourStatistics> FormatMachineDailyData(MachineDetails oneMachine, string startTime, string endTime, out List<string> xLabels, out string title)
+        public List<HourStatistics> FormatSCM2MachineDailyData(MachineDetails oneMachine, string startTime, string endTime, out List<string> xLabels, out string title)
         {
             List<HourStatistics> result = new List<HourStatistics>();
             xLabels = new List<string>();
-
+            
             List<SCM2ReportBody> dayData = GetSCM2WebRawData(oneMachine, startTime, endTime);
 
             List<int> hoursInInterval = dayData.Select(h => h.DateTime.Hour).Distinct().ToList();
@@ -426,10 +458,21 @@ namespace mes.Models.Services.Infrastructures
                     };
                     result.Add(oneHourStat);
                 }
-
-
-
             }        
+            return result;
+        }
+
+        public List<HourStatistics> FormatBIESSE1MachineDailyData(MachineDetails oneMachine, string startTime, string endTime, out List<string> biesseXLabels, out string biessetitle)
+        {
+            List<HourStatistics> result = new List<HourStatistics>();
+            biesseXLabels = new List<string>();
+            biessetitle ="";
+
+            ////ricevi i dati grezzi di quel giorno
+            //string localFile = Path.Combine(oneMachine.FtpTempFolder, oneFile);
+            //ftp.FtpDownloadFile($"/{oneMachine.MachineName}/{oneFile}/", localFile);
+            //List<BiesseReportModel> reportList = GetReportContent(localFile);            
+
             return result;
         }
 

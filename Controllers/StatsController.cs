@@ -60,7 +60,7 @@ namespace mes.Controllers
 
             MachineDetails machineDetails = config.AvailableMachines.Where(m =>m.MachineName == machineName).FirstOrDefault();
             //semaforo qui-------------------- qui decide come e dove andare a prendere i dati
-            List<DayStatistic> machineStatistics = statService.GetMachineStats(machineDetails, startTime, endTime);
+            List<DayStatistic> machineStatistics = statService.GetMachineStats(machineDetails, startTime, endTime);                                                                                                    
 
             if(machineStatistics.Count()==0)
             {
@@ -87,7 +87,7 @@ namespace mes.Controllers
                 List<double> totalMeters;    
                 List<double> totalMetersConsumed;  
 
-                statService.FormatMachineData(machineStatistics,machineDetails.MachineType, out onTime, out workingTime, out daysNames, out progsPerDay, out progsPerHour, out totalMeters, out totalMetersConsumed);
+                statService.FormatMachineData(machineStatistics, machineDetails.MachineType, out onTime, out workingTime, out daysNames, out progsPerDay, out progsPerHour, out totalMeters, out totalMetersConsumed);
 
                 ViewBag.OnTime = onTime;
                 ViewBag.WorkingTime = workingTime;
@@ -100,25 +100,40 @@ namespace mes.Controllers
                 ViewBag.MaxDate = DateTime.Now.ToString("yyyy-MM-dd");
 
                 ViewBag.Comment = $"Dati per {machineName} dal {Convert.ToDateTime(startTime).ToString("dd/MMM")} al {Convert.ToDateTime(endTime).ToString("dd/MMM")}";
+                ViewBag.machineType = machineDetails.MachineType;
 
                 return View(machineStatistics);
             }
             else
             {
-                List<HourStatistics> hourStats = statService.FormatMachineDailyData(machineDetails, startTime, endTime, out List<string> xLabels, out string title);
-                //area test e debug
-                string series = statService.SeriesDataStringBuilder(hourStats);
-                ViewBag.Series = series;
+                //bisogna gestire le differenti maniere di estrarre la statistica oraria per tipo macchina (file differenti)
+                List<HourStatistics> hourStats = new List<HourStatistics>();
+                
+                switch (machineDetails.MachineType)
+                {
+                    case "SCM2":
+                        hourStats = statService.FormatSCM2MachineDailyData(machineDetails, startTime, endTime, out List<string> xLabels, out string title);
+                        //area test e debug
+                        string series = statService.SeriesDataStringBuilder(hourStats);
+                        ViewBag.Series = series;
 
-                string categories = "[" + string.Join(", ", xLabels.Select(x => "\"" + x + "\"")) + "]";
-                ViewBag.Categories = categories;
+                        string categories = "[" + string.Join(", ", xLabels.Select(x => "\"" + x + "\"")) + "]";
+                        ViewBag.Categories = categories;
 
-                // stringa di titolo con totale giornaliero
-                ViewBag.title = title;
-                // data di default per widget calendario
-                ViewBag.defaultDate = Convert.ToDateTime(startTime).ToString("yyyy-MM-dd");
-                ViewBag.machineName = $"{machineName}";
-                ViewBag.MaxDate = DateTime.Now.ToString("yyyy-MM-dd");
+                        // stringa di titolo con totale giornaliero
+                        ViewBag.title = title;
+                        // data di default per widget calendario
+                        ViewBag.defaultDate = Convert.ToDateTime(startTime).ToString("yyyy-MM-dd");
+                        ViewBag.machineName = $"{machineName}";
+                        ViewBag.MaxDate = DateTime.Now.ToString("yyyy-MM-dd");                        
+                        break;
+
+                    case "BIESSE1":
+                        hourStats = statService.FormatBIESSE1MachineDailyData(machineDetails, startTime, endTime, out List<string> biesseXLabels, out string biessetitle);
+                        break;
+                }
+                
+
 
                 return View("MachineDailyDetail", machineStatistics);
             }
