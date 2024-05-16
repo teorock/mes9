@@ -394,7 +394,8 @@ namespace mes.Controllers
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<PermessoViewModel> Permessi = new List<PermessoViewModel>();
             
-            List<DipendenteViewModel> dipendenti = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti");
+            List<DipendenteViewModel> dipendenti = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti")
+                                                            .Where(e => e.Enabled =="1").ToList();
             DipendenteViewModel dipendente = dipendenti.Where(x => x.Username == userData.UserName).FirstOrDefault();
 
             // se utente, vede solo la lista dei suoi
@@ -411,14 +412,19 @@ namespace mes.Controllers
                                             .OrderBy(z => z.DataInizio).ToList(); 
             } else if(userData.UserRoles.Contains("PermessiInsert"))
             {
-                List<DipendenteViewModel> allDipendenti = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti");
-                ViewBag.allDipendenti = allDipendenti.OrderBy(x => x.Cognome);
+                //List<DipendenteViewModel> allDipendenti = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti")
+                //                                                    .Where(e => e.Enabled =="1").ToList();
+                //ViewBag.allDipendenti = allDipendenti.OrderBy(x => x.Cognome);
             }
             
+                List<DipendenteViewModel> allDipendenti = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti")
+                                                                    .Where(e => e.Enabled =="1").ToList();
+                ViewBag.allDipendenti = allDipendenti.OrderBy(x => x.Cognome);
+
             ViewBag.Dipendente = dipendente;
             ViewBag.PermessiList = Permessi;
             ViewBag.UserRoles = userData.UserRoles;
-            ViewBag.allDipendenti = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti");
+            ViewBag.allDipendenti = allDipendenti;
             ViewBag.userName = userData.UserName;
 
             List<string> tipologie = new List<string>();

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -101,6 +102,21 @@ namespace mes.Controllers
 
                 ViewBag.Comment = $"Dati per {machineName} dal {Convert.ToDateTime(startTime).ToString("dd/MMM")} al {Convert.ToDateTime(endTime).ToString("dd/MMM")}";
                 ViewBag.machineType = machineDetails.MachineType;
+                
+                switch(machineDetails.MachineType)
+                {
+                    case "SCM2":
+                        ViewBag.entityName = "lati";
+                        break;
+
+                    case "BIESSE1":
+                        ViewBag.entityName = "pezzi";
+                        break;
+
+                    default:
+                        ViewBag.entityName = "pezzi";
+                        break;
+                }
 
                 return View(machineStatistics);
             }
@@ -125,7 +141,9 @@ namespace mes.Controllers
                         // data di default per widget calendario
                         ViewBag.defaultDate = Convert.ToDateTime(startTime).ToString("yyyy-MM-dd");
                         ViewBag.machineName = $"{machineName}";
-                        ViewBag.MaxDate = DateTime.Now.ToString("yyyy-MM-dd");                        
+                        ViewBag.MaxDate = DateTime.Now.ToString("yyyy-MM-dd");  
+                        ViewBag.machineType = machineDetails.MachineType;
+                        ViewBag.entityName ="lati";                  
                         break;
 
                     case "BIESSE1":
@@ -142,7 +160,9 @@ namespace mes.Controllers
                         // data di default per widget calendario
                         ViewBag.defaultDate = Convert.ToDateTime(startTime).ToString("yyyy-MM-dd");
                         ViewBag.machineName = $"{machineName}";
-                        ViewBag.MaxDate = DateTime.Now.ToString("yyyy-MM-dd");                         
+                        ViewBag.MaxDate = DateTime.Now.ToString("yyyy-MM-dd");
+                        ViewBag.machineType = machineDetails.MachineType;
+                        ViewBag.entityName ="pezzi";                        
                         break;
                 }
                 

@@ -110,6 +110,8 @@ else
 
 <script>
       //debug
+        var machineType ='@ViewBag.machineType';
+        console.log("machineType=" + machineType);
         var onTime =  @Html.Raw(Json.Serialize(ViewBag.OnTime));
         console.log("onTime=" + onTime);
         var workingTime =  @Html.Raw(Json.Serialize(ViewBag.WorkingTime));
@@ -125,9 +127,12 @@ else
         var totalMeters = @Html.Raw(Json.Serialize(ViewBag.TotalMeters));
         console.log("metri bordati" + totalMeters);
         var totalMetersConsumed = @Html.Raw(Json.Serialize(ViewBag.TotalMetersConsumed));
-        console.log("metri consumati " + totalMetersConsumed);        
+        console.log("metri consumati " + totalMetersConsumed);
+        var entityName = @Html.Raw(Json.Serialize(ViewBag.entityName));
+        console.log("entityName " + entityName);         
       //-------------------------------
 
+  
   var options = {
     series: [
       {
@@ -222,8 +227,8 @@ else
               : `${minutes} minuti`;
 
           // Get the tooltip for the current bar
-          const nPezzi = progs[dataPointIndex] + ' lati';
-          const nPezziOra = progsHour[dataPointIndex] + ' lati ora';
+          const nPezzi = progs[dataPointIndex] + ' ' + entityName;
+          const nPezziOra = progsHour[dataPointIndex] + ' ' + entityName + ' ora';
           const totMeters = totalMeters[dataPointIndex] + ' metri totali';
           const totMetersConsumed = totalMetersConsumed[dataPointIndex] + ' metri consumati';
 
