@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Utilities;
+using ServiceStack.Text.Common;
 
 namespace mes.Models.Services.Infrastructures
 {
@@ -264,6 +265,8 @@ namespace mes.Models.Services.Infrastructures
     #region BIESSE1
         public List<DayStatistic> GetBIESSE1Data(MachineDetails oneMachine, string startTime, string endTime, string ftpTemp)
         {
+            //necessario refactoring per conteggio pezzi provenienti da nesting
+
             List<DayStatistic> result = new List<DayStatistic>();
             GeneralPurpose genPurpose = new GeneralPurpose();
 
@@ -318,9 +321,30 @@ namespace mes.Models.Services.Infrastructures
             List<BiesseReportModel> report = new List<BiesseReportModel>();
             List<string> rawFile = new List<string>(File.ReadAllLines(fileName));
 
+            //refactor del BiesseReportModel
+            //aggiungere proprietà TotalPieces per conteggio totale dei pezzi fatti con quella riga di programma
+            //proprietà booleana IsNesting
+            //proprietà int NestingPieces
+
+            //successivo refactor 
+            //al momento il numero di pezzi del giorno è prodotto contando il numero di elementi nella lista
+            //dovrà invece essere prodotto dal conteggio
+
             for(int i=1; i<rawFile.Count; i++)
             {
                 string[] parts = rawFile[i].Split("\t");
+
+            int pezziTotali = 0;
+            bool tempHasNesting = false;
+        
+            if(parts[5].Contains("PZ_"))
+            {
+                List<string> elements = parts[5].Split("_").ToList();
+                string piecesPart = elements.Where(p => p.Contains("PZ")).FirstOrDefault();
+                pezziTotali = Convert.ToInt32(piecesPart.Substring(0, piecesPart.IndexOf('P')));
+                tempHasNesting = true;
+            }
+
 
                 BiesseReportModel oneModel = new BiesseReportModel(){
                     StartDate = Convert.ToDateTime($"{thisFileDate.Replace('_','-')} {parts[2]}"),
@@ -331,7 +355,10 @@ namespace mes.Models.Services.Infrastructures
                     Program = parts[5],
                     Time = TimeSpan.Parse(parts[6]),
                     Origin = Convert.ToInt16(parts[7]),
-                    Result = Convert.ToInt16(parts[8])                    
+                    Result = Convert.ToInt16(parts[8]),
+                    TotalPieces = pezziTotali,
+                    HasNesting = tempHasNesting,
+                    ReportLines = rawFile.Count                
                 };
                 report.Add(oneModel);
             }
@@ -343,7 +370,8 @@ namespace mes.Models.Services.Infrastructures
             DateTime startTime = inputList.Min(d => d.StartDate);
             DateTime endTime = inputList.Max(e=> e.EndDate);
             TimeSpan totaleOre = endTime.TimeOfDay - startTime.TimeOfDay;
-            double progPerOra = Math.Round((inputList.Count()/totaleOre.TotalMinutes)*60,2);
+       
+            double progPerOra = Math.Round((inputList.Count()/totaleOre.TotalMinutes)*60,2);            
             var totaleTempoProgrammi = new TimeSpan(inputList.Sum(r => r.Time.Ticks));
             List<TimeSpan> test = inputList.Select(t => t.Time).ToList();
 
@@ -351,7 +379,8 @@ namespace mes.Models.Services.Infrastructures
             {
                 StartTime = startTime,
                 EndTime = endTime,
-                ProgramsToday = inputList.Count(),
+                //ProgramsToday = inputList.Count(),
+                ProgramsToday = GetBIESSE1ReportListTotalPieces(inputList),
                 ProgramsPerHour = progPerOra,
                 TimeOn = totaleOre - totaleTempoProgrammi,
                 TimeWorking = totaleTempoProgrammi,
@@ -360,7 +389,6 @@ namespace mes.Models.Services.Infrastructures
                 TotalMetersConsumed = 1,
                 IsAlive = true    
             };
-
             return oneDay;
         }
 
@@ -478,7 +506,11 @@ namespace mes.Models.Services.Infrastructures
             //-----analisi dati e creazione --------
             DateTime dayStart = reportList.Min(d => d.StartDate);
             DateTime dayEnd = reportList.Max(d => d.EndDate);
-            int pezziTotali = reportList.Count();
+            
+            //modificare per conteggio nesting
+            //int pezziTotali = reportList.Count();
+            int pezziTotali = GetBIESSE1ReportListTotalPieces(reportList);
+            
             TimeSpan totalWorktime = dayEnd-dayStart;
             double minuti = totalWorktime.TotalMinutes;
             biessetitle = $"orario di lavoro: {dayStart.ToString("HH:mm")}-{dayEnd.ToString("HH:mm")}, {pezziTotali} pezzi, {Math.Round(pezziTotali/minuti*60, 2)} pezzi/ora";
@@ -504,6 +536,9 @@ namespace mes.Models.Services.Infrastructures
                 {
                     Hour = oneHour,
                     TotalMeters = 1,
+                    //
+                    //refactor per conteggio nesting -------- manca questo
+                    //
                     TotalSides = oneHourData.Count(),
                     ConsumedMeters = 1,
                     Thickness = 1
@@ -511,6 +546,23 @@ namespace mes.Models.Services.Infrastructures
                 result.Add(oneHourStat);
             }
 
+            return result;
+        }
+
+        public int GetBIESSE1ReportListTotalPieces(List<BiesseReportModel> inputList)
+        {
+            int result =0;
+            foreach(BiesseReportModel oneLine in inputList)
+            {
+                if(oneLine.HasNesting)
+                {
+                    result += oneLine.TotalPieces;
+                }
+                else
+                {
+                    result++;
+                }
+            }
             return result;
         }
 

@@ -16,5 +16,8 @@ namespace mes.Models.StatisticsModels
         public TimeSpan Time { get; set; }
         public int Origin { get; set; }
         public int Result { get; set; }
+        public int TotalPieces { get; set; } //numero totale dei pezzi, contando i nesting e i non nesting
+        public bool HasNesting { get; set; } //in questa giornata sono stati fatti i nesting
+        public int ReportLines { get; set; } //numero di righe del file di report (se non nesting, uguali al numero di pezzi fatti)
     }
 }
