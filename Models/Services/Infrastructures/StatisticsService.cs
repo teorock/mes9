@@ -522,9 +522,17 @@ namespace mes.Models.Services.Infrastructures
             {
                 DateTime thisHourStart = new DateTime(today.Year, today.Month, today.Day, oneHour, 0, 0);
                 DateTime thisHourEnd = new DateTime(today.Year, today.Month, today.Day, oneHour, 59, 59);
+                
+                List<BiesseReportModel> thisHourData = reportList.Where(d => d.StartDate.Hour == oneHour).ToList();
+
+                var thisHourLastEnd = thisHourData.Max(d=> d.StartDate.Add(d.Time));
+
+                //fare la lista di tutti i programmi dove l'ora (solo l'ora è uguale all'ora di inizio)
+                //fare il conteggio di quanto si spinge in là 
 
                 List<BiesseReportModel> oneHourData = reportList.Where(d => d.StartDate >= thisHourStart)
-                                                                .Where(e => e.EndDate <= thisHourEnd).ToList();
+                                                                .Where(e => e.EndDate <= thisHourLastEnd).ToList();                
+                                                              
 
                 string inizioOra = oneHourData.Min(s => s.StartDate).ToString("HH:mm");
                 string fineOra = oneHourData.Max(e => e.EndDate).ToString("HH:mm");
@@ -540,11 +548,7 @@ namespace mes.Models.Services.Infrastructures
                 {
                     Hour = oneHour,
                     TotalMeters = 1,
-                    //
-                    //refactor per conteggio nesting -------- manca questo
-                    //
                     TotalSides = GetBIESSE1ReportListTotalPieces(oneHourData),
-                    //TotalSides = oneHourData.Count(),
                     ConsumedMeters = 1,
                     Thickness = 1
                 };

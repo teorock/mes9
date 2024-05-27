@@ -233,13 +233,24 @@ else
           const totMetersConsumed = totalMetersConsumed[dataPointIndex] + ' metri consumati';
 
           // Multiline tooltip with custom text
-          return [
-            formattedTooltip,
-            nPezzi,
-            nPezziOra,
-            totMeters,
-            totMetersConsumed
-          ].join('<br>');
+          if(machineType === "SCM2")
+          {
+            return [
+              formattedTooltip,
+              nPezzi,
+              nPezziOra,
+              totMeters,
+              totMetersConsumed
+            ].join('<br>');
+          }
+          if(machineType === "BIESSE1")
+          {
+            return [
+              formattedTooltip,
+              nPezzi,
+              nPezziOra
+            ].join('<br>');
+          }
         },
       },
     },
