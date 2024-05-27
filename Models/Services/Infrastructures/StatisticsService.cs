@@ -498,7 +498,7 @@ namespace mes.Models.Services.Infrastructures
             biesseXLabels = new List<string>();
             biessetitle ="";
 
-            string oneFilename = $"P_{startTime.Replace('-','_')}.xls"             ;
+            string oneFilename = $"P_{startTime.Replace('-','_')}.xls";
             string localFile = Path.Combine(oneMachine.FtpTempFolder, oneFilename);
             ftp.FtpDownloadFile($"/{oneMachine.MachineName}/{oneFilename}/", localFile);
             List<BiesseReportModel> reportList = GetReportContent(localFile);            
@@ -525,12 +525,16 @@ namespace mes.Models.Services.Infrastructures
 
                 List<BiesseReportModel> oneHourData = reportList.Where(d => d.StartDate >= thisHourStart)
                                                                 .Where(e => e.EndDate <= thisHourEnd).ToList();
+
                 string inizioOra = oneHourData.Min(s => s.StartDate).ToString("HH:mm");
                 string fineOra = oneHourData.Max(e => e.EndDate).ToString("HH:mm");
 
                 string label2add = $"{inizioOra}-{fineOra}";
 
                 if(!biesseXLabels.Contains(label2add)) biesseXLabels.Add(label2add);
+
+                var debug = GetBIESSE1ReportListTotalPieces(oneHourData);
+                var debug1 = oneHourData.Count();
 
                 HourStatistics oneHourStat = new HourStatistics()
                 {
@@ -539,7 +543,8 @@ namespace mes.Models.Services.Infrastructures
                     //
                     //refactor per conteggio nesting -------- manca questo
                     //
-                    TotalSides = oneHourData.Count(),
+                    TotalSides = GetBIESSE1ReportListTotalPieces(oneHourData),
+                    //TotalSides = oneHourData.Count(),
                     ConsumedMeters = 1,
                     Thickness = 1
                 };
