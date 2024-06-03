@@ -7,6 +7,7 @@ namespace mes.Models.StatisticsModels
 {
     public class BIESSE1ReportBody
     {
+        public string Giorno { get; set; }
         public string OraInizio { get; set; }
         public string OraFine { get; set; }
         public string TempoLavoro { get; set; }

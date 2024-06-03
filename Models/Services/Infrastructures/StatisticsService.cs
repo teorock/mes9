@@ -632,8 +632,9 @@ namespace mes.Models.Services.Infrastructures
             {
                 BIESSE1ReportBody oneReport = new BIESSE1ReportBody()
                 {
-                    OraInizio = oneStat.StartTime.ToString("dd/MM/yyyy HH:mm:ss"),
-                    OraFine = oneStat.EndTime.ToString("dd/MM/yyyy HH:mm:ss"),
+                    Giorno = oneStat.StartTime.ToString("dd/MM/yyyy"),
+                    OraInizio = oneStat.StartTime.ToString("HH:mm:ss"),
+                    OraFine = oneStat.EndTime.ToString("HH:mm:ss"),
                     TempoAccensione = oneStat.TimeOn.ToString(@"hh\:mm\:ss"),
                     TempoLavoro = oneStat.TimeWorking.ToString(@"hh\:mm\:ss"),
                     ProgrammiEseguiti = oneStat.ProgramsToday,
