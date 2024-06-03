@@ -180,37 +180,54 @@ namespace mes.Controllers
             GeneralPurpose genPurpose = new GeneralPurpose();
 
             MachineDetails machineDetails = config.AvailableMachines.Where(m =>m.MachineName == machineName).FirstOrDefault();                        
-            
-            
+            List<string>csvList = new List<string>();
 
-            List<SCM2ReportBody> rawReportBodies = statService.GetSCM2WebRawData(machineDetails, startTime, endTime);
+            // da gestire i dati per tipo macchina
+            // se SCM2 e isAlive = false, esci con errore
+            // se BIESSE1 -- estrai per biesse 1
 
-            //lista dei giorni
-            List<DateTime> days = new List<DateTime>();
-            List<SCM2ReportToFile> report = new List<SCM2ReportToFile>();
-
-            if(rawReportBodies != null)
+            switch (machineDetails.MachineType)
             {
-                days = rawReportBodies.Select(d => Convert.ToDateTime(d.DateTime).Date).Distinct().ToList();
-                                            
-                //per ogni giorno creo una lista
-                foreach(DateTime oneDay in days)
-                {
-                    List<SCM2ReportBody> oneDayList = rawReportBodies.Where(d => d.DateTime.Date == oneDay.Date).ToList();                
-                    //estraggo il numero d bordi in questa lista
-                    List<KeyValuePair<int, double>> thicknessPieces = statService.GetThicknessPieces(rawReportBodies, oneDay);
-                    //estraggo la lista raw solo per quello spessore
-                    foreach(var oneCouple in thicknessPieces)
+                case "BIESSE1":
+                    //
+                    List<DayStatistic> dayStats = statService.GetBIESSE1Data(machineDetails, startTime, endTime, machineDetails.FtpTempFolder);
+                    List<BIESSE1ReportBody> transformed = statService.BIESSE1ReportMapper(dayStats);
+                    csvList = genPurpose.ExportObj2CsvList<BIESSE1ReportBody>(transformed); 
+                    break;
+
+                case "SCM2":
+                    List<SCM2ReportBody> rawReportBodies = statService.GetSCM2WebRawData(machineDetails, startTime, endTime);
+
+                    //lista dei giorni
+                    List<DateTime> days = new List<DateTime>();
+                    List<SCM2ReportToFile> report = new List<SCM2ReportToFile>();
+
+                    if(rawReportBodies != null)
                     {
-                        List<SCM2ReportBody> oneDayOneThick = oneDayList.Where(t => t.Thickness == oneCouple.Value).ToList();
-                        //calcolo i totali e li aggiungo al report
-                        SCM2ReportToFile oneLine = SCM2Mapper(oneDayOneThick);
-                        report.Add(oneLine);
-                    }           
-                }
+                        days = rawReportBodies.Select(d => Convert.ToDateTime(d.DateTime).Date).Distinct().ToList();
+                                                    
+                        //per ogni giorno creo una lista
+                        foreach(DateTime oneDay in days)
+                        {
+                            List<SCM2ReportBody> oneDayList = rawReportBodies.Where(d => d.DateTime.Date == oneDay.Date).ToList();                
+                            //estraggo il numero d bordi in questa lista
+                            List<KeyValuePair<int, double>> thicknessPieces = statService.GetThicknessPieces(rawReportBodies, oneDay);
+                            //estraggo la lista raw solo per quello spessore
+                            foreach(var oneCouple in thicknessPieces)
+                            {
+                                List<SCM2ReportBody> oneDayOneThick = oneDayList.Where(t => t.Thickness == oneCouple.Value).ToList();
+                                //calcolo i totali e li aggiungo al report
+                                SCM2ReportToFile oneLine = SCM2Mapper(oneDayOneThick);
+                                report.Add(oneLine);
+                            }
+                        }
+                    }
+
+                    csvList = genPurpose.ExportObj2CsvList<SCM2ReportToFile>(report);                
+                    break;
             }
 
-            List<string>csvList = genPurpose.ExportObj2CsvList<SCM2ReportToFile>(report);
+
             string csvContent = genPurpose.List2Csv(csvList);
             string outputFile = $"{machineName}_{startTime}_{endTime}.csv";
             byte[] bytes = Encoding.UTF8.GetBytes(csvContent.ToString());

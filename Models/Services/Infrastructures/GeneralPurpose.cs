@@ -189,7 +189,7 @@ namespace mes.Models.Services.Infrastructures
                 {
                     line += prop.GetValue(obj, null) + "; ";
                 }                    
-                line = line.Substring(0, line.Length - 2);
+                line = line.Replace(',','.').Substring(0, line.Length - 2);
                 result.Add(line); 
             }
 

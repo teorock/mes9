@@ -116,16 +116,20 @@ namespace mes.Models.Services.Infrastructures
     public List<SCM2ReportBody> GetSCM2WebRawData(MachineDetails oneMachine, string startTime, string endTime)
     {
         bool isALive = PingHost(oneMachine.ServerAddress);            
+        List<SCM2ReportBody> jsonReply = new List<SCM2ReportBody>();
 
-        DateTime startT = Convert.ToDateTime(startTime);
-        DateTime endT = Convert.ToDateTime(endTime);
+        if(isALive)
+        {
+            DateTime startT = Convert.ToDateTime(startTime);
+            DateTime endT = Convert.ToDateTime(endTime);
 
-        string startPeriod = $"{startT.Year}-{startT.Month.ToString("00")}-{startT.Day.ToString("00")}T04%3A00%3A00";
-        string endPeriod = $"{endT.Year}-{endT.Month.ToString("00")}-{endT.Day.ToString("00")}T21%3A00%3A00";
+            string startPeriod = $"{startT.Year}-{startT.Month.ToString("00")}-{startT.Day.ToString("00")}T04%3A00%3A00";
+            string endPeriod = $"{endT.Year}-{endT.Month.ToString("00")}-{endT.Day.ToString("00")}T21%3A00%3A00";
 
-        string requestUrl = $"http://{oneMachine.ServerAddress}:{oneMachine.ServerPort}/api/v1/report/production?from={startPeriod}&to={endPeriod}";
+            string requestUrl = $"http://{oneMachine.ServerAddress}:{oneMachine.ServerPort}/api/v1/report/production?from={startPeriod}&to={endPeriod}";
 
-        List<SCM2ReportBody> jsonReply = GetWebResponse(requestUrl);
+            jsonReply = GetWebResponse(requestUrl);
+        }
         
         return jsonReply;
     }
@@ -618,6 +622,26 @@ namespace mes.Models.Services.Infrastructures
                 }
             }
             return result;
+        }
+
+        public List<BIESSE1ReportBody> BIESSE1ReportMapper(List<DayStatistic> inputList)
+        {
+            List<BIESSE1ReportBody> report= new List<BIESSE1ReportBody>();
+
+            foreach(DayStatistic oneStat in inputList)
+            {
+                BIESSE1ReportBody oneReport = new BIESSE1ReportBody()
+                {
+                    OraInizio = oneStat.StartTime.ToString("dd/MM/yyyy HH:mm:ss"),
+                    OraFine = oneStat.EndTime.ToString("dd/MM/yyyy HH:mm:ss"),
+                    TempoAccensione = oneStat.TimeOn.ToString(@"hh\:mm\:ss"),
+                    TempoLavoro = oneStat.TimeWorking.ToString(@"hh\:mm\:ss"),
+                    ProgrammiEseguiti = oneStat.ProgramsToday,
+                    ProgrammiOra = oneStat.ProgramsPerHour
+                };
+                report.Add(oneReport);
+            }
+            return report;
         }
 
         public string SeriesDataStringBuilder(List<HourStatistics> input)
