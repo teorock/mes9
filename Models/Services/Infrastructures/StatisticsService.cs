@@ -4,17 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
-using System.Reflection.PortableExecutable;
 using FluentFTP;
 using mes.Models.ControllersConfigModels;
 using mes.Models.Services.Application;
 using mes.Models.StatisticsModels;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Newtonsoft.Json;
-using Org.BouncyCastle.Bcpg;
-using Org.BouncyCastle.Utilities;
-using ServiceStack.Text.Common;
 
 namespace mes.Models.Services.Infrastructures
 {
@@ -61,10 +55,61 @@ namespace mes.Models.Services.Infrastructures
 
                 case "ftp":
                     break;
+                
+                case "POMPA1":
+                    result = GetPOMPA1Data(oneMachine);
+                    break;
             }
 
             return result;
         }
+
+    #region POMPA1
+
+        public List<DayStatistic> GetPOMPA1Data(MachineDetails oneMachine)    
+        {
+            string webRequest = $"http://{oneMachine.ServerAddress}{oneMachine.WebGetString}";
+
+            List<AtlasCopcoData> rawDatas = GetAtlasCopcoWebResponse(webRequest);
+
+            return new List<DayStatistic>();
+        }
+
+        public List<AtlasCopcoData> GetAtlasCopcoWebResponse(string webRequest)
+        {
+            List<AtlasCopcoData> result = new List<AtlasCopcoData>();
+            ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+
+            // Ensure TLS 1.2 is used
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
+            var request = WebRequest.Create(webRequest);
+
+            request.ContentType = "application/json; charset=utf-8";
+
+            HttpWebResponse response;
+
+            string text;
+            try
+            {
+                response = (HttpWebResponse)request.GetResponse();
+            }
+            catch (Exception excp)
+            {
+                //Logger(excp.Message);
+                return result;
+            }
+
+            using (var sr = new StreamReader(response.GetResponseStream()))
+            {
+                text = sr.ReadToEnd();
+            }
+
+            result = JsonConvert.DeserializeObject<List<AtlasCopcoData>>(text);
+            return result;
+        }
+
+    #endregion
 
     #region SCM2
 

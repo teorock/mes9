@@ -181,28 +181,34 @@ namespace mes.Controllers
 
             MachineDetails machineDetails = config.AvailableMachines.Where(m =>m.MachineName == machineName).FirstOrDefault();                        
             
+            
+
             List<SCM2ReportBody> rawReportBodies = statService.GetSCM2WebRawData(machineDetails, startTime, endTime);
 
             //lista dei giorni
-            List<DateTime> days = rawReportBodies.Select(d => Convert.ToDateTime(d.DateTime).Date).Distinct().ToList();
-
+            List<DateTime> days = new List<DateTime>();
             List<SCM2ReportToFile> report = new List<SCM2ReportToFile>();
-            
-            //per ogni giorno creo una lista
-            foreach(DateTime oneDay in days)
+
+            if(rawReportBodies != null)
             {
-                List<SCM2ReportBody> oneDayList = rawReportBodies.Where(d => d.DateTime.Date == oneDay.Date).ToList();                
-                //estraggo il numero d bordi in questa lista
-                List<KeyValuePair<int, double>> thicknessPieces = statService.GetThicknessPieces(rawReportBodies, oneDay);
-                //estraggo la lista raw solo per quello spessore
-                foreach(var oneCouple in thicknessPieces)
+                days = rawReportBodies.Select(d => Convert.ToDateTime(d.DateTime).Date).Distinct().ToList();
+                                            
+                //per ogni giorno creo una lista
+                foreach(DateTime oneDay in days)
                 {
-                    List<SCM2ReportBody> oneDayOneThick = oneDayList.Where(t => t.Thickness == oneCouple.Value).ToList();
-                    //calcolo i totali e li aggiungo al report
-                    SCM2ReportToFile oneLine = SCM2Mapper(oneDayOneThick);
-                    report.Add(oneLine);
-                }           
-            }    
+                    List<SCM2ReportBody> oneDayList = rawReportBodies.Where(d => d.DateTime.Date == oneDay.Date).ToList();                
+                    //estraggo il numero d bordi in questa lista
+                    List<KeyValuePair<int, double>> thicknessPieces = statService.GetThicknessPieces(rawReportBodies, oneDay);
+                    //estraggo la lista raw solo per quello spessore
+                    foreach(var oneCouple in thicknessPieces)
+                    {
+                        List<SCM2ReportBody> oneDayOneThick = oneDayList.Where(t => t.Thickness == oneCouple.Value).ToList();
+                        //calcolo i totali e li aggiungo al report
+                        SCM2ReportToFile oneLine = SCM2Mapper(oneDayOneThick);
+                        report.Add(oneLine);
+                    }           
+                }
+            }
 
             List<string>csvList = genPurpose.ExportObj2CsvList<SCM2ReportToFile>(report);
             string csvContent = genPurpose.List2Csv(csvList);

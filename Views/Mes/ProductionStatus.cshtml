@@ -15,7 +15,7 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
 
-<h2>stato produzione</h2>
+<h2>Stato produzione</h2>
 
 </div>
   <style>
@@ -283,7 +283,10 @@
                     <td style="text-align: center;">@oneStatus.Passage</td>
                     <td style="text-align: center;">@oneStatus.TrackSpeed</td>
                   </tr>
-              } //Scm2 - Stefani                           
+              } //Scm2 - Stefani
+              if(oneStatus.MachineType=="POMPA1") 
+              {
+              }                       
             } <!-- foreach status -->              
             </table>
           </div>
