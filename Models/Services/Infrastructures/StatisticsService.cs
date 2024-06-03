@@ -314,8 +314,6 @@ namespace mes.Models.Services.Infrastructures
     #region BIESSE1
         public List<DayStatistic> GetBIESSE1Data(MachineDetails oneMachine, string startTime, string endTime, string ftpTemp)
         {
-            //necessario refactoring per conteggio pezzi provenienti da nesting
-
             List<DayStatistic> result = new List<DayStatistic>();
             GeneralPurpose genPurpose = new GeneralPurpose();
 
@@ -630,6 +628,11 @@ namespace mes.Models.Services.Infrastructures
 
             foreach(DayStatistic oneStat in inputList)
             {
+                TimeSpan tempoTotale = Convert.ToDateTime(oneStat.EndTime) - Convert.ToDateTime(oneStat.StartTime);
+                double minutiLavoro = oneStat.TimeWorking.TotalMinutes;
+                double minutiAccensione = oneStat.TimeOn.TotalMinutes;
+                double minutiTotali = tempoTotale.TotalMinutes;
+                
                 BIESSE1ReportBody oneReport = new BIESSE1ReportBody()
                 {
                     Giorno = oneStat.StartTime.ToString("dd/MM/yyyy"),
@@ -637,6 +640,10 @@ namespace mes.Models.Services.Infrastructures
                     OraFine = oneStat.EndTime.ToString("HH:mm:ss"),
                     TempoAccensione = oneStat.TimeOn.ToString(@"hh\:mm\:ss"),
                     TempoLavoro = oneStat.TimeWorking.ToString(@"hh\:mm\:ss"),
+                    TempoTotale = tempoTotale.ToString(@"hh\:mm\:ss"),
+                    MinutiAccensione = Math.Round(minutiAccensione,1).ToString(),
+                    MinutiLavoro = Math.Round(minutiLavoro, 1).ToString(),
+                    MinutiTotali = Math.Round(minutiTotali,1).ToString(),
                     ProgrammiEseguiti = oneStat.ProgramsToday,
                     ProgrammiOra = oneStat.ProgramsPerHour
                 };
