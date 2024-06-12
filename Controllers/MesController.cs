@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 using mes.Models.Services.Application;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http.Features;
+using mes.Models.InfrastructureModels;
 
 namespace mes.Controllers
 {
@@ -142,13 +143,17 @@ namespace mes.Controllers
         public IActionResult GetMachineHistory(string machineName)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<MachineStatusPicker> allMachineStatus = dbAccessor.Queryer<MachineStatusPicker>(config.LastPeriodConnString,"MachineStatus");
+            //List<MachineStatusPicker> allMachineStatus = dbAccessor.Queryer<MachineStatusPicker>(config.LastPeriodConnString,"MachineStatus");
+            //List<MachineStatusPicker> oneMachineStatus = allMachineStatus.Where(x => x.MachineName == machineName).ToList();
 
-            List<MachineStatusPicker> oneMachineStatus = allMachineStatus.Where(x => x.MachineName == machineName).ToList();                    
+            string filter = $"MachineName=\'{machineName}\'";
+            List<MachineStatusPicker> oneMachineStatus = dbAccessor.QueryerFilter<MachineStatusPicker>(config.LastPeriodConnString,"MachineStatus", filter);
+                                
             MachineStatusPicker last = oneMachineStatus[oneMachineStatus.Count -1];            
 
             //devo creare una lista contenente solo lo stato più recente per ogni macchina
-            List<string> allMachines = allMachineStatus.Select(x => x.MachineName).Distinct().ToList();            
+            //List<string> allMachines = allMachineStatus.Select(x => x.MachineName).Distinct().ToList();            
+            List<string> allMachines = dbAccessor.Queryer<MacchineListModel>(config.LastPeriodConnString,"Macchine").Select(n => n.MachineName).ToList();
 
             ViewBag.avanzamento = CalcolaAvanzamento(last.Counter, last.Quantity);
             ViewBag.allMachines = allMachines;
@@ -166,10 +171,12 @@ namespace mes.Controllers
             string dataInizio = oneMachineStatus[0].Date;
             string dataFine = oneMachineStatus[oneMachineStatus.Count()-1].Date;
 
-            ViewBag.automatico = Math.Round((automatico/oneMachineStatus.Count()*100),0);
-            ViewBag.attesa = Math.Round((attesa/oneMachineStatus.Count()*100),0);
-            ViewBag.manuali = Math.Round((manuali/oneMachineStatus.Count()*100),0);
-            ViewBag.scollegata = Math.Round((scollegata/oneMachineStatus.Count()*100),0);
+            int totalMachineStatus = oneMachineStatus.Count();
+
+            ViewBag.automatico = Math.Round((automatico/totalMachineStatus*100),1);
+            ViewBag.attesa = Math.Round((attesa/totalMachineStatus*100),1);
+            ViewBag.manuali = Math.Round((manuali/totalMachineStatus*100),1);
+            ViewBag.scollegata = Math.Round((scollegata/totalMachineStatus*100),1);
             ViewBag.dataInizio = dataInizio;
             ViewBag.dataFine = dataFine;
 
@@ -258,6 +265,7 @@ namespace mes.Controllers
 
         private List<MachineStatustPickerWeek> WeekPeeker(List<MachineStatusPicker> oneMachineStatus)
         {
+            //mettere calcolo in percentuale
             List<MachineStatustPickerWeek> weekPeek = new List<MachineStatustPickerWeek>();
             List<string> allDates = oneMachineStatus.Select(x => x.Date).Distinct().ToList();
 
@@ -270,7 +278,7 @@ namespace mes.Controllers
             {
                 int automatico = oneMachineStatus.Where(x => x.Date == allDates[i])
                                                  .Where(n => n.MachineState == "start - automatico").Count()
-                                + oneMachineStatus.Where( y => y.MachineState == "connessa").Count()
+                                //+ oneMachineStatus.Where( y => y.MachineState == "connessa").Count()
                                 + oneMachineStatus.Where(z => z.MachineState == "in lavorazione").Count() ;
 
                 int connessa = oneMachineStatus.Where(x => x.Date == allDates[i])
@@ -291,7 +299,8 @@ namespace mes.Controllers
                 int emergenza = oneMachineStatus.Where(x => x.Date == allDates[i])
                                                  .Where(n => n.MachineState == "emergenza").Count();
 
-                int dayTotal = oneMachineStatus.Where(d => d.Date== allDates[i]).Count();
+                //int dayTotal = oneMachineStatus.Where(d => d.Date== allDates[i]).Count();
+                int dayTotal = automatico + connessa + attesa + manuali + spenta + nonconnessa + emergenza;
 
                 MachineStatustPickerWeek onePeek = new MachineStatustPickerWeek() 
                 {

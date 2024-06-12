@@ -264,6 +264,7 @@
 </div -->
 
 <script>
+  //grafico a torta
     var xValues = ["automatico", "in attesa", "mov.manuali", "scollegata"];
     var yValues = [@automatico, @attesa, @manuali, @scollegata];
     var barColors = [
@@ -285,7 +286,7 @@
       options: {
         title: {
           display: true,
-          text: "tempi macchina dal @dataInizio al @dataFine"
+          text: "complessivo tempi macchina (in %) dal @dataInizio al @dataFine"
         }
       }
     });
@@ -293,38 +294,44 @@
     const xValues2 = ['@oneWeek[6].Day','@oneWeek[5].Day','@oneWeek[4].Day','@oneWeek[3].Day','@oneWeek[2].Day','@oneWeek[1].Day','@oneWeek[0].Day'];
 
     new Chart("weekChart", {
-      type: "line",
+      type: "bar",
       data: {
         labels: xValues2,
         datasets: [{ 
           label: 'in attesa',
           data: [@oneWeek[6].Waiting,@oneWeek[5].Waiting,@oneWeek[4].Waiting,@oneWeek[3].Waiting,@oneWeek[2].Waiting,@oneWeek[1].Waiting,@oneWeek[0].Waiting],
           borderColor: "orange",
+          backgroundColor: "orange",
           fill: false
         }, { 
           label: 'start',
           data: [@oneWeek[6].Start,@oneWeek[5].Start,@oneWeek[4].Start,@oneWeek[3].Start,@oneWeek[2].Start,@oneWeek[1].Start,@oneWeek[0].Start],
           borderColor: "green",
+          backgroundColor: "green",
           fill: false
         }, {
           label: 'mov.manuali',
           data: [@oneWeek[6].ManualMovements,@oneWeek[5].ManualMovements,@oneWeek[4].ManualMovements,@oneWeek[3].ManualMovements,@oneWeek[2].ManualMovements,@oneWeek[1].ManualMovements,@oneWeek[0].ManualMovements],
           borderColor: "blue",
+          backgroundColor: "blue",
           fill: false
         },{
           label: 'emergenza',
           data: [@oneWeek[6].Emergency,@oneWeek[5].Emergency,@oneWeek[4].Emergency,@oneWeek[3].Emergency,@oneWeek[2].Emergency,@oneWeek[1].Emergency,@oneWeek[0].Emergency],
           borderColor: "red",
+          backgroundColor: "red",
           fill: false
         },{
           label: 'scollegata',
           data: [@oneWeek[6].NotConnected,@oneWeek[5].NotConnected,@oneWeek[4].NotConnected,@oneWeek[3].NotConnected,@oneWeek[2].NotConnected,@oneWeek[1].NotConnected,@oneWeek[0].NotConnected],
           borderColor: "grey",
+          backgroundColor: "grey",
           fill: false
         },{
           label: 'collegata',
           data: [@oneWeek[6].Connected,@oneWeek[5].Connected,@oneWeek[4].Connected,@oneWeek[3].Connected,@oneWeek[2].Connected,@oneWeek[1].Connected,@oneWeek[0].Connected],
           borderColor: "cyan",
+          backgroundColor: "cyan",
           fill: false                       
         }]
       },

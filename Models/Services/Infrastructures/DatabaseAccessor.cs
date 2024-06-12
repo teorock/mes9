@@ -179,6 +179,100 @@ namespace mes.Models.Services.Infrastructures
 
         }                
 
+        public List<T> QueryerFilter<T>(string connectionString, string table, string filter)
+        {
+            Log2File("queryerFilter");
+            var typeOfInstance = typeof(T);
+
+            List<T> results = new List<T>();
+
+            var properties = typeof(T).GetProperties();
+
+            try
+            {
+                var conn = new SqliteConnection(connectionString);
+                conn.Open();
+
+                var cmd2 = new SqliteCommand($"SELECT * FROM {table} WHERE {filter}", conn);
+                Log2File(cmd2.CommandText);
+                var reader = cmd2.ExecuteReader();
+                
+                while(reader.Read())
+                {
+                    var instance = Activator.CreateInstance(typeof(T));
+                    
+                    foreach(var oneProp in properties)
+                    {
+                        try
+                        {
+                            typeOfInstance.GetProperty(oneProp.Name).SetValue(instance, reader[oneProp.Name]);
+                        }
+                        catch (Exception excp)
+                        {
+                            Log2File($"ERRORE: {excp.Message}");
+                        }
+                    }
+                    results.Add((T)instance);
+                    
+                } 
+
+                conn.Close();
+                conn.Dispose();
+            }
+            catch (Exception excp)
+            {
+                Log2File($"ERRORE: {excp.Message}");
+            }
+            return results;
+        }                
+
+        public List<T> QueryerCommand<T>(string connectionString, string table, string command)
+        {
+            Log2File("queryerCommand");
+            var typeOfInstance = typeof(T);
+
+            List<T> results = new List<T>();
+
+            var properties = typeof(T).GetProperties();
+
+            try
+            {
+                var conn = new SqliteConnection(connectionString);
+                conn.Open();
+
+                var cmd2 = new SqliteCommand(command, conn);
+                Log2File(cmd2.CommandText);
+                var reader = cmd2.ExecuteReader();
+                
+                while(reader.Read())
+                {
+                    var instance = Activator.CreateInstance(typeof(T));
+                    
+                    foreach(var oneProp in properties)
+                    {
+                        try
+                        {
+                            typeOfInstance.GetProperty(oneProp.Name).SetValue(instance, reader[oneProp.Name]);
+                        }
+                        catch (Exception excp)
+                        {
+                            Log2File($"ERRORE: {excp.Message}");
+                        }
+                    }
+                    results.Add((T)instance);
+                    
+                } 
+
+                conn.Close();
+                conn.Dispose();
+            }
+            catch (Exception excp)
+            {
+                Log2File($"ERRORE: {excp.Message}");
+            }
+            return results;
+        }  
+
         public int Delete (string connectionString, string table, long id)
         {
             int result = 0;
