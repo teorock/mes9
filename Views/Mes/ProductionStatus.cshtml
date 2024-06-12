@@ -46,8 +46,30 @@
     table {
       width: 80%;
     }
+    
+    .loader-container {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.8);
+        z-index: 9999;
+    }
+
+    .loader {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
   </style>
 
+<div class="loader-container" id="loader-container">
+    <img src="/images/loader.gif" alt="Loader" class="loader">
+</div>
 
 <nav class="navbar navbar-inverse visible-xs">
   <div class="container-fluid">
@@ -90,7 +112,7 @@
         @foreach (string oneMachine in allMachines)
         {
           <tr style="border-bottom: 0px;">
-            <td class="machine"  style="padding-left:10px;"><a asp-controller="Mes" asp-action="GetMachineHistory" asp-route-machineName="@oneMachine">@oneMachine</a>  </td>
+            <td class="machine"  style="padding-left:10px;"><a asp-controller="Mes" asp-action="GetMachineHistory" asp-route-machineName="@oneMachine" onclick="showLoader()">@oneMachine</a>  </td>
           </tr>
           <tr><td><br></td></tr> 
         }
@@ -296,8 +318,8 @@
   </div>
 </div>
 
-
-
-
-
-
+<script>
+    function showLoader() {
+        document.getElementById("loader-container").style.display = "block";
+    }
+</script>
