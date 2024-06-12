@@ -187,8 +187,8 @@ var machineName = '@machineName';
   });
 
   $("#exportcsv").on('click', function() {
-    var perStart = $("#periodStart").val();
-    var perEnd = $("#periodEnd").val();
+    var perStart = $("#daySelection").val();
+    var perEnd = $("#daySelection").val();
     var redirectUrl = '/Stats/ExportStats2Csv?machineName=' + machineName + '&startTime=' + perStart + '&endTime=' + perEnd;
     //alert(redirectUrl);
     window.location.href = redirectUrl;

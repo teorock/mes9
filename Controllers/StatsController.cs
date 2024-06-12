@@ -120,7 +120,7 @@ namespace mes.Controllers
 
                 return View(machineStatistics);
             }
-            else
+            else //daysGap = 0
             {
                 //bisogna gestire le differenti maniere di estrarre la statistica oraria per tipo macchina (file differenti)
                 List<HourStatistics> hourStats = new List<HourStatistics>();
@@ -227,7 +227,6 @@ namespace mes.Controllers
                     break;
             }
 
-
             string csvContent = genPurpose.List2Csv(csvList);
             string outputFile = $"{machineName}_{startTime}_{endTime}.csv";
             byte[] bytes = Encoding.UTF8.GetBytes(csvContent.ToString());
@@ -239,15 +238,15 @@ namespace mes.Controllers
             TimeSpan oraInizioLavoro = inputList.Select(d => d.DateTime.TimeOfDay).Min();
             TimeSpan oraFineLavoro  = inputList.Select(df => df.DateTime.TimeOfDay).Max();
             TimeSpan totaleOreLavoro = oraFineLavoro- oraInizioLavoro;
-            double totaleMinutiLavoro = Math.Round(TimeSpan.FromMinutes(totaleOreLavoro.TotalMinutes).TotalMinutes,2);
+            double totaleMinutiLavoro = Math.Round(TimeSpan.FromMinutes(totaleOreLavoro.TotalMinutes).TotalMinutes,1);
             
-            double totaleMetri = Math.Round(inputList.Sum(tm => tm.Length)/1000, 2);
-            double totaleMetriConsumati = Math.Round(inputList.Sum(tmc => tmc.EdgeConsumptionLH)/1000,2);
+            double totaleMetri = Math.Round(inputList.Sum(tm => tm.Length)/1000, 1);
+            double totaleMetriConsumati = Math.Round(inputList.Sum(tmc => tmc.EdgeConsumptionLH)/1000,1);
             int totalePezzi = inputList.Count();
             double spessore = inputList[0].Thickness;
 
-            double metriAlMinuto = Math.Round(totaleMetri/totaleMinutiLavoro,2);
-            double metriAllOra = metriAlMinuto*60;
+            double metriAlMinuto = Math.Round(totaleMetri/totaleMinutiLavoro,1);
+            double metriAllOra = Math.Round(metriAlMinuto*60,1);
 
             SCM2ReportToFile report = new SCM2ReportToFile(){
                 Data = inputList[0].DateTime.ToString("dd/MM/yyyy"),

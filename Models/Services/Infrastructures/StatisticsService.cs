@@ -8,6 +8,7 @@ using FluentFTP;
 using mes.Models.ControllersConfigModels;
 using mes.Models.Services.Application;
 using mes.Models.StatisticsModels;
+using Microsoft.AspNetCore.Components.Web;
 using Newtonsoft.Json;
 
 namespace mes.Models.Services.Infrastructures
@@ -255,7 +256,7 @@ namespace mes.Models.Services.Infrastructures
             HttpWebResponse response;
 
             string text = "";            
-
+            bool debug = false;    
             try
             {
                 response = (HttpWebResponse)request.GetResponse();
@@ -263,13 +264,21 @@ namespace mes.Models.Services.Infrastructures
                 {
                     using (var sr = new StreamReader(response.GetResponseStream()))
                     {
-                        text = sr.ReadToEnd();                    
+                        text = sr.ReadToEnd();                                        
                     }
                 }                
             }
             catch( Exception ex)
             {
                 genP.Log2File($"StatisticService.GetWebResponse: {ex.Message}", intranetLog);
+            }
+
+            if(debug)
+            {
+                using(StreamWriter sw = new StreamWriter(@"c:\temp\scm2_response.json"))
+                {                
+                    sw.WriteLine(text);
+                }
             }
 
             results = JsonConvert.DeserializeObject<List<SCM2ReportBody>>(StatusCutter(text.Replace("'","-")));
@@ -491,10 +500,10 @@ namespace mes.Models.Services.Infrastructures
             string oraInizio = dayData.Min(d => d.DateTime).ToString("HH:mm");
             string oraFine = dayData.Max(d=> d.DateTime).ToString("HH:mm");
             int latiTotali = dayData.Count();
-            double metriTotali = Math.Round(dayData.Sum(m => m.Length)/1000,2);
-            double metriConsumati = Math.Round(dayData.Sum(m=> m.EdgeConsumptionLH)/1000,2);
+            double metriTotali = Math.Round(dayData.Sum(m => m.Length)/1000,1);
+            double metriConsumati = Math.Round(dayData.Sum(m=> m.EdgeConsumptionLH)/1000,1);
 
-            title =$"orario di lavoro: {oraInizio}-{oraFine}, {latiTotali} lati, {metriTotali} metri bordati, {metriConsumati} bordo consumato";
+            title =$"orario di lavoro: {oraInizio}-{oraFine}, {latiTotali} lati, {metriTotali.ToString().Replace(',','.')} metri bordati, {metriConsumati.ToString().Replace(',','.')} bordo consumato";
 
             List<double> thicknesses = dayData.Select(t => t.Thickness).Distinct().ToList();
             //ottieni il massimo e il minimo di ogni ora nell'intervallo
@@ -519,9 +528,9 @@ namespace mes.Models.Services.Infrastructures
                     string label2add = $"{intervalMin}-{intervalMax}";
                     if(!xLabels.Contains(label2add)) xLabels.Add(label2add);
 
-                    double totalMeters = oneHourData.Sum(t => t.Length)/1000;
+                    double totalMeters = Math.Round(oneHourData.Sum(t => t.Length)/1000,1);
                     int totalSides = oneHourData.Count();
-                    double consumedMeters = oneHourData.Sum(c => c.EdgeConsumptionLH)/1000;
+                    double consumedMeters = Math.Round(oneHourData.Sum(c => c.EdgeConsumptionLH)/1000,1);
 
                     HourStatistics oneHourStat = new HourStatistics(){
                         Hour = oneHour,
