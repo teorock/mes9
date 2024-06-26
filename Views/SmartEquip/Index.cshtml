@@ -1,0 +1,23 @@
+@{
+    List<string> machinesNames = ViewBag.machinesNames;
+}
+
+<h1>Gestione macchinari 4.0</h1>
+<br>
+<br>
+<hr>
+@foreach(string oneMachine in machinesNames)
+{
+<div class="row">
+    <div class="col-md-1" align="center">
+        <i class="fa-solid fa-signal fa-3xl" style="font-size:28px;padding-top:-10px;"></i>
+    </div>
+    <div class="col-md-4">
+        <h5>@oneMachine</h5>
+    </div>
+    <div class="col-md-3 d-grid">
+        <a class="btn btn-outline-success btn-block" asp-controller="SmartEquip" asp-action="EquipmentLastInfo" asp-route-equipmentName="@oneMachine" asp-route-startTime="@ViewBag.startTime" asp-route-endTime="@ViewBag.endTime">dettagli</a>
+    </div>
+</div>
+<hr>
+}

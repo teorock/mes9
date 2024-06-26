@@ -1,15 +1,19 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using FluentFTP;
+using FluentFTP.Helpers;
+using iTextSharp.text;
 using mes.Models.ControllersConfigModels;
 using mes.Models.Services.Application;
 using mes.Models.StatisticsModels;
 using Microsoft.AspNetCore.Components.Web;
 using Newtonsoft.Json;
+using ServiceStack.Text;
 
 namespace mes.Models.Services.Infrastructures
 {
@@ -39,6 +43,11 @@ namespace mes.Models.Services.Infrastructures
             //SCM1 e Busell: yyyymmdd.pro
             //Stefani: richiesta diretta via Web
             //Akron: richiesta web diretta
+            //Akron aggiornamento(20giu2024): attenzione, i metri lineari totali e il numero totale di pannelli non sono legati ad un fattore temporale
+                //la richiesta 'http://192.168.2.55:8082/TOTALE_METRI_LINEARI' produce solo { "value": 122457.710067}
+                //quindi, per contestualizzare nel tempo è necessario prelevare ad intervalli e registrare il dato su db (come già realizzato)
+                //in fine, per avere un andamento temporale della Akron è solo possibile interrogare il db e NON la macchina direttamente
+                //ATTENZIONE: per il conteggio dei pannelli fatti in un giorno usare TOTALPANEL. Le righe con descrizione "PANEL ENTERED" servono solo per il conteggio degli spessori lavorati quel giorno
             //PRimus: RyyyyMMMdd.REP
 
             switch (machineType)
@@ -49,6 +58,10 @@ namespace mes.Models.Services.Infrastructures
 
                 case "BIESSE1":
                     result = GetBIESSE1Data(oneMachine, startTime, endTime, ftpTemp);
+                    break;
+
+                case "BIESSE2": //Akron
+                    result = GetBIESSE2Data(oneMachine.DbDataSource, oneMachine.DbTable, startTime, endTime);
                     break;
 
                 case "SCM1":
@@ -112,8 +125,161 @@ namespace mes.Models.Services.Infrastructures
 
     #endregion
 
-    #region SCM2
+    #region BIESSE2
 
+    public List<DayStatistic> GetBIESSE2Data(string dbDataSource, string dbTable, string startTime, string endTime)
+    {
+        List<DayStatistic> result = new List<DayStatistic>();
+            
+        DatabaseAccessor db = new DatabaseAccessor();
+        List<AkronDataRaw> rawData = db.Queryer<AkronDataRaw>(dbDataSource, dbTable);
+        List<AkronData> data = AkronDataRaw2AkronDataMapper(rawData, startTime, endTime);
+        result = AkronData2DayStatisticMapper(data);
+
+
+        return result;
+    }
+
+    private List<AkronData> AkronDataRaw2AkronDataMapper(List<AkronDataRaw> rawData, string startDate, string endDate)
+    {        
+        List<AkronData> result = new List<AkronData>();
+        DateTime startPeriod = Convert.ToDateTime(startDate).AddHours(-1);
+        DateTime endPeriod = Convert.ToDateTime(endDate).AddDays(1).AddHours(-1);
+
+        foreach(AkronDataRaw oneRaw in rawData)
+        {
+            DateTime date = Convert.ToDateTime(oneRaw.Date);
+
+            var debug = oneRaw;
+
+            double totalMeters = (oneRaw.TotalMeters == "")? 0: Math.Round(Convert.ToDouble(oneRaw.TotalMeters, CultureInfo.InvariantCulture), 2);
+
+            AkronData oneData = new AkronData()                
+            {
+                Date = date,
+                Code = Convert.ToInt32(oneRaw.Code),
+                Descr = oneRaw.Descr,
+                A = oneRaw.A, 
+                B = oneRaw.B,
+                C= oneRaw.C,
+                D = oneRaw.D,
+                E = oneRaw.E,
+                F = oneRaw.F,
+                G = oneRaw.G,
+                TotalMeters = totalMeters,
+                TotalPanels = Int32.TryParse(oneRaw.TotalPanels, out int panels) ? panels : 0
+            };
+            result.Add(oneData);
+        }
+
+        //var beginPer = GiveMeSomeTime(startDate, 0);
+        //var endPer = GiveMeSomeTime(endDate, 1);
+
+        List<AkronData> restrictedResult = result.Where(d => d.Date >= startPeriod).Where(d2 => d2.Date <= endPeriod).ToList();        
+
+        return restrictedResult;        
+    }
+
+    private DateTime GiveMeSomeTime(string dateTime, int addDays)
+    {
+        // sono costretto a verificare il formato della data perchè arrivano in due formati diversi (forse dalla pagina statistiche del singolo giorno)
+        int year = 2000;
+        int month = 1;
+        int day = 1;
+
+        if(dateTime[2]=='/')
+        {
+            day = Convert.ToInt16(dateTime.Substring(0,2));
+            month = Convert.ToInt16(dateTime.Substring(3,2));
+            year = Convert.ToInt16(dateTime.Substring(6,4));
+        }
+
+        if(dateTime[4] == '-')
+        {
+            year = Convert.ToInt16(dateTime.Substring(0,4));
+            month = Convert.ToInt16(dateTime.Substring(5,2));
+            day = Convert.ToInt16(dateTime.Substring(8,2));
+        }
+
+
+        DateTime result = new DateTime(year, month, day, 0,0,0);
+        return result.AddDays(addDays);
+
+    }
+
+    private List<DayStatistic> AkronData2DayStatisticMapper(List<AkronData> data)
+    {
+        List<DayStatistic> result = new List<DayStatistic>();
+
+        //------------------
+            List<DateTime> dates = data.Select(x => x.Date.Date).Distinct().ToList();
+
+            foreach (DateTime oneDay in dates)
+            {
+                TimeSpan beginTime = data.Where(d => d.Date.Date == oneDay).Select(t => t.Date.TimeOfDay).Min();
+                TimeSpan endTime = data.Where(d => d.Date.Date == oneDay).Select(t => t.Date.TimeOfDay).Max();                            
+
+                DateTime todayStart = new DateTime(oneDay.Year, oneDay.Month, oneDay.Day, beginTime.Hours, beginTime.Minutes, beginTime.Seconds);
+                DateTime todayEnd = new DateTime(oneDay.Year, oneDay.Month, oneDay.Day, endTime.Hours, endTime.Minutes, endTime.Seconds);
+                
+                TimeSpan totalTimeToday = todayEnd - todayStart;
+
+                double todayStartMeters = data.Where(d => d.Date == todayStart).Select(m => m.TotalMeters).FirstOrDefault();
+                double todayEndMeters = data.Where(d => d.Date == todayEnd).Select(m => m.TotalMeters).FirstOrDefault();
+
+                double todayTotalMeters = Math.Round(todayEndMeters - todayStartMeters,2);
+
+
+                int todayStartPanels = data.Where(d => d.Date == todayStart).Select(m => m.TotalPanels).FirstOrDefault();
+                int todayEndPanels = data.Where(d => d.Date == todayEnd).Select(m => m.TotalPanels).FirstOrDefault();
+
+                int todayTotalPanels = todayEndPanels - todayStartPanels;
+
+
+                double progsPerHour = (todayTotalPanels!=0) ? Math.Round(todayTotalPanels / totalTimeToday.TotalHours,2) : 0;
+
+                List<string> spessori = data.Where(d => d.Date.Date == oneDay)
+                                    .Where(e => e.Descr == "PANEL ENTERED")
+                                    .Select(s => s.E)
+                                    .Distinct().ToList();
+
+                List<KeyValuePair<int,double>> thicknessPieces = new List<KeyValuePair<int, double>>();
+                foreach(string oneThick in spessori)
+                {
+                    //quanti sono per questo spessore
+                    int panels4thick = data.Where(d => d.Date.Date == oneDay)
+                                            .Where(e => e.Descr == "PANEL ENTERED")
+                                            .Where(s => s.E == oneThick)
+                                            .Count();
+                    KeyValuePair<int,double> onePair = new KeyValuePair<int, double>(panels4thick, Convert.ToDouble(oneThick));
+                    thicknessPieces.Add(onePair);
+                }
+
+                //mappo su DayStatistic e aggiungo alla lista
+                DayStatistic oneStat = new DayStatistic()
+                {
+                    StartTime = todayStart,
+                    EndTime = todayEnd,
+                    ProgramsToday = todayTotalPanels,
+                    TimeOn = totalTimeToday,
+                    TimeWorking = totalTimeToday,
+                    ThicknessPieces = thicknessPieces,
+                    ProgramsPerHour = progsPerHour,
+                    TotalMeters = todayTotalMeters,
+                    TotalMetersConsumed = 0,
+                    IsAlive = true,
+                    TimePowerOn = todayStart,
+                    TimePowerOff = todayEnd
+                };
+                result.Add(oneStat);
+            }
+
+        return result;
+    }
+
+    #endregion
+
+    #region SCM2
     public List<SCM2ReportBody> GetSCM2WebRawData(MachineDetails oneMachine, string startTime, string endTime)
     {
         bool isALive = PingHost(oneMachine.ServerAddress);            
@@ -130,8 +296,7 @@ namespace mes.Models.Services.Infrastructures
             string requestUrl = $"http://{oneMachine.ServerAddress}:{oneMachine.ServerPort}/api/v1/report/production?from={startPeriod}&to={endPeriod}";
 
             jsonReply = GetWebResponse(requestUrl);
-        }
-        
+        }        
         return jsonReply;
     }
 
@@ -220,7 +385,6 @@ namespace mes.Models.Services.Infrastructures
                 ThicknessPieces = thicknessPieces
             });                
         }
-
         return result;
     }
 
@@ -234,7 +398,6 @@ namespace mes.Models.Services.Infrastructures
             var debug2 = queryDay.Date;
 
             List<SCM2ReportBody> rawBody = jsonReply.Where(w => Convert.ToDateTime(w.DateTime).Date == queryDay.Date).ToList();
-
             List<double> thicknessesThatDay = rawBody.Select(t => t.Thickness).Distinct().ToList();
 
             foreach(double onethickness in thicknessesThatDay)                                                
@@ -393,14 +556,13 @@ namespace mes.Models.Services.Infrastructures
             int pezziTotali = 0;
             bool tempHasNesting = false;
         
-            if(parts[5].Contains("PZ_"))
-            {
-                List<string> elements = parts[5].Split("_").ToList();
-                string piecesPart = elements.Where(p => p.Contains("PZ")).FirstOrDefault();
-                pezziTotali = Convert.ToInt32(piecesPart.Substring(0, piecesPart.IndexOf('P')));
-                tempHasNesting = true;
-            }
-
+                if(parts[5].Contains("PZ_"))
+                {
+                    List<string> elements = parts[5].Split("_").ToList();
+                    string piecesPart = elements.Where(p => p.Contains("PZ")).FirstOrDefault();
+                    pezziTotali = Convert.ToInt32(piecesPart.Substring(0, piecesPart.IndexOf('P')));
+                    tempHasNesting = true;
+                }
 
                 BiesseReportModel oneModel = new BiesseReportModel(){
                     StartDate = Convert.ToDateTime($"{thisFileDate.Replace('_','-')} {parts[2]}"),
@@ -470,13 +632,19 @@ namespace mes.Models.Services.Infrastructures
             
             foreach(DayStatistic oneStat in inputStats)
             {
-                if(machineType =="SCM2")
+                switch (machineType)
                 {
-                    onTime.Add(0);
-                }
-                else
-                {
-                    onTime.Add(Convert.ToInt32(oneStat.TimeOn.TotalMinutes));
+                    case "SCM2":
+                        onTime.Add(0);
+                        break;
+                    
+                    case "BIESSE2":
+                        onTime.Add(0);
+                        break;
+                    
+                    default:
+                        onTime.Add(Convert.ToInt32(oneStat.TimeOn.TotalMinutes));
+                        break;
                 }
                 
                 workingTime.Add(Convert.ToInt32(oneStat.TimeWorking.TotalMinutes));
@@ -488,12 +656,93 @@ namespace mes.Models.Services.Infrastructures
             }
         }
 
+        public List<HourStatistics> FormatBIESSE2MachineDailyData(MachineDetails oneMachine, string startTime, string endTime, out List<string> xLabels, out string title)
+        {
+            List<HourStatistics> result = new List<HourStatistics>();
+            xLabels = new List<string>();
+            title ="";
+            DateTime today = Convert.ToDateTime(startTime);
+
+            //attenzione: per avere i dettagli della giornata occorre riestrarre i dati grezzi
+            DatabaseAccessor db = new DatabaseAccessor();
+            List<AkronDataRaw> rawData = db.Queryer<AkronDataRaw>(oneMachine.DbDataSource, oneMachine.DbTable);
+            List<AkronData> dayData = AkronDataRaw2AkronDataMapper(rawData, startTime, endTime); 
+
+            List<int> hoursInInterval = dayData.Select(h => h.Date.Hour).Distinct().ToList();
+            //____ composizione titolo pagina --------------------
+            string oraInizio = dayData.Min(d => d.Date).ToString("HH:mm:ss");
+            string oraFine = dayData.Max(d=> d.Date).ToString("HH:mm:ss");
+            int latiTotali = dayData.Count();
+            
+            double metriInizioGiornata = dayData[0].TotalMeters;
+            double metriFineGiornata = dayData[dayData.Count-1].TotalMeters;
+            
+            double metriTotali = Math.Round(metriFineGiornata - metriInizioGiornata,2);
+
+            //calcola gli spessori bordati oggi
+            List<string> spessori = dayData.Where(e => e.Descr == "PANEL ENTERED")
+                                            .Select(s => s.E)
+                                            .Distinct().ToList();
+            
+            string spessoriOggi = String.Join(", ", spessori);
+
+            title =$"orario di lavoro: {oraInizio}-{oraFine}, {latiTotali} lati, {metriTotali.ToString().Replace(',','.')} metri bordati, spessori: {spessoriOggi}";
+
+            //===============================
+            //qui possiamo conteggiare i pannelli bordati per ogni ora
+            
+            foreach(int oneHour in hoursInInterval)
+            {
+                DateTime thisHourStart = new DateTime(today.Year, today.Month, today.Day, oneHour, 0, 0);
+                DateTime thisHourEnd = new DateTime(today.Year, today.Month, today.Day, oneHour, 59, 59);
+
+                List<AkronData> oneHourData = dayData.Where(d => d.Date >= thisHourStart && d.Date <= thisHourEnd).ToList();  
+
+                TimeSpan debugStart = new TimeSpan(oneHour, 0, 0);
+                TimeSpan debugEnd = new TimeSpan(oneHour, 59, 59);
+
+                List<AkronData> debug2 = dayData.Where(d => d.Date.TimeOfDay >= debugStart && d.Date.TimeOfDay <= debugEnd).ToList();               
+                
+                string intervalMax = oneHourData.Max(d => d.Date.ToString("HH:mm"));
+                string intervalMin = oneHourData.Min(d => d.Date.ToString("HH:mm"));
+
+                string label2add = $"{intervalMin}-{intervalMax}";
+                if(!xLabels.Contains(label2add)) xLabels.Add(label2add);
+
+                //metri bordati in quell'ora                
+                double metriInizioOra = oneHourData[0].TotalMeters;
+                double metriFineOra = oneHourData[oneHourData.Count-1].TotalMeters;
+                
+                double metersThisHour = Math.Round(metriFineOra - metriInizioOra, 2);
+
+                //lati bordati in quell'ora
+                int latiInizioOra = oneHourData[0].TotalPanels;
+                int latiFineOra = oneHourData[oneHourData.Count-1].TotalPanels;
+
+                int sidesThisHour = latiFineOra - latiInizioOra;                
+
+                HourStatistics oneHourStat = new HourStatistics() 
+                {
+                    Hour = oneHour,
+                    TotalMeters = metersThisHour,
+                    TotalSides = sidesThisHour,
+                    ConsumedMeters = 0,
+                    Thickness = 0                   
+                };
+
+                result.Add(oneHourStat);
+            }
+
+            return result;
+        }
+
         public List<HourStatistics> FormatSCM2MachineDailyData(MachineDetails oneMachine, string startTime, string endTime, out List<string> xLabels, out string title)
         {
             List<HourStatistics> result = new List<HourStatistics>();
             xLabels = new List<string>();
             //attenzione: per avere i dettagli della giornata occorre riestrarre i dati grezzi
             List<SCM2ReportBody> dayData = GetSCM2WebRawData(oneMachine, startTime, endTime);
+            
 
             List<int> hoursInInterval = dayData.Select(h => h.DateTime.Hour).Distinct().ToList();
             //____ composizione titolo pagina --------------------

@@ -45,8 +45,8 @@ namespace mes.Controllers
 
             GeneralPurpose genPurpose = new GeneralPurpose();
             //qui vengono generate le date di default per la prima visione
-            ViewBag.startTime = genPurpose.GetWeeksMonday(0);
-            ViewBag.endTime = genPurpose.GetWeeksMonday(5);
+            ViewBag.startTime = genPurpose.GetWeeksMonday(0).ToString("dd/MM/yyyy");
+            ViewBag.endTime = genPurpose.GetWeeksMonday(5).ToString("dd/MM/yyyy");
 
             return View();
         }        
@@ -109,6 +109,10 @@ namespace mes.Controllers
                         ViewBag.entityName = "lati";
                         break;
 
+                    case "BIESSE2":
+                        ViewBag.entityName = "lati";
+                        break;                        
+
                     case "BIESSE1":
                         ViewBag.entityName = "pezzi";
                         break;
@@ -164,8 +168,27 @@ namespace mes.Controllers
                         ViewBag.machineType = machineDetails.MachineType;
                         ViewBag.entityName ="pezzi";                        
                         break;
+                    
+                    case "BIESSE2":
+                        hourStats = statService.FormatBIESSE2MachineDailyData(machineDetails, startTime, endTime, out List<string> xLabels2, out string title2);
+                        //area test e debug
+                        string series2 = statService.SeriesDataStringBuilder(hourStats);
+                        ViewBag.Series = series2;
+
+                        string categories2 = "[" + string.Join(", ", xLabels2.Select(x => "\"" + x + "\"")) + "]";
+                        ViewBag.Categories = categories2;
+
+                        // stringa di titolo con totale giornaliero
+                        ViewBag.title = title2;
+                        // data di default per widget calendario
+                        ViewBag.defaultDate = Convert.ToDateTime(startTime).ToString("yyyy-MM-dd");
+                        ViewBag.machineName = $"{machineName}";
+                        ViewBag.MaxDate = DateTime.Now.ToString("yyyy-MM-dd");  
+                        ViewBag.machineType = machineDetails.MachineType;
+                        ViewBag.entityName ="lati";                  
+                        break;                    
                 }
-                
+                //--------------------------------------------------
                 return View("MachineDailyDetail", machineStatistics);
             }
 

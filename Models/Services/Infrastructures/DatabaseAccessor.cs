@@ -13,6 +13,9 @@ namespace mes.Models.Services.Infrastructures
         private bool LogEnabled = true;
         private string logConnectionString = "Data Source=../mesData/dbmovements.db";
 
+        // versione 2.0 - 12 giu 2024
+
+
         const string logPath = @"c:\temp\intranet.log";        
 
         public int Insertor<T>(string connectionString, string tableName, object inputObject)

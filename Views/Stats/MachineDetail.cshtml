@@ -8,12 +8,16 @@
 <h2>Dettagli macchina per @machineName</h2>
 <br>
 <hr>
-<table>
-  <tr>
+<table style="width:80%;">
+  <tr style="height:55px">
+    <td>
+      <a class="btn btn-outline-primary" asp-controller="Stats" asp-action="Index">lista macchine</a>
+    </td>
     <td>
       <h5>periodo dal</h5>
     </td>
     <td>
+      
       <input type="date" style="width:120px;" id="periodStart" name="selPeriod" value="@startWeek" max=@ViewBag.MaxDate>
     </td>
     <td>
@@ -273,8 +277,18 @@ else
 var machineName = '@machineName';
   $("#update").on('click', function() {
     var perStart = $("#periodStart").val();
+    if(perStart)
+    {
+      var dateParts = perStart.split("-");
+      var formattedDateStart = dateParts[2] + "/" + dateParts[1] + "/" + dateParts[0];
+    }
     var perEnd = $("#periodEnd").val();
-    var redirectUrl = '/Stats/MachineDetail?machineName=' + machineName + '&startTime=' + perStart + '&endTime=' + perEnd;
+    if(perEnd)
+    {
+      var dateParts = perEnd.split("-");
+      var formattedDateEnd = dateParts[2] + "/" + dateParts[1] + "/" + dateParts[0];
+    }    
+    var redirectUrl = '/Stats/MachineDetail?machineName=' + machineName + '&startTime=' + formattedDateStart + '&endTime=' + formattedDateEnd;
     //alert(redirectUrl);
     window.location.href = redirectUrl;
   });
