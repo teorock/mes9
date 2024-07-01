@@ -140,7 +140,7 @@ namespace mes.Models.Services.Infrastructures
         return result;
     }
 
-    private List<AkronData> AkronDataRaw2AkronDataMapper(List<AkronDataRaw> rawData, string startDate, string endDate)
+    public List<AkronData> AkronDataRaw2AkronDataMapper(List<AkronDataRaw> rawData, string startDate, string endDate)
     {        
         List<AkronData> result = new List<AkronData>();
         DateTime startPeriod = Convert.ToDateTime(startDate).AddHours(-1);
@@ -207,7 +207,7 @@ namespace mes.Models.Services.Infrastructures
 
     }
 
-    private List<DayStatistic> AkronData2DayStatisticMapper(List<AkronData> data)
+    public List<DayStatistic> AkronData2DayStatisticMapper(List<AkronData> data)
     {
         List<DayStatistic> result = new List<DayStatistic>();
 

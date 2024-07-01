@@ -8,6 +8,7 @@ using mes.Models.ControllersConfigModels;
 using mes.Models.Services.Infrastructures;
 using mes.Models.StatisticsModels;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -248,6 +249,22 @@ namespace mes.Controllers
 
                     csvList = genPurpose.ExportObj2CsvList<SCM2ReportToFile>(report);                
                     break;
+
+                case "BIESSE2":
+                    DatabaseAccessor db = new DatabaseAccessor();
+
+                    List<AkronDataRaw> rawData = db.Queryer<AkronDataRaw>(machineDetails.DbDataSource, machineDetails.DbTable);
+                    List<AkronData> data = statService.AkronDataRaw2AkronDataMapper(rawData, startTime, endTime);
+                    List<AkronReportBody> csvData = Akron2CsvMapper(data);
+                    
+                    csvList = genPurpose.ExportObj2CsvList<AkronReportBody>(csvData); 
+                    
+
+
+                    //Akron2CsvMapper
+                    //data, ora inizio, ora fine, lati lavorati, metri lavorati                    
+
+                    break;
             }
 
             string csvContent = genPurpose.List2Csv(csvList);
@@ -255,6 +272,52 @@ namespace mes.Controllers
             byte[] bytes = Encoding.UTF8.GetBytes(csvContent.ToString());
             return File(bytes, "text/csv", outputFile);                   
         }
+
+
+        public List<AkronReportBody> Akron2CsvMapper (List<AkronData> inputList)
+        {
+            List<AkronReportBody> result = new List<AkronReportBody>();
+
+            List<DateTime> dates = inputList.Select(d => d.Date.Date).Distinct().ToList();
+
+            foreach(DateTime oneDate in dates)
+            {
+                List<AkronData> todayList = inputList.Where(d => d.Date.Date == oneDate).ToList();
+
+                TimeSpan oraInizio = todayList.Min(t => t.Date.TimeOfDay);
+                TimeSpan oraFine = todayList.Max(t => t.Date.TimeOfDay);
+
+                double metriIniziali = todayList.Min(m => m.TotalMeters);
+                double metriFinali = todayList.Max(m => m.TotalMeters);
+
+                double metriOggi = Math.Round(metriFinali - metriIniziali, 2);
+
+                int latiIniziali = todayList.Min(l => l.TotalPanels);
+                int latiFinali = todayList.Max(l => l.TotalPanels);
+
+                int latiOggi = latiFinali - latiIniziali;
+
+                List<string> spessori = todayList.Where(d => d.Date.Date == oneDate)
+                                    .Where(e => e.Descr == "PANEL ENTERED")
+                                    .Select(s => s.E)
+                                    .Distinct().ToList();
+
+
+                AkronReportBody oneReport = new AkronReportBody()
+                {
+                    Data = oneDate.Date.Date,
+                    OraInizio = oraInizio,
+                    OraFine = oraFine,
+                    TotaleMetri = metriOggi,
+                    TotaleLati = latiOggi,
+                    Spessori = $"sp{String.Join(" sp", spessori)}"
+                };
+                result.Add(oneReport);
+            }
+
+            return result;
+        }
+
 
         public SCM2ReportToFile SCM2Mapper(List<SCM2ReportBody> inputList)
         {
