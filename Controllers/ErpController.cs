@@ -212,7 +212,7 @@ namespace mes.Controllers
                                     .OrderBy(y => y.DataInizio).ToList();
             }
 
-            List<DipendenteViewModel> dipendenti = (List<DipendenteViewModel>)dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti");
+            List<DipendenteViewModel> dipendenti = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti");
             List<DipendenteViewModel>dipendentiOrdered =  dipendenti.Where(e => e.Enabled == "1").OrderBy(z => z.Cognome).ToList();
             DipendenteViewModel dipendente = dipendenti.Where(x => x.Username == userData.UserName).FirstOrDefault();
             ViewBag.dipendente = dipendente;

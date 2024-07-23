@@ -42,7 +42,10 @@ namespace mes.Models.Services.Infrastructures
             string minutes="";
             string comment="";
 
-            TimeSpan duration = DateTime.Parse(endTime).Subtract(DateTime.Parse(startTime));
+            DateTime endDatetime = String2DateTime(endTime);
+            DateTime startDatetime = String2DateTime(startTime);
+
+            TimeSpan duration = endDatetime.Subtract(startDatetime);
 
             decimal giorni = Math.Round(Convert.ToDecimal(duration.TotalDays), 0);            
 
@@ -64,8 +67,8 @@ namespace mes.Models.Services.Infrastructures
             }            
             if(duration.Minutes == 30) minutes="30";
             //pausa pranzo
-            if ((DateTime.Parse(startTime).Hour < 12 & DateTime.Parse(endTime).Hour >12)|
-                    (DateTime.Parse(startTime).Hour <13 & DateTime.Parse(endTime).Hour>13))
+            if ((startDatetime.Hour < 12 & endDatetime.Hour >12)|
+                    (startDatetime.Hour <13 & endDatetime.Hour>13))
                     {
                         ore -= 1;
                         comment +="-1h pranzo";
@@ -75,6 +78,19 @@ namespace mes.Models.Services.Infrastructures
 
             result = (arrotondato)? $"{ore}h{minutes} {comment}":$"{ore}h{minutes}";
 
+
+            return result;
+        }
+
+        private DateTime String2DateTime(string input)
+        {
+            int year = Convert.ToInt16(input.Substring(6,4));
+            int month = Convert.ToInt16(input.Substring(3,2));
+            int day = Convert.ToInt16(input.Substring(0,2));
+            int hour = Convert.ToInt16(input.Substring(11,2));
+            int minute = Convert.ToInt16(input.Substring(14,2));
+
+            DateTime result = new DateTime(year,month,day,hour, minute, 0);
 
             return result;
         }
