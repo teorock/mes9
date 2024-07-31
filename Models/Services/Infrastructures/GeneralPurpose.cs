@@ -84,13 +84,23 @@ namespace mes.Models.Services.Infrastructures
 
         private DateTime String2DateTime(string input)
         {
-            int year = Convert.ToInt16(input.Substring(6,4));
-            int month = Convert.ToInt16(input.Substring(3,2));
-            int day = Convert.ToInt16(input.Substring(0,2));
-            int hour = Convert.ToInt16(input.Substring(11,2));
-            int minute = Convert.ToInt16(input.Substring(14,2));
+            DateTime result = DateTime.Now;
 
-            DateTime result = new DateTime(year,month,day,hour, minute, 0);
+            if(!input.Contains('T'))
+            {
+                int year = Convert.ToInt16(input.Substring(6,4));
+                int month = Convert.ToInt16(input.Substring(3,2));
+                int day = Convert.ToInt16(input.Substring(0,2));
+                int hour = Convert.ToInt16(input.Substring(11,2));
+                int minute = Convert.ToInt16(input.Substring(14,2));
+
+                result = new DateTime(year,month,day,hour, minute, 0);
+            }
+            if(input.Contains('T'))
+            {
+                result = DateTime.Parse(input)               ;
+            }
+            
 
             return result;
         }
