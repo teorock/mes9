@@ -84,6 +84,9 @@ namespace mes.Models.Services.Infrastructures
 
         private DateTime String2DateTime(string input)
         {
+            //funzione deprecata
+            //non più necessaria in quanto è stato effettuato il debug
+            
             DateTime result = DateTime.Now;
 
             if(!input.Contains('T'))
