@@ -13,25 +13,36 @@ using Microsoft.Extensions.Logging;
 using mes.Models.InfrastructureModels;
 using System.IO;
 using Newtonsoft.Json;
+using mes.Models.ControllersConfigModels;
 
 namespace mes.Controllers
 {
     public class ErpController : Controller
     {
         private readonly ILogger<ErpController> _logger;
-        private readonly string connectionString ="Data Source=../mesData/erpdata.db";
+        private string erpControllerConfigPath = @"C:\core\mes\ControllerConfig\erpcontrollerconfig.json";
+        //private readonly string connectionString ="Data Source=../mesData/erpdata.db";
 
-        private readonly string usersDbConnString ="Data Source=../data/app.db";
-        const string intranetLog=@"c:\temp\intranet.log";
+        //private readonly string usersDbConnString ="Data Source=../data/app.db";
+        //const string intranetLog=@"c:\temp\intranet.log";
 
         bool aggiornaDipendenti = false;
         bool aggiornaPermessi = false;
 
-        string dateFormat = "dd/MM/yyyy-HH:mm";
+        string dateFormat = "dd/MM/yyyy HH:mm";
+        ErpControllerConfig config = new ErpControllerConfig();
 
         public ErpController(ILogger<ErpController> logger)
         {
-            _logger = logger;         
+            _logger = logger;
+
+            string rawConf = "";
+
+            using (StreamReader sr = new StreamReader(erpControllerConfigPath))
+            {
+                rawConf = sr.ReadToEnd();
+            }
+            config = JsonConvert.DeserializeObject<ErpControllerConfig>(rawConf);                  
         }
 
         public IActionResult Main()
@@ -53,7 +64,7 @@ namespace mes.Controllers
             ViewBag.userRoles = userData.UserRoles;
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<DipendenteViewModel> dipendenti = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti")
+            List<DipendenteViewModel> dipendenti = dbAccessor.Queryer<DipendenteViewModel>(config.ConnectionString, "Dipendenti")
                                             .Where(x => x.Enabled =="1")
                                             .OrderBy(y => y.Cognome).ToList();
 
@@ -71,8 +82,8 @@ namespace mes.Controllers
                 foreach(DipendenteViewModel oneModel in Dipendenti)
                 {
                     oneModel.CreatedBy = userData.UserName;
-                    oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
-                    int result = dbAccessor.Updater<DipendenteViewModel>(connectionString, "Dipendenti", oneModel, oneModel.id);
+                    oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
+                    int result = dbAccessor.Updater<DipendenteViewModel>(config.ConnectionString, "Dipendenti", oneModel, oneModel.id);
                 }
             }       
             return RedirectToAction("MainDipendenti");
@@ -83,7 +94,7 @@ namespace mes.Controllers
         public IActionResult InsertDipendente(string errorMessage)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<DipendenteViewModel> dipendenti = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti")
+            List<DipendenteViewModel> dipendenti = dbAccessor.Queryer<DipendenteViewModel>(config.ConnectionString, "Dipendenti")
                                         .Where(x => x.Enabled=="1")
                                         .OrderBy(y =>y.Cognome).ToList();            
             
@@ -109,17 +120,17 @@ namespace mes.Controllers
             UserData userData = GetUserData();
 
             newDipendente.CreatedBy = userData.UserName;
-            newDipendente.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
+            newDipendente.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
             newDipendente.Enabled = "1";            
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<DipendenteViewModel> dipendenti = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti");
+            List<DipendenteViewModel> dipendenti = dbAccessor.Queryer<DipendenteViewModel>(config.ConnectionString, "Dipendenti");
 
             long max = (from l in dipendenti select l.id).Max();
 
             newDipendente.id = max + 1;
 
-            int result = dbAccessor.Insertor<DipendenteViewModel>(connectionString, "Dipendenti", newDipendente);
+            int result = dbAccessor.Insertor<DipendenteViewModel>(config.ConnectionString, "Dipendenti", newDipendente);
 
             return RedirectToAction("MainDipendenti");
         }
@@ -129,7 +140,7 @@ namespace mes.Controllers
         public IActionResult ModDipendente(long id)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<DipendenteViewModel> Dipendenti = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti")
+            List<DipendenteViewModel> Dipendenti = dbAccessor.Queryer<DipendenteViewModel>(config.ConnectionString, "Dipendenti")
                                         .Where(x => x.Enabled=="1").ToList(); 
             ViewBag.DipendentiList = Dipendenti;
             DipendenteViewModel oneModel = Dipendenti.Where(x => x.id == id).FirstOrDefault();
@@ -144,12 +155,12 @@ namespace mes.Controllers
             UserData userData = GetUserData();
 
             oneModel.CreatedBy = userData.UserName;
-            oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
+            oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
             //oneModel.Enabled = "1";
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
 
-            int result = dbAccessor.Updater<DipendenteViewModel>(connectionString,"Dipendenti", oneModel, oneModel.id);
+            int result = dbAccessor.Updater<DipendenteViewModel>(config.ConnectionString,"Dipendenti", oneModel, oneModel.id);
 
             return RedirectToAction("MainDipendenti");
         }        
@@ -162,10 +173,10 @@ namespace mes.Controllers
             DatabaseAccessor dbAccessor = new DatabaseAccessor();            
             //int result = dbAccessor.Delete(connectionString, "Dipendenti", id);
 
-            DipendenteViewModel Dipendente2disable = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti").Where(x => x.id == id).FirstOrDefault();
+            DipendenteViewModel Dipendente2disable = dbAccessor.Queryer<DipendenteViewModel>(config.ConnectionString, "Dipendenti").Where(x => x.id == id).FirstOrDefault();
             Dipendente2disable.Enabled = "0";
 
-            int result = dbAccessor.Updater<DipendenteViewModel>(connectionString,"Dipendenti", Dipendente2disable, id);
+            int result = dbAccessor.Updater<DipendenteViewModel>(config.ConnectionString,"Dipendenti", Dipendente2disable, id);
             
             Thread.Sleep(1000);
             return RedirectToAction("MainDipendenti");
@@ -196,7 +207,7 @@ namespace mes.Controllers
 
             if(level1)
             {
-                permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                permessi = dbAccessor.Queryer<PermessoViewModel>(config.ConnectionString, "Permessi")
                                     .Where(x => x.Enabled =="1")
                                     .Where(z => DateTime.ParseExact(z.DataInizio, dateFormat, null).Date >= Convert.ToDateTime($"{actualYear}-{actualMonth}-01").Date)
                                     .Where(w => DateTime.ParseExact(w.DataFine, dateFormat, null).Date <= Convert.ToDateTime($"{actualYear}-{actualMonth}-{lastDay}").Date)                                            
@@ -204,7 +215,7 @@ namespace mes.Controllers
             }
             else if(userData.UserRoles.Contains("User"))
             {
-                permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                permessi = dbAccessor.Queryer<PermessoViewModel>(config.ConnectionString, "Permessi")
                                     .Where(x => x.Enabled =="1")
                                     .Where(z => DateTime.ParseExact(z.DataInizio, dateFormat, null).Date >= Convert.ToDateTime($"{actualYear}-{actualMonth}-01").Date)
                                     .Where(w => DateTime.ParseExact(w.DataFine, dateFormat, null).Date <= Convert.ToDateTime($"{actualYear}-{actualMonth}-{lastDay}").Date)                                               
@@ -212,7 +223,7 @@ namespace mes.Controllers
                                     .OrderBy(y => y.DataInizio).ToList();
             }
 
-            List<DipendenteViewModel> dipendenti = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti");
+            List<DipendenteViewModel> dipendenti = dbAccessor.Queryer<DipendenteViewModel>(config.ConnectionString, "Dipendenti");
             List<DipendenteViewModel>dipendentiOrdered =  dipendenti.Where(e => e.Enabled == "1").OrderBy(z => z.Cognome).ToList();
             DipendenteViewModel dipendente = dipendenti.Where(x => x.Username == userData.UserName).FirstOrDefault();
             ViewBag.dipendente = dipendente;
@@ -225,12 +236,12 @@ namespace mes.Controllers
             List<PermessoViewModel> allPermissions = new List<PermessoViewModel>();
             if(level1)
             {
-                allPermissions = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                allPermissions = dbAccessor.Queryer<PermessoViewModel>(config.ConnectionString, "Permessi")
                                                                     .Where(p => p.Enabled == "1").ToList();
             }
             else
             {
-            allPermissions = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+            allPermissions = dbAccessor.Queryer<PermessoViewModel>(config.ConnectionString, "Permessi")
                                                                 .Where(u => u.Username == userData.UserName)
                                                                 .Where(p => p.Enabled == "1").ToList();                
             }
@@ -271,7 +282,7 @@ namespace mes.Controllers
             {
                 if(filter.Tipologia == null && filter.Username !=null) //chiedo un dipendente ma non la tipologia(permesso, ferie, etc)
                 {
-                    permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                    permessi = dbAccessor.Queryer<PermessoViewModel>(config.ConnectionString, "Permessi")
                                         .Where(x => x.Enabled =="1")
                                         .Where(y => y.Username == filter.Username)
                                         .Where(z => DateTime.ParseExact(z.DataInizio, dateFormat, null).Date >= Convert.ToDateTime(filter.DataInizio).Date)
@@ -280,7 +291,7 @@ namespace mes.Controllers
                 }
                 else if(filter.Username != null && filter.Tipologia != null) // chiedo un dipendente e anche la tipologia di permesso/ferie
                 {                     
-                    permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                    permessi = dbAccessor.Queryer<PermessoViewModel>(config.ConnectionString, "Permessi")
                                         .Where(x => x.Enabled =="1")
                                         .Where(y => y.Username == filter.Username)
                                         .Where(z => DateTime.ParseExact(z.DataInizio, dateFormat, null).Date >= Convert.ToDateTime(filter.DataInizio).Date)
@@ -290,7 +301,7 @@ namespace mes.Controllers
                 }
                 else if(filter.Username == null && filter.Tipologia == null) //non chiedo nulla, restituisce tutta la lista di quel periodo
                 {                   
-                    permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                    permessi = dbAccessor.Queryer<PermessoViewModel>(config.ConnectionString, "Permessi")
                                         .Where(x => x.Enabled =="1")
                                         .Where(z => DateTime.ParseExact(z.DataInizio, dateFormat, null).Date >= Convert.ToDateTime(filter.DataInizio).Date)
                                         .Where(y => DateTime.ParseExact(y.DataFine, dateFormat, null).Date <= Convert.ToDateTime(filter.DataFine).Date)                                                
@@ -298,7 +309,7 @@ namespace mes.Controllers
                 }
                 else if(filter.Username == null && filter.Tipologia != null) // tutta la lista di quella tipologia per tutti
                 {
-                    permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                    permessi = dbAccessor.Queryer<PermessoViewModel>(config.ConnectionString, "Permessi")
                                         .Where(x => x.Enabled =="1")
                                         .Where(z => DateTime.ParseExact(z.DataInizio, dateFormat, null).Date >= Convert.ToDateTime(filter.DataInizio).Date)
                                         .Where(y => DateTime.ParseExact(y.DataFine, dateFormat, null).Date <= Convert.ToDateTime(filter.DataFine).Date)
@@ -308,12 +319,12 @@ namespace mes.Controllers
             }
             else if(userData.UserRoles.Contains("User"))
             {
-                permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                permessi = dbAccessor.Queryer<PermessoViewModel>(config.ConnectionString, "Permessi")
                                             .Where(x => x.Enabled =="1")
                                             .Where(y => y.Username == userData.UserName).ToList();
             }
 
-            List<DipendenteViewModel> dipendenti = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti");
+            List<DipendenteViewModel> dipendenti = dbAccessor.Queryer<DipendenteViewModel>(config.ConnectionString, "Dipendenti");
             DipendenteViewModel dipendente = dipendenti.Where(x => x.Username == userData.UserName).FirstOrDefault();
             ViewBag.dipendente = dipendente;
             ViewBag.dipendenti = dipendenti;
@@ -379,8 +390,8 @@ namespace mes.Controllers
             foreach(PermessoViewModel oneModel in Permessi)
             {
                 oneModel.CreatedBy = userData.UserName;
-                oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
-                int result = dbAccessor.Updater<PermessoViewModel>(connectionString, "Permessi", oneModel, oneModel.id);
+                oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
+                int result = dbAccessor.Updater<PermessoViewModel>(config.ConnectionString, "Permessi", oneModel, oneModel.id);
             }
   
             return RedirectToAction("MainPermessi");
@@ -394,19 +405,19 @@ namespace mes.Controllers
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<PermessoViewModel> Permessi = new List<PermessoViewModel>();
             
-            List<DipendenteViewModel> dipendenti = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti")
+            List<DipendenteViewModel> dipendenti = dbAccessor.Queryer<DipendenteViewModel>(config.ConnectionString, "Dipendenti")
                                                             .Where(e => e.Enabled =="1").ToList();
             DipendenteViewModel dipendente = dipendenti.Where(x => x.Username == userData.UserName).FirstOrDefault();
 
             // se utente, vede solo la lista dei suoi
             if(userData.UserRoles.Contains("root")||userData.UserRoles.Contains("PermessiMaster")||userData.UserRoles.Contains("PermessiSupervisor"))
             {
-                Permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                Permessi = dbAccessor.Queryer<PermessoViewModel>(config.ConnectionString, "Permessi")
                                             .Where(x => x.Enabled=="1")
                                             .OrderBy(y => y.DataInizio).ToList(); 
             } else if (userData.UserRoles.Contains("User"))
             {
-                Permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                Permessi = dbAccessor.Queryer<PermessoViewModel>(config.ConnectionString, "Permessi")
                                             .Where(x => x.Enabled=="1")
                                             .Where(y => y.Username == userData.UserName)
                                             .OrderBy(z => z.DataInizio).ToList(); 
@@ -417,7 +428,7 @@ namespace mes.Controllers
                 //ViewBag.allDipendenti = allDipendenti.OrderBy(x => x.Cognome);
             }
             
-                List<DipendenteViewModel> allDipendenti = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti")
+                List<DipendenteViewModel> allDipendenti = dbAccessor.Queryer<DipendenteViewModel>(config.ConnectionString, "Dipendenti")
                                                                     .Where(e => e.Enabled =="1").ToList();
                 ViewBag.allDipendenti = allDipendenti.OrderBy(x => x.Cognome);
 
@@ -444,25 +455,25 @@ namespace mes.Controllers
             UserData userData = GetUserData();
 
             newPermesso.CreatedBy = userData.UserName;
-            newPermesso.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
-            newPermesso.DataDiRichiesta = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
+            newPermesso.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
+            newPermesso.DataDiRichiesta = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
             GeneralPurpose genPurpose = new GeneralPurpose();
             newPermesso.IntervalloTempo = genPurpose.PermissionTimeSpan(newPermesso.DataInizio, newPermesso.DataFine, newPermesso.Tipologia);
             newPermesso.Stato = "in attesa";
             if(newPermesso.Note == null) newPermesso.Note ="nessuna";
 
-            newPermesso.DataInizio = Convert.ToDateTime(newPermesso.DataInizio).ToString("dd/MM/yyyy-HH:mm");
-            newPermesso.DataFine = Convert.ToDateTime(newPermesso.DataFine).ToString("dd/MM/yyyy-HH:mm");
+            newPermesso.DataInizio = Convert.ToDateTime(newPermesso.DataInizio).ToString("dd/MM/yyyy HH:mm");
+            newPermesso.DataFine = Convert.ToDateTime(newPermesso.DataFine).ToString("dd/MM/yyyy HH:mm");
 
             //ottieni il nome utente per lo user che richiede l'inserimento            
             //se il nome nel model != nome dello user => ricerca lo username del dipendente per il quale viene chiesto il permesso
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            DipendenteViewModel intermediaryUser = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti")
+            DipendenteViewModel intermediaryUser = dbAccessor.Queryer<DipendenteViewModel>(config.ConnectionString, "Dipendenti")
                                                                     .Where(x => x.Username == userData.UserName).FirstOrDefault();
 
             if(intermediaryUser.Nome != newPermesso.Nome) 
             {
-                DipendenteViewModel applicantUser = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti")
+                DipendenteViewModel applicantUser = dbAccessor.Queryer<DipendenteViewModel>(config.ConnectionString, "Dipendenti")
                                                                         .Where(x => x.Nome == newPermesso.Nome)
                                                                         .Where(y => y.Cognome == newPermesso.Cognome).FirstOrDefault();
                 newPermesso.Username = applicantUser.Username;
@@ -470,11 +481,11 @@ namespace mes.Controllers
             else newPermesso.Username = userData.UserName;
             
             newPermesso.Enabled = "1";            
-            List<PermessoViewModel> Permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi");
+            List<PermessoViewModel> Permessi = dbAccessor.Queryer<PermessoViewModel>(config.ConnectionString, "Permessi");
 
             long max = (from l in Permessi select l.id).Max();
             newPermesso.id = max + 1;
-            int result = dbAccessor.Insertor<PermessoViewModel>(connectionString, "Permessi", newPermesso);
+            int result = dbAccessor.Insertor<PermessoViewModel>(config.ConnectionString, "Permessi", newPermesso);
 
             return RedirectToAction("MainPermessi");
         }
@@ -499,10 +510,10 @@ namespace mes.Controllers
             List<PermessoViewModel> Permessi = new List<PermessoViewModel>();
             if(authorize)
             {
-                Permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                Permessi = dbAccessor.Queryer<PermessoViewModel>(config.ConnectionString, "Permessi")
                                             .Where(x => x.Enabled=="1").ToList(); 
             } else {
-                Permessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+                Permessi = dbAccessor.Queryer<PermessoViewModel>(config.ConnectionString, "Permessi")
                                             .Where(u => u.Username == userData.UserName)
                                             .Where(x => x.Enabled=="1").ToList();                 
             }
@@ -527,7 +538,7 @@ namespace mes.Controllers
             UserData userData = GetUserData();
 
             oneModel.CreatedBy = userData.UserName;
-            oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
+            oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
             //oneModel.Stato = "in attesa";
 
             string actualDataInizio = oneModel.DataInizio;
@@ -540,10 +551,10 @@ namespace mes.Controllers
             oneModel.IntervalloTempo = genPurpose.PermissionTimeSpan(oneModel.DataInizio, oneModel.DataFine, oneModel.Tipologia);
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<PermessoViewModel> actualPermessi = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi")
+            List<PermessoViewModel> actualPermessi = dbAccessor.Queryer<PermessoViewModel>(config.ConnectionString, "Permessi")
                                         .Where(x => x.Enabled =="1").ToList();           
 
-            int result = dbAccessor.Updater<PermessoViewModel>(connectionString,"Permessi", oneModel, oneModel.id);
+            int result = dbAccessor.Updater<PermessoViewModel>(config.ConnectionString,"Permessi", oneModel, oneModel.id);
 
             //notifica ai PermMaster se un permesso ha cambiato stato
             string previousState = actualPermessi.Where(x => x.id == oneModel.id).Select(y => y.Stato).FirstOrDefault();
@@ -588,7 +599,7 @@ namespace mes.Controllers
             string hour = inputString.Substring(11,2);
             string minutes = inputString.Substring(14,2);
 
-            return $"{day}/{month}/{year}-{hour}:{minutes}";
+            return $"{day}/{month}/{year} {hour}:{minutes}";
         }        
         
         private bool IsValidEmail(string email)
@@ -646,7 +657,7 @@ namespace mes.Controllers
             // prendere la lista di tutti i 
             List<UsersRolesNotify> allUsers = GetCompleteUsersList();
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<DipendenteViewModel> dipendenti = dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti");
+            List<DipendenteViewModel> dipendenti = dbAccessor.Queryer<DipendenteViewModel>(config.ConnectionString, "Dipendenti");
 
             List<DipendenteViewModel> dipPermMaster = dipendenti.Where(x => x.Ruolo.Contains("PermMaster")).ToList();
 
@@ -703,10 +714,10 @@ namespace mes.Controllers
             List<UsersRolesNotify> output = new List<UsersRolesNotify>();
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
 
-            List<UserDataModel> allUsersData = (List<UserDataModel>)dbAccessor.Queryer<UserDataModel>(usersDbConnString, "AspNetUsers");            
+            List<UserDataModel> allUsersData = (List<UserDataModel>)dbAccessor.Queryer<UserDataModel>(config.UserDbConnString, "AspNetUsers");            
             //List<AspNetRoles> allRoles = (List<AspNetRoles>)dbAccessor.Queryer<AspNetRoles>(usersDbConnString,"AspNetRoles");
             //List<AspNetUsersRoles> allUsersRoles = (List<AspNetUsersRoles>)dbAccessor.Queryer<AspNetUsersRoles>(usersDbConnString,"AspNetUserRoles");
-            List<DipendenteViewModel> dipendenti = (List<DipendenteViewModel>)dbAccessor.Queryer<DipendenteViewModel>(connectionString, "Dipendenti");
+            List<DipendenteViewModel> dipendenti = (List<DipendenteViewModel>)dbAccessor.Queryer<DipendenteViewModel>(config.ConnectionString, "Dipendenti");
 
             foreach(UserDataModel oneUserData in allUsersData)
             {
@@ -729,10 +740,10 @@ namespace mes.Controllers
 
             //serve lo user Id, da trovare una o più volte dentro la allUsersRoles, per ogni volta si aggiunge il role.name
             //lista di tutte le corrspondenze UserId con RoleId
-            List<AspNetUsersRoles> allUsersRoles = (List<AspNetUsersRoles>)dbAccessor.Queryer<AspNetUsersRoles>(usersDbConnString,"AspNetUserRoles");
+            List<AspNetUsersRoles> allUsersRoles = (List<AspNetUsersRoles>)dbAccessor.Queryer<AspNetUsersRoles>(config.UserDbConnString,"AspNetUserRoles");
             
             //lista di tutti i roles.Name e corrispondente roles.Id
-            List<AspNetRoles> allRoles = (List<AspNetRoles>)dbAccessor.Queryer<AspNetRoles>(usersDbConnString,"AspNetRoles");
+            List<AspNetRoles> allRoles = (List<AspNetRoles>)dbAccessor.Queryer<AspNetRoles>(config.UserDbConnString,"AspNetRoles");
 
             foreach(AspNetUsersRoles oneRole in allUsersRoles)
             {
@@ -751,7 +762,7 @@ namespace mes.Controllers
 
         private void Log2File(string line2log)
         {
-            using(StreamWriter sw = new StreamWriter(intranetLog, true))
+            using(StreamWriter sw = new StreamWriter(config.IntranetLog, true))
             {
                 sw.WriteLine($"{DateTime.Now} -> {line2log}");
             }
