@@ -742,7 +742,7 @@ namespace mes.Models.Services.Infrastructures
             TimeSpan timeOn = new TimeSpan(inputList.Where(r => r.ReferenceDay == oneDate).Sum(t => t.Ttotale.Ticks));
             TimeSpan timeWorking = new TimeSpan(inputList.Where(r => r.ReferenceDay == oneDate).Sum(t => t.Teffettivo.Ticks));
 
-            double progByHour = (progsToday / timeOn.TotalMinutes) * 60;
+            double progByHour = (progsToday / (timeOn.TotalMinutes + timeWorking.TotalMinutes)) * 60;
 
             DateTime timePowerOn = new DateTime(oneDate.Year, oneDate.Month, oneDate.Day, startTime.Hours, startTime.Minutes, startTime.Seconds);
             DateTime timePowerOff = new DateTime(oneDate.Year, oneDate.Month, oneDate.Day, endTime.Hours, endTime.Minutes, endTime.Seconds);
@@ -756,7 +756,11 @@ namespace mes.Models.Services.Infrastructures
                 TimeWorking = timeWorking,
                 ProgramsPerHour = progByHour,
                 TimePowerOn = timePowerOn,
-                TimePowerOff = timePowerOff
+                TimePowerOff = timePowerOff,
+                ThicknessPieces = new List<KeyValuePair<int, double>>(){new KeyValuePair<int, double>(1,1)},
+                TotalMeters = 1,
+                TotalMetersConsumed = 1,
+                IsAlive = true                  
             };
             result.Add(oneDay);
         }
@@ -797,6 +801,7 @@ namespace mes.Models.Services.Infrastructures
                         break;
 
                     case "SCM1":
+                        onTime.Add(Convert.ToInt32(oneStat.TimeOn.TotalMinutes));
                         break;
                         
                     default:
