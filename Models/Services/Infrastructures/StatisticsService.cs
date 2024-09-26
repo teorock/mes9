@@ -12,6 +12,7 @@ using mes.Models.ControllersConfigModels;
 using mes.Models.Services.Application;
 using mes.Models.StatisticsModels;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.CodeAnalysis;
 using Newtonsoft.Json;
 using ServiceStack.Text;
 
@@ -65,6 +66,7 @@ namespace mes.Models.Services.Infrastructures
                     break;
 
                 case "SCM1":
+                    result = GetSCM1ReportData(oneMachine, startTime, endTime);
                     break;
 
                 case "ftp":
@@ -488,8 +490,6 @@ namespace mes.Models.Services.Infrastructures
         {
             List<DayStatistic> result = new List<DayStatistic>();
             GeneralPurpose genPurpose = new GeneralPurpose();
-
-            //bool isALive = PingHost(oneMachine.ServerAddress); 
             
             FtpService ftp = new FtpService(oneMachine.ServerAddress, oneMachine.UserName, genPurpose.ImplicitPwd(oneMachine.UserName));        
             List<FtpListItem> ftpDir = ftp.FtpDir($"/{oneMachine.MachineName}/");
@@ -612,6 +612,160 @@ namespace mes.Models.Services.Infrastructures
 
     #endregion
 
+#region SCM1
+
+    public List<DayStatistic> GetSCM1ReportData(MachineDetails oneMachine, string startTime, string endTime)
+    {
+        //get raw data
+        List<SCM1ReportModel> report = GetSCM1RawData(oneMachine, startTime, endTime);
+        // map data
+        List<DayStatistic> result = SCM1Mapper(report);
+
+        return result; 
+    }
+
+    private List<SCM1ReportModel> GetSCM1RawData(MachineDetails oneMachine, string startTime, string endTime)
+    {
+        //ftp lentissimo
+        //spostare ftp su dc2
+
+        List<SCM1ReportModel> result = new List<SCM1ReportModel>();
+        GeneralPurpose genPurpose = new GeneralPurpose();
+        
+        FtpService ftp = new FtpService(oneMachine.ServerAddress, oneMachine.UserName, genPurpose.ImplicitPwd(oneMachine.UserName));        
+        List<FtpListItem> ftpDir = ftp.FtpDir($"/{oneMachine.MachineName}/");
+        List<string> ftpNames = ftpDir.Select(n => n.Name).ToList();
+
+        List<string> periodFileNames = SCM1FilenameGenerator(startTime, endTime);
+
+        foreach(string oneFilename in periodFileNames)
+        {
+            if (ftpNames.Contains(oneFilename))
+            {
+                string localFile = Path.Combine(oneMachine.FtpTempFolder, oneFilename);
+                ftp.FtpDownloadFile($"/{oneMachine.MachineName}/{oneFilename}/", localFile);
+                result.AddRange(GetSCM1DataFromFile(localFile));
+            }
+        }
+        //togli i nomi file con '_previous.pro'
+        //da startTime e endTime compila la lista di tutti i nomi file da scaricare, secondo la convenzione nomiFile della scm (yyyyMMdd.pro)
+        //per ogni nome file in questa lista
+        //scaricalo
+        //analizzalo
+
+        return result;
+    }
+
+    private List<SCM1ReportModel> GetSCM1DataFromFile(string localFile)
+    {
+        List<SCM1ReportModel> report = new List<SCM1ReportModel>();
+        List<string> rawFile = new List<string>(File.ReadAllLines(localFile));
+
+        for (int i = 1; i < rawFile.Count(); i++)
+        {
+            string[] parts = rawFile[i].Split(',');
+
+            TimeSpan start = new TimeSpan(Convert.ToInt16(parts[6]), Convert.ToInt16(parts[7]), Convert.ToInt16(parts[8]));
+            TimeSpan stop = new TimeSpan(Convert.ToInt16(parts[9]), Convert.ToInt16(parts[10]), Convert.ToInt16(parts[11]));
+            TimeSpan tEffettivo = new TimeSpan(Convert.ToInt16(parts[12]), Convert.ToInt16(parts[13]), Convert.ToInt16(parts[14]));
+            TimeSpan tTotale = new TimeSpan(Convert.ToInt16(parts[15]), Convert.ToInt16(parts[16]), Convert.ToInt16(parts[17]));
+            int quantita = Convert.ToInt16(parts[18]);
+            TimeSpan tMedio = new TimeSpan(Convert.ToInt16(parts[19]), Convert.ToInt16(parts[20]), Convert.ToInt16(parts[21]), Convert.ToInt16(parts[22]));
+
+            DateTime referenceDay = GetDatetimeFromFilename(Path.GetFileNameWithoutExtension(localFile));
+
+            SCM1ReportModel oneModel = new SCM1ReportModel()
+            {
+                ReferenceDay = referenceDay, 
+                Area = parts[0],
+                FilePGM = Path.GetFileNameWithoutExtension(parts[1]),
+                DimX = Convert.ToDouble(parts[3]),
+                DimY = Convert.ToDouble(parts[4]),
+                DimZ = Convert.ToDouble(parts[5]),
+                Start = start,
+                Stop = stop,
+                Teffettivo = tEffettivo,
+                Ttotale = tTotale,
+                Quantita = quantita,
+                Tmedio = tMedio
+            };
+
+            report.Add(oneModel);
+        }        
+        return report;
+    }
+
+    private DateTime GetDatetimeFromFilename (string filename)
+    {
+        int year = Convert.ToInt16(filename.Substring(0,4));
+        int month = Convert.ToInt16(filename.Substring(4,2));
+        int day = Convert.ToInt16(filename.Substring(6,2));
+
+        return new DateTime(year,month, day);
+    }
+
+    private List<string> SCM1FilenameGenerator(string startTime, string endTime)
+    {
+        //converti start e end in DateTime
+        //calcola la distanza in giorni
+        //per ogni giorno      
+        List<string> fileNames = new List<string>();  
+        GeneralPurpose general = new GeneralPurpose();
+
+        DateTime start = general.String2DateConverter(startTime);
+        DateTime end = general.String2DateConverter(endTime);
+
+        TimeSpan days = end.Date - start.Date;
+
+        for(int x=0; x<days.Days; x++)
+        {
+            string oneDate = $"{start.AddDays(x).ToString("yyyyMMdd")}.pro";
+            fileNames.Add(oneDate);
+        }
+
+        return fileNames;
+    }
+
+    private List<DayStatistic> SCM1Mapper (List<SCM1ReportModel> inputList)
+    {
+        List<DayStatistic> result = new List<DayStatistic>();
+
+        //da inputlist devo tirare fuori tutti i giorni che contiene
+        List<DateTime> dates = inputList.Select(d => d.ReferenceDay).Distinct().ToList();
+        //per ogni giorno devo fare la somma dei dati
+        foreach(DateTime oneDate in dates)
+        {
+            TimeSpan startTime = inputList.Where(r => r.ReferenceDay == oneDate).Select(s => s.Start).Min();
+            TimeSpan endTime = inputList.Where(r => r.ReferenceDay == oneDate).Select(s => s.Stop).Max();
+            double progsToday = inputList.Where(r => r.ReferenceDay == oneDate).Select(q => q.Quantita).Sum();
+            
+            TimeSpan timeOn = new TimeSpan(inputList.Where(r => r.ReferenceDay == oneDate).Sum(t => t.Ttotale.Ticks));
+            TimeSpan timeWorking = new TimeSpan(inputList.Where(r => r.ReferenceDay == oneDate).Sum(t => t.Teffettivo.Ticks));
+
+            double progByHour = (progsToday / timeOn.TotalMinutes) * 60;
+
+            DateTime timePowerOn = new DateTime(oneDate.Year, oneDate.Month, oneDate.Day, startTime.Hours, startTime.Minutes, startTime.Seconds);
+            DateTime timePowerOff = new DateTime(oneDate.Year, oneDate.Month, oneDate.Day, endTime.Hours, endTime.Minutes, endTime.Seconds);
+
+            DayStatistic oneDay = new DayStatistic()
+            {
+                StartTime = timePowerOn,
+                EndTime = timePowerOff,
+                ProgramsToday = Convert.ToInt16(progsToday),
+                TimeOn = timeOn,
+                TimeWorking = timeWorking,
+                ProgramsPerHour = progByHour,
+                TimePowerOn = timePowerOn,
+                TimePowerOff = timePowerOff
+            };
+            result.Add(oneDay);
+        }
+
+        return result;
+    }
+
+#endregion
+
         public void FormatMachineData(List<DayStatistic> inputStats,
                                         string machineType,
                                         out List<int>onTime,
@@ -641,7 +795,10 @@ namespace mes.Models.Services.Infrastructures
                     case "BIESSE2":
                         onTime.Add(0);
                         break;
-                    
+
+                    case "SCM1":
+                        break;
+                        
                     default:
                         onTime.Add(Convert.ToInt32(oneStat.TimeOn.TotalMinutes));
                         break;
