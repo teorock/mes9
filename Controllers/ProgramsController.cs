@@ -130,7 +130,7 @@ namespace mes.Controllers
                 oneModel.CreatedBy = userData.UserName;
                 oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
                 oneModel.Enabled ="1";
-                int result = dbAccessor.Updater<BordoViewModel>(config.ConnectionString, config.ColleDbTable, oneModel, oneModel.id);
+                int result = dbAccessor.Updater<BordoViewModel>(config.ConnectionString, config.BordiDbTable, oneModel, oneModel.id);
             }  
             //}       
             return RedirectToAction("MagBordi");
