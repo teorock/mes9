@@ -226,7 +226,12 @@ namespace mes.Controllers
             List<ProductionCalendarDbModel> allEvents = dbAccessor.Queryer<ProductionCalendarDbModel>(config.ConnString, config.Table)
                                                         .Where(x => x.enabled =="1").ToList();
             
-            var result = JsonConvert.SerializeObject(allEvents);
+            //var result = JsonConvert.SerializeObject(allEvents);
+
+            List<ProductionCalendarDbModel> rectangular = Rectangulizer(allEvents);
+
+            //var result = JsonConvert.SerializeObject(allEvents);
+            var result = JsonConvert.SerializeObject(rectangular);
 
             return result;
         }
@@ -248,7 +253,11 @@ namespace mes.Controllers
                                                             .Where(x => x.enabled =="1").ToList();
             }
             
-            var result = JsonConvert.SerializeObject(allEvents);
+            //var result = JsonConvert.SerializeObject(allEvents);
+            List<ProductionCalendarDbModel> rectangular = Rectangulizer(allEvents);
+
+            //var result = JsonConvert.SerializeObject(allEvents);
+            var result = JsonConvert.SerializeObject(rectangular);            
 
             return result;
         }        
@@ -267,10 +276,34 @@ namespace mes.Controllers
                                                                 .Where(x => x.enabled =="1").ToList());
             }
             
-            var result = JsonConvert.SerializeObject(allEvents);
+            List<ProductionCalendarDbModel> rectangular = Rectangulizer(allEvents);
+
+            //var result = JsonConvert.SerializeObject(allEvents);
+            var result = JsonConvert.SerializeObject(rectangular);
 
             return result;
         }     
+
+        private List<ProductionCalendarDbModel> Rectangulizer(List<ProductionCalendarDbModel> inputList)
+        {
+            List<ProductionCalendarDbModel> result = new List<ProductionCalendarDbModel>();
+
+            foreach(ProductionCalendarDbModel oneModel in inputList)
+            {
+                DateTime startDate = Convert.ToDateTime(oneModel.start);
+                DateTime endDate = Convert.ToDateTime(oneModel.end);
+
+                if(startDate == endDate)
+                {
+                    oneModel.start = startDate.ToString("yyyy-MM-dd");
+                    oneModel.end = endDate.ToString("yyyy-MM-dd");
+                    result.Add(oneModel);
+                }
+                else result.Add(oneModel);
+            }
+
+            return result;
+        }
 
         public IActionResult OpenSmbFolder(string path2open)
         {            
