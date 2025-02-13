@@ -119,7 +119,7 @@
                     // Display the card for the current incoming
                     @:<div class="card">
                         @:<div class="card-body">
-                            @:<h5 class="card-title">@incoming.Title</h5>
+                            @:<h5 class="card-title">@incoming.Title - @incoming.StartHour</h5>
                             @:<p class="card-text">@incoming.Description</p>
                         @:</div>
                     @:</div>
@@ -135,7 +135,7 @@
     </div>
 
 
-<!-- div class="container" -->
+<div class="container">
     <h3>Consegne</h3>
     <div class="row outgoing-row">
         @{
@@ -157,7 +157,7 @@
                         }
 
                         @:<div class="col-md-2 day-column">
-                            @:<!-- h4>@outgoing.ReferenceDate</h4 -->
+                            @:<h4>@outgoing.ReferenceDate</h4>
 
                         currentOutgoingDay = outgoing.ReferenceDate;
                     }
@@ -165,7 +165,7 @@
                     // Display the card for the current outgoing
                     @:<div class="card">
                         @:<div class="card-body">
-                            @:<h5 class="card-title">@outgoing.Title</h5>
+                            @:<h5 class="card-title">@outgoing.Title - @outgoing.StartHour</h5>
                             @:<p class="card-text">@outgoing.Description</p>
                         @:</div>
                     @:</div>
@@ -178,8 +178,8 @@
             }
         }
     </div>
-<!-- /div -->
-<!-- div class="container" -->
+</div>
+<div class="container">
     <h3>Manutenzioni e interventi</em></h3>
     <div class="row intervention-row">
         @{
@@ -201,7 +201,7 @@
                         }
 
                         @:<div class="col-md-2 day-column">
-                            @:<!-- h4>@intervention.ReferenceDate</h4 -->
+                            @:<h4>@intervention.ReferenceDate</h4>
 
                         currentInterventionDay = intervention.ReferenceDate;
                     }
@@ -209,7 +209,7 @@
                     // Display the card for the current intervention
                     @:<div class="card">
                         @:<div class="card-body">
-                            @:<h5 class="card-title">@intervention.Title</h5>
+                            @:<h5 class="card-title">@intervention.Title - @intervention.StartHour</h5>
                             @:<p class="card-text">@intervention.Description</p>
                         @:</div>
                     @:</div>
@@ -222,54 +222,4 @@
             }
         }
     </div>
-<!-- /div -->
-
-    <script>
-        window.onload = function() {
-            let scrollCount = 0;
-            const maxScrolls = 5;  // Number of times to scroll up and down
-            const displayTime = 20000; // 20 seconds (milliseconds)
-            const pauseTime = 10000; // 10 seconds (milliseconds)
-            let scrollingDown = true;
-
-            function scrollToBottom() {
-                window.scrollTo({
-                    top: document.body.scrollHeight,
-                    behavior: 'smooth',
-                    scrollDuration: 10000  // Add this, adjust milliseconds for scrolling speed
-                });
-                setTimeout(pauseAtBottom, pauseTime); // Pause after scrolling down
-            }
-
-            function scrollToTop() {
-                window.scrollTo({
-                    top: 0,
-                    behavior: 'smooth',
-                    scrollDuration: 10000 // Add this, adjust milliseconds for scrolling speed
-                });
-                setTimeout(startDisplay, displayTime);  // Pause and then restart
-            }
-
-            function pauseAtBottom() {
-                console.log("Pausing at bottom...");
-                setTimeout(scrollToTop, pauseTime); // Pause at the bottom and then scroll up
-            }
-
-            function startDisplay() {
-                console.log("Scrolling Down Start, Count: " + scrollCount);
-                scrollCount++;
-
-                if (scrollCount <= maxScrolls) {
-                    scrollToBottom();
-                } else {
-                    console.log("Scrolling complete! Reloading...");
-                    window.location.reload();  // Reload the page
-                }
-            }
-
-
-            // Initial start of the scrolling
-            startDisplay();
-
-        };
-    </script>
+</div>
