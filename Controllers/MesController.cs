@@ -143,11 +143,23 @@ namespace mes.Controllers
         public IActionResult GetMachineHistory(string machineName)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            //List<MachineStatusPicker> allMachineStatus = dbAccessor.Queryer<MachineStatusPicker>(config.LastPeriodConnString,"MachineStatus");
-            //List<MachineStatusPicker> oneMachineStatus = allMachineStatus.Where(x => x.MachineName == machineName).ToList();
+            
+            //---------------- area test ------------------------
+            string startDate = "17/02/2025";
+            string endDate = "21/02/2025";
+
+            DateTime start = Convert.ToDateTime(startDate);
+            DateTime end = Convert.ToDateTime(endDate);
 
             string filter = $"MachineName=\'{machineName}\'";
-            List<MachineStatusPicker> oneMachineStatus = dbAccessor.QueryerFilter<MachineStatusPicker>(config.LastPeriodConnString,"MachineStatus", filter);
+            List<MachineStatusPicker> allMachineStatus = dbAccessor.QueryerFilter<MachineStatusPicker>(config.LastPeriodConnString,"MachineStatus", filter);
+
+            var debug = allMachineStatus.Last();
+            //-----------------------------------------------------
+
+
+            List<MachineStatusPicker> oneMachineStatus = dbAccessor.QueryerFilter<MachineStatusPicker>(config.LastPeriodConnString,"MachineStatus", filter)
+                                                                    .Where(d => Convert.ToDateTime(d.Date) >= start.Date & Convert.ToDateTime(d.Date) <= end.Date).ToList();
                                 
             MachineStatusPicker last = oneMachineStatus[oneMachineStatus.Count -1];            
 

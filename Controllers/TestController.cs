@@ -172,9 +172,6 @@ namespace mes.Controllers
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             int result = 0;
 
-            //string backgroundColor=GetEventColors(getCalendar.assignedTo).Key;
-            //string borderColor = GetEventColors(getCalendar.assignedTo).Value;
-
             string backgroundColor = config.CalendarAssignments.FirstOrDefault(n => n.AssignmentName == getCalendar.assignedTo).BackgroundColor;
             string borderColor = config.CalendarAssignments.FirstOrDefault(n => n.AssignmentName == getCalendar.assignedTo).BorderColor;
 

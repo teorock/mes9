@@ -254,7 +254,7 @@
                     <label for="endDate">Assegnato a</label>
                     <br>
                     <select id="assignedTo" style="width: 470px;">
-                      ${assignedToOptions}  <!-- Insert the generated options here -->                        
+                      ${assignedToOptions}                         
                     </select>
                 </div>                
               </form>
@@ -279,11 +279,13 @@
               var dayDiff = endDiff.diff(startDiff, 'day');
               console.log("giorni "+dayDiff);
               //se si tratta di un giorno solo, propone lo stesso giorno dalle 8 alle 17
-              //altrimenti procede cosme al solito
+              //altrimenti procede come al solito
               if(dayDiff == 1) {
                 //alert("daydiff ==1");
-                $('#startDate').val(moment(event.start).format('YYYY-MM-DD') + "T" + moment(event.start).add(6, 'hours').format('HH:mm'));
-                $('#endDate').val(moment(event.start).format('YYYY-MM-DD') + "T" + moment(event.start).add(15, 'hours').format('HH:mm'));
+                //$('#startDate').val(moment(event.start).format('YYYY-MM-DD') + "T" + moment(event.start).add(6, 'hours').format('HH:mm'));
+                //$('#endDate').val(moment(event.start).format('YYYY-MM-DD') + "T" + moment(event.start).add(15, 'hours').format('HH:mm'));
+                $('#startDate').val(moment(event.start).format('YYYY-MM-DD') + "T" + moment(event.start).add(7, 'hours').format('HH:mm'));
+                $('#endDate').val(moment(event.start).format('YYYY-MM-DD') + "T" + moment(event.start).add(7, 'hours').format('HH:mm'));
               } else {
                 $('#startDate').val(moment(event.start).format('YYYY-MM-DD') + "T" + moment(event.start).subtract(2, 'hours').format('HH:mm'));
                 $('#endDate').val(moment(event.end).format('YYYY-MM-DD') + "T" + moment(event.end).subtract(2, 'hours').format('HH:mm'));
@@ -295,6 +297,12 @@
             $('#confirmBtn').click(function() {          
               if(confirm('Confermi le informazioni?'))
                 {
+
+                if ($('#startDate').val() === "" || $('#endDate').val() === "") {
+                  alert("Data di inizio edit fine non valide, controlla");
+                  return; 
+                }
+
                 var data = {
                           assignedTo: $('#assignedTo').val(),
                           eventTitle: $('#eventName').val(),
