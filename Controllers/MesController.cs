@@ -143,10 +143,11 @@ namespace mes.Controllers
         public IActionResult GetMachineHistory(string machineName)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            GeneralPurpose genPurpose = new GeneralPurpose();
             
-            //---------------- area test ------------------------
-            string startDate = "17/02/2025";
-            string endDate = "21/02/2025";
+            //date a caso per sviluppo
+            string startDate = genPurpose.GetWeeksMonday(-6).ToString("dd/MM/yyyy");
+            string endDate = genPurpose.GetWeeksMonday(5).ToString("dd/MM/yyyy");
 
             DateTime start = Convert.ToDateTime(startDate);
             DateTime end = Convert.ToDateTime(endDate);
@@ -155,13 +156,11 @@ namespace mes.Controllers
             List<MachineStatusPicker> allMachineStatus = dbAccessor.QueryerFilter<MachineStatusPicker>(config.LastPeriodConnString,"MachineStatus", filter);
 
             var debug = allMachineStatus.Last();
-            //-----------------------------------------------------
 
+            List<MachineStatusPicker> oneMachineStatus = allMachineStatus.Where(d => Convert.ToDateTime(d.Date) >= start.Date & Convert.ToDateTime(d.Date) <= end.Date).ToList();
 
-            List<MachineStatusPicker> oneMachineStatus = dbAccessor.QueryerFilter<MachineStatusPicker>(config.LastPeriodConnString,"MachineStatus", filter)
-                                                                    .Where(d => Convert.ToDateTime(d.Date) >= start.Date & Convert.ToDateTime(d.Date) <= end.Date).ToList();
-                                
-            MachineStatusPicker last = oneMachineStatus[oneMachineStatus.Count -1];            
+            //MachineStatusPicker last = oneMachineStatus[oneMachineStatus.Count -1];            
+            MachineStatusPicker last = oneMachineStatus.Last();
 
             //devo creare una lista contenente solo lo stato più recente per ogni macchina
             //List<string> allMachines = allMachineStatus.Select(x => x.MachineName).Distinct().ToList();            
@@ -192,7 +191,7 @@ namespace mes.Controllers
             ViewBag.dataInizio = dataInizio;
             ViewBag.dataFine = dataFine;
 
-            List<MachineStatustPickerWeek> oneWeekStatus = WeekPeeker(oneMachineStatus);
+            List<MachineStatustPickerWeek> oneWeekStatus = WeekPeeker(oneMachineStatus, start, end);
             ViewBag.oneWeekStatus = oneWeekStatus;
             //preleva una lista degli ultimi 5 movimenti di MachineMovements
             ViewBag.oneWeekProgs = GetLastWeekProgs(last.MachineName, 7);
@@ -258,6 +257,8 @@ namespace mes.Controllers
         {            
             List<KeyValuePair<string,string>> result = new List<KeyValuePair<string, string>>();
 
+            //TO DO: passare allMachineMovements direttamente
+
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<MachineMovementsPicker> allMachineMovements = dbAccessor.Queryer<MachineMovementsPicker>(config.ConnectionString, "MachineMovements")
                                                                 .Where(x=> x.MachineName == machineName).ToList();
@@ -274,59 +275,142 @@ namespace mes.Controllers
             return result;
         }
 
-
-        private List<MachineStatustPickerWeek> WeekPeeker(List<MachineStatusPicker> oneMachineStatus)
+        public  List<DateTime> GetDaysInBetween(DateTime startDate, DateTime endDate)
         {
-            //mettere calcolo in percentuale
-            List<MachineStatustPickerWeek> weekPeek = new List<MachineStatustPickerWeek>();
-            List<string> allDates = oneMachineStatus.Select(x => x.Date).Distinct().ToList();
+            List<DateTime> allDates = new List<DateTime>();
 
-            int total = allDates.Count;
-            if(total <7) return GetEmptyWeek();
-
-            int range = 7;
-
-            for(int i= total-1; i>total-range-1; i--)
+            for (DateTime date = startDate; date <= endDate; date = date.AddDays(1))
             {
-                int automatico = oneMachineStatus.Where(x => x.Date == allDates[i])
-                                                 .Where(n => n.MachineState == "start - automatico").Count()
-                                //+ oneMachineStatus.Where( y => y.MachineState == "connessa").Count()
-                                + oneMachineStatus.Where(z => z.MachineState == "in lavorazione").Count() ;
-
-                int connessa = oneMachineStatus.Where(x => x.Date == allDates[i])
-                                                 .Where(n => n.MachineState == "connessa").Count();
-
-                int attesa = oneMachineStatus.Where(x => x.Date == allDates[i])
-                                                 .Where(n => n.MachineState == "in attesa").Count();
-
-                int manuali = oneMachineStatus.Where(x => x.Date == allDates[i])
-                                                 .Where(n => n.MachineState == "mov.manuali").Count();
-
-                int spenta = oneMachineStatus.Where(x => x.Date == allDates[i])
-                                                 .Where(n => n.MachineState == "non connessa").Count();
-
-                int nonconnessa = oneMachineStatus.Where(x => x.Date == allDates[i])
-                                                 .Where(n => n.MachineState == "non connessa").Count(); 
-
-                int emergenza = oneMachineStatus.Where(x => x.Date == allDates[i])
-                                                 .Where(n => n.MachineState == "emergenza").Count();
-
-                //int dayTotal = oneMachineStatus.Where(d => d.Date== allDates[i]).Count();
-                int dayTotal = automatico + connessa + attesa + manuali + spenta + nonconnessa + emergenza;
-
-                MachineStatustPickerWeek onePeek = new MachineStatustPickerWeek() 
-                {
-                    Day = allDates[i],
-                    Start = CalcolaPercentuale(automatico, dayTotal).ToString(),
-                    Waiting = CalcolaPercentuale(attesa,dayTotal).ToString(),
-                    ManualMovements = CalcolaPercentuale(manuali, dayTotal).ToString(),
-                    Connected = CalcolaPercentuale(connessa, dayTotal).ToString(),
-                    NotConnected = CalcolaPercentuale(nonconnessa, dayTotal).ToString(),
-                    Emergency = CalcolaPercentuale(emergenza, dayTotal).ToString()
-                };
-
-                weekPeek.Add(onePeek);
+                allDates.Add(date.Date);
             }
+
+            return allDates;
+        }
+
+        private List<MachineStatustPickerWeek> WeekPeeker(List<MachineStatusPicker> oneMachineStatus, DateTime startDate, DateTime endDate)
+        {
+            //calcolo tutti i giorni tra StartDate e EndDate
+            //per ogni giorni nella lista controllo oneMachineStatus
+            //se la data è presente creo un oggetto con i dati
+            //se la data non c'è creo un oggetto con valori a zero tranne la data
+
+            List<MachineStatustPickerWeek> weekPeek = new List<MachineStatustPickerWeek>();
+
+            List<DateTime> allDatesInBetween = GetDaysInBetween(startDate, endDate);
+
+            foreach(DateTime oneDate in allDatesInBetween)
+            {
+                MachineStatusPicker oneDayStatus = oneMachineStatus.Where(d => Convert.ToDateTime(d.Date) == oneDate).FirstOrDefault();
+                if(oneDayStatus != null)
+                {
+					int automatico = oneMachineStatus.Where(x => Convert.ToDateTime(x.Date).Date == oneDate)
+													 .Where(n => n.MachineState == "start - automatico").Count()
+													+ oneMachineStatus.Where(z => z.MachineState == "in lavorazione").Count() ;
+
+					int connessa = oneMachineStatus.Where(x => Convert.ToDateTime(x.Date).Date == oneDate)
+													 .Where(n => n.MachineState == "connessa").Count();
+
+					int attesa = oneMachineStatus.Where(x => Convert.ToDateTime(x.Date).Date == oneDate)
+													 .Where(n => n.MachineState == "in attesa").Count();
+
+					int manuali = oneMachineStatus.Where(x => Convert.ToDateTime(x.Date).Date == oneDate)
+													 .Where(n => n.MachineState == "mov.manuali").Count();
+
+					int spenta = oneMachineStatus.Where(x => Convert.ToDateTime(x.Date).Date == oneDate)
+													 .Where(n => n.MachineState == "non connessa").Count();
+
+					int nonconnessa = oneMachineStatus.Where(x => Convert.ToDateTime(x.Date).Date == oneDate)
+													 .Where(n => n.MachineState == "non connessa").Count(); 
+
+					int emergenza = oneMachineStatus.Where(x => Convert.ToDateTime(x.Date).Date == oneDate)
+													 .Where(n => n.MachineState == "emergenza").Count();
+
+					//int dayTotal = oneDaysStatus.Where(d => d.Date== allDates[i]).Count();
+					int dayTotal = automatico + connessa + attesa + manuali + spenta + nonconnessa + emergenza;
+
+					MachineStatustPickerWeek onePeek = new MachineStatustPickerWeek() 
+					{
+						Day = oneDate.Date.ToString(),
+						Start = CalcolaPercentuale(automatico, dayTotal).ToString(),
+						Waiting = CalcolaPercentuale(attesa,dayTotal).ToString(),
+						ManualMovements = CalcolaPercentuale(manuali, dayTotal).ToString(),
+						Connected = CalcolaPercentuale(connessa, dayTotal).ToString(),
+						NotConnected = CalcolaPercentuale(nonconnessa, dayTotal).ToString(),
+						Emergency = CalcolaPercentuale(emergenza, dayTotal).ToString()
+					};
+
+					weekPeek.Add(onePeek);
+                }
+                else
+                {
+					MachineStatustPickerWeek onePeek = new MachineStatustPickerWeek() 
+					{
+						Day = oneDate.Date.ToString(),
+						Start = "0",
+						Waiting = "0",
+						ManualMovements = "0",
+						Connected = "0",
+						NotConnected = "0",
+						Emergency = "0"
+					};
+
+					weekPeek.Add(onePeek);
+                }
+            }
+
+
+            
+            //List<string> allDates = oneMachineStatus.Select(x => x.Date).Distinct().ToList();            
+//
+            //int availableDays = allDates.Count;
+            //int noDataDays = 7- availableDays;
+//
+            //for(int i= 0; i>availableDays; i--)
+            //{
+            //    int automatico = oneMachineStatus.Where(x => x.Date == allDates[i])
+            //                                     .Where(n => n.MachineState == "start - automatico").Count()
+            //                    //+ oneMachineStatus.Where( y => y.MachineState == "connessa").Count()
+            //                    + oneMachineStatus.Where(z => z.MachineState == "in lavorazione").Count() ;
+//
+            //    int connessa = oneMachineStatus.Where(x => x.Date == allDates[i])
+            //                                     .Where(n => n.MachineState == "connessa").Count();
+//
+            //    int attesa = oneMachineStatus.Where(x => x.Date == allDates[i])
+            //                                     .Where(n => n.MachineState == "in attesa").Count();
+//
+            //    int manuali = oneMachineStatus.Where(x => x.Date == allDates[i])
+            //                                     .Where(n => n.MachineState == "mov.manuali").Count();
+//
+            //    int spenta = oneMachineStatus.Where(x => x.Date == allDates[i])
+            //                                     .Where(n => n.MachineState == "non connessa").Count();
+//
+            //    int nonconnessa = oneMachineStatus.Where(x => x.Date == allDates[i])
+            //                                     .Where(n => n.MachineState == "non connessa").Count(); 
+//
+            //    int emergenza = oneMachineStatus.Where(x => x.Date == allDates[i])
+            //                                     .Where(n => n.MachineState == "emergenza").Count();
+//
+            //    //int dayTotal = oneMachineStatus.Where(d => d.Date== allDates[i]).Count();
+            //    int dayTotal = automatico + connessa + attesa + manuali + spenta + nonconnessa + emergenza;
+//
+            //    MachineStatustPickerWeek onePeek = new MachineStatustPickerWeek() 
+            //    {
+            //        Day = allDates[i],
+            //        Start = CalcolaPercentuale(automatico, dayTotal).ToString(),
+            //        Waiting = CalcolaPercentuale(attesa,dayTotal).ToString(),
+            //        ManualMovements = CalcolaPercentuale(manuali, dayTotal).ToString(),
+            //        Connected = CalcolaPercentuale(connessa, dayTotal).ToString(),
+            //        NotConnected = CalcolaPercentuale(nonconnessa, dayTotal).ToString(),
+            //        Emergency = CalcolaPercentuale(emergenza, dayTotal).ToString()
+            //    };
+//
+            //    weekPeek.Add(onePeek);
+            //} //end for
+
+            //devo aggiungere un giorno vuoto per ogni giorno senza dati
+            //quindi devo generare una stringa con la data per ogni giorno mancante nel periodo
+
+            //List<DateTime> noDataDaysDates = genPurpose.GetWeekDaysInterval(allDates[0], availableDays, 7);
 
             return weekPeek;
         }
