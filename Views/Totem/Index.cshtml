@@ -13,6 +13,7 @@
     List<TotemBootstrapModel> interventionsWeek = ViewBag.interventionsWeek as List<TotemBootstrapModel>;
     string lastDate = "";
     int ouutgoingCounter = 0;
+    string autoScroll = ViewBag.autoScroll;
 }
 
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
@@ -232,46 +233,57 @@
             const maxScrolls = 5;  // Number of times to scroll up and down
             const displayTime = 20000; // 20 seconds (milliseconds)
             const pauseTime = 10000; // 10 seconds (milliseconds)
-            let scrollingDown = true;
+            const scrollingSpeed = 10000;
+            let scrollingDown = @autoScroll;
 
             function scrollToBottom() {
-                window.scrollTo({
-                    top: document.body.scrollHeight,
-                    behavior: 'smooth',
-                    scrollDuration: 10000  // Add this, adjust milliseconds for scrolling speed
-                });
-                setTimeout(pauseAtBottom, pauseTime); // Pause after scrolling down
-            }
-
-            function scrollToTop() {
-                window.scrollTo({
-                    top: 0,
-                    behavior: 'smooth',
-                    scrollDuration: 10000 // Add this, adjust milliseconds for scrolling speed
-                });
-                setTimeout(startDisplay, displayTime);  // Pause and then restart
-            }
-
-            function pauseAtBottom() {
-                console.log("Pausing at bottom...");
-                setTimeout(scrollToTop, pauseTime); // Pause at the bottom and then scroll up
-            }
-
-            function startDisplay() {
-                console.log("Scrolling Down Start, Count: " + scrollCount);
-                scrollCount++;
-
-                if (scrollCount <= maxScrolls) {
-                    scrollToBottom();
-                } else {
-                    console.log("Scrolling complete! Reloading...");
-                    window.location.reload();  // Reload the page
+                if(scrollingDown)
+                {
+                    window.scrollTo({
+                        top: document.body.scrollHeight,
+                        behavior: 'smooth',
+                        scrollDuration: 10000
+                    });
+                    setTimeout(pauseAtBottom, pauseTime);
                 }
             }
 
+            function scrollToTop() {
+                if(scrollingDown)
+                {
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth',
+                        scrollDuration: scrollingSpeed
+                    });
+                    setTimeout(startDisplay, displayTime);  // Pause and then restart
+                }
+            }
+
+            function pauseAtBottom() {
+                if(scrollingDown)
+                {
+                    console.log("Pausing at bottom...");
+                    setTimeout(scrollToTop, pauseTime);
+                }
+            }
+
+            function startDisplay() {
+                if(scrollingDown)
+                {
+                    console.log("Scrolling Down Start, Count: " + scrollCount);
+                    scrollCount++;
+
+                    if (scrollCount <= maxScrolls) {
+                        scrollToBottom();
+                    } else {
+                        console.log("Scrolling complete! Reloading...");
+                        window.location.reload();  // Reload the page
+                    }
+                }
+            }
 
             // Initial start of the scrolling
             startDisplay();
-
         };
     </script>

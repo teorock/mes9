@@ -66,6 +66,8 @@ namespace mes.Controllers
             ViewBag.incomingsWeek = weeksIncoming;
             ViewBag.outgoingsWeek = weeksOutgoing;
             ViewBag.interventionsWeek = weeksIntervention;
+            string autoscr = (config.AutoScroll)? "true" : "false";
+            ViewBag.autoScroll = autoscr;
             
 
             return View();

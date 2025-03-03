@@ -10,5 +10,6 @@ namespace mes.Models.ControllersConfigModels
         public string ConnString { get; set; }
         public string Table { get; set; }
         public List<string> TotemEvents { get; set; }  
+        public bool AutoScroll { get; set; }
     }
 }
