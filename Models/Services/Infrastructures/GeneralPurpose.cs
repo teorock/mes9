@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -241,6 +242,17 @@ namespace mes.Models.Services.Infrastructures
             int daysUntilSunday = (int)DateTime.Now.DayOfWeek - (int)DayOfWeek.Sunday - 1;
             DateTime firstDayOfThisWeek = DateTime.Now.AddDays(-daysUntilSunday);
             return firstDayOfThisWeek.AddDays(addDays);
+        }
+
+        public List<DateTime> GetWeekDaysInterval (DateTime startDate, int startDay, int endDay)
+        {
+            List<DateTime> result = new List<DateTime>();
+            for(int day=startDay; day<endDay; day++)
+            {
+                result.Add(GetWeeksMonday(day));
+            }
+
+            return result;
         }
 
         public void Log2File(string line2log, string filePath)
