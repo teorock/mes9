@@ -281,49 +281,50 @@ namespace mes.Controllers
             return result;
         }
 
-        //public  List<DateTime> GetDaysInBetween(DateTime startDate, DateTime endDate)
-        //{
-        //    //le date devono essere sempre 7
-        //    List<DateTime> allDates = new List<DateTime>();
-//
-        //    for (DateTime date = startDate; date <= endDate; date = date.AddDays(1))
-        //    {
-        //        allDates.Add(date.Date);
-        //    }
-//
-        //    return allDates;
-        //}
-
-        public List<DateTime> GetDaysInBetween(DateTime startDate, DateTime endDate)
+        public  List<DateTime> GetDaysInBetween(DateTime startDate, DateTime endDate)
         {
+            //le date devono essere sempre 7
             List<DateTime> allDates = new List<DateTime>();
-            DateTime currentDate = startDate.Date;  
 
-            while (currentDate <= endDate.Date) 
+            for (DateTime date = startDate; date <= endDate; date = date.AddDays(1))
             {
-                allDates.Add(currentDate);
-                currentDate = currentDate.AddDays(1);
-            }
-
-            if (allDates.Count < 7)
-            {
-                currentDate = endDate.Date.AddDays(1); 
-
-                while (allDates.Count < 7)
-                {
-                    allDates.Add(currentDate);
-                    currentDate = currentDate.AddDays(1);
-                }
-            }
-
-            if(allDates.Count > 7)
-            {
-                allDates = allDates.Take(7).ToList();
+                allDates.Add(date.Date);
             }
 
             allDates.Reverse();
             return allDates;
         }
+
+        //public List<DateTime> GetDaysInBetween(DateTime startDate, DateTime endDate)
+        //{
+        //    List<DateTime> allDates = new List<DateTime>();
+        //    DateTime currentDate = startDate.Date;  
+//
+        //    while (currentDate <= endDate.Date) 
+        //    {
+        //        allDates.Add(currentDate);
+        //        currentDate = currentDate.AddDays(1);
+        //    }
+//
+        //    if (allDates.Count < 7)
+        //    {
+        //        currentDate = endDate.Date.AddDays(1); 
+//
+        //        while (allDates.Count < 7)
+        //        {
+        //            allDates.Add(currentDate);
+        //            currentDate = currentDate.AddDays(1);
+        //        }
+        //    }
+//
+        //    if(allDates.Count > 7)
+        //    {
+        //        allDates = allDates.Take(7).ToList();
+        //    }
+//
+        //    allDates.Reverse();
+        //    return allDates;
+        //}
 
         private List<MachineStatustPickerWeek> WeekPeeker(List<MachineStatusPicker> oneMachineStatus, DateTime startDate, DateTime endDate)
         {
