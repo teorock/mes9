@@ -12,6 +12,8 @@ using mes.Models.Services.Application;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http.Features;
 using mes.Models.InfrastructureModels;
+using System.Data.Common;
+using Microsoft.AspNetCore.Builder.Extensions;
 
 namespace mes.Controllers
 {
@@ -54,6 +56,7 @@ namespace mes.Controllers
         {
             List<MachineStatusPicker> lastMachinesStatus = new List<MachineStatusPicker>();
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            GeneralPurpose genPurpose = new GeneralPurpose();
             List<MachineStatusPicker> allMachineStatus = dbAccessor.Queryer<MachineStatusPicker>(config.LastInstantConnString,"MachineStatus");
 
             //devo creare una lista contenente solo lo stato più recente per ogni macchina
@@ -135,19 +138,24 @@ namespace mes.Controllers
 
             ViewBag.wlProgress = wlProgress;
 
+            //--------------
+            ViewBag.startDate = genPurpose.GetWeeksMonday(0).ToString("dd/MM/yyyy");
+            ViewBag.endDate = genPurpose.GetWeeksMonday(5).ToString("dd/MM/yyyy");
+
             return View("ProductionStatus", lastMachinesStatus); 
         }
 
         [HttpGet]
         [Route("GetMachineHistory")]
-        public IActionResult GetMachineHistory(string machineName)
+        public IActionResult GetMachineHistory(string machineName, string startDate, string endDate)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             GeneralPurpose genPurpose = new GeneralPurpose();
             
             //date a caso per sviluppo
-            string startDate = genPurpose.GetWeeksMonday(-6).ToString("dd/MM/yyyy");
-            string endDate = genPurpose.GetWeeksMonday(5).ToString("dd/MM/yyyy");
+
+            //startDate = genPurpose.GetWeeksMonday(0).ToString("dd/MM/yyyy");
+            //endDate = genPurpose.GetWeeksMonday(5).ToString("dd/MM/yyyy");
 
             DateTime start = Convert.ToDateTime(startDate);
             DateTime end = Convert.ToDateTime(endDate);
@@ -158,19 +166,15 @@ namespace mes.Controllers
             var debug = allMachineStatus.Last();
 
             List<MachineStatusPicker> oneMachineStatus = allMachineStatus.Where(d => Convert.ToDateTime(d.Date) >= start.Date & Convert.ToDateTime(d.Date) <= end.Date).ToList();
-
-            //MachineStatusPicker last = oneMachineStatus[oneMachineStatus.Count -1];            
+           
             MachineStatusPicker last = oneMachineStatus.Last();
-
-            //devo creare una lista contenente solo lo stato più recente per ogni macchina
-            //List<string> allMachines = allMachineStatus.Select(x => x.MachineName).Distinct().ToList();            
+          
             List<string> allMachines = dbAccessor.Queryer<MacchineListModel>(config.LastPeriodConnString,"Macchine").Select(n => n.MachineName).ToList();
 
             ViewBag.avanzamento = CalcolaAvanzamento(last.Counter, last.Quantity);
             ViewBag.allMachines = allMachines;
 
             //calcolo percentuali
-            //100 = oneMAchineStatus.count
             double automatico = oneMachineStatus.Where(x => x.MachineState == "start - automatico").Count() 
                             + oneMachineStatus.Where(y => y.MachineState =="connessa").Count()
                             + oneMachineStatus.Where(z => z.MachineState == "in lavorazione").Count();
@@ -191,12 +195,14 @@ namespace mes.Controllers
             ViewBag.dataInizio = dataInizio;
             ViewBag.dataFine = dataFine;
 
+            //----------------- date per i calendari
+            ViewBag.calendarStartDate = Convert.ToDateTime(dataInizio).ToString("yyyy-MM-dd");
+            ViewBag.calendarEndDate = Convert.ToDateTime(dataFine).ToString("yyyy-MM-dd");
+
             List<MachineStatustPickerWeek> oneWeekStatus = WeekPeeker(oneMachineStatus, start, end);
             ViewBag.oneWeekStatus = oneWeekStatus;
             //preleva una lista degli ultimi 5 movimenti di MachineMovements
             ViewBag.oneWeekProgs = GetLastWeekProgs(last.MachineName, 7);
-            //ultimi 7gg accesa spenta?
-            //ultimi 5 movements?
                                     
             return View("GetMachineHistory", last);
         }
@@ -275,15 +281,47 @@ namespace mes.Controllers
             return result;
         }
 
-        public  List<DateTime> GetDaysInBetween(DateTime startDate, DateTime endDate)
+        //public  List<DateTime> GetDaysInBetween(DateTime startDate, DateTime endDate)
+        //{
+        //    //le date devono essere sempre 7
+        //    List<DateTime> allDates = new List<DateTime>();
+//
+        //    for (DateTime date = startDate; date <= endDate; date = date.AddDays(1))
+        //    {
+        //        allDates.Add(date.Date);
+        //    }
+//
+        //    return allDates;
+        //}
+
+        public List<DateTime> GetDaysInBetween(DateTime startDate, DateTime endDate)
         {
             List<DateTime> allDates = new List<DateTime>();
+            DateTime currentDate = startDate.Date;  
 
-            for (DateTime date = startDate; date <= endDate; date = date.AddDays(1))
+            while (currentDate <= endDate.Date) 
             {
-                allDates.Add(date.Date);
+                allDates.Add(currentDate);
+                currentDate = currentDate.AddDays(1);
             }
 
+            if (allDates.Count < 7)
+            {
+                currentDate = endDate.Date.AddDays(1); 
+
+                while (allDates.Count < 7)
+                {
+                    allDates.Add(currentDate);
+                    currentDate = currentDate.AddDays(1);
+                }
+            }
+
+            if(allDates.Count > 7)
+            {
+                allDates = allDates.Take(7).ToList();
+            }
+
+            allDates.Reverse();
             return allDates;
         }
 
@@ -330,7 +368,7 @@ namespace mes.Controllers
 
 					MachineStatustPickerWeek onePeek = new MachineStatustPickerWeek() 
 					{
-						Day = oneDate.Date.ToString(),
+						Day = oneDate.Date.ToString("dd/MM/yyyy"),
 						Start = CalcolaPercentuale(automatico, dayTotal).ToString(),
 						Waiting = CalcolaPercentuale(attesa,dayTotal).ToString(),
 						ManualMovements = CalcolaPercentuale(manuali, dayTotal).ToString(),
@@ -345,7 +383,7 @@ namespace mes.Controllers
                 {
 					MachineStatustPickerWeek onePeek = new MachineStatustPickerWeek() 
 					{
-						Day = oneDate.Date.ToString(),
+						Day = oneDate.Date.ToString("dd/MM/yyyy"),
 						Start = "0",
 						Waiting = "0",
 						ManualMovements = "0",
@@ -358,59 +396,6 @@ namespace mes.Controllers
                 }
             }
 
-
-            
-            //List<string> allDates = oneMachineStatus.Select(x => x.Date).Distinct().ToList();            
-//
-            //int availableDays = allDates.Count;
-            //int noDataDays = 7- availableDays;
-//
-            //for(int i= 0; i>availableDays; i--)
-            //{
-            //    int automatico = oneMachineStatus.Where(x => x.Date == allDates[i])
-            //                                     .Where(n => n.MachineState == "start - automatico").Count()
-            //                    //+ oneMachineStatus.Where( y => y.MachineState == "connessa").Count()
-            //                    + oneMachineStatus.Where(z => z.MachineState == "in lavorazione").Count() ;
-//
-            //    int connessa = oneMachineStatus.Where(x => x.Date == allDates[i])
-            //                                     .Where(n => n.MachineState == "connessa").Count();
-//
-            //    int attesa = oneMachineStatus.Where(x => x.Date == allDates[i])
-            //                                     .Where(n => n.MachineState == "in attesa").Count();
-//
-            //    int manuali = oneMachineStatus.Where(x => x.Date == allDates[i])
-            //                                     .Where(n => n.MachineState == "mov.manuali").Count();
-//
-            //    int spenta = oneMachineStatus.Where(x => x.Date == allDates[i])
-            //                                     .Where(n => n.MachineState == "non connessa").Count();
-//
-            //    int nonconnessa = oneMachineStatus.Where(x => x.Date == allDates[i])
-            //                                     .Where(n => n.MachineState == "non connessa").Count(); 
-//
-            //    int emergenza = oneMachineStatus.Where(x => x.Date == allDates[i])
-            //                                     .Where(n => n.MachineState == "emergenza").Count();
-//
-            //    //int dayTotal = oneMachineStatus.Where(d => d.Date== allDates[i]).Count();
-            //    int dayTotal = automatico + connessa + attesa + manuali + spenta + nonconnessa + emergenza;
-//
-            //    MachineStatustPickerWeek onePeek = new MachineStatustPickerWeek() 
-            //    {
-            //        Day = allDates[i],
-            //        Start = CalcolaPercentuale(automatico, dayTotal).ToString(),
-            //        Waiting = CalcolaPercentuale(attesa,dayTotal).ToString(),
-            //        ManualMovements = CalcolaPercentuale(manuali, dayTotal).ToString(),
-            //        Connected = CalcolaPercentuale(connessa, dayTotal).ToString(),
-            //        NotConnected = CalcolaPercentuale(nonconnessa, dayTotal).ToString(),
-            //        Emergency = CalcolaPercentuale(emergenza, dayTotal).ToString()
-            //    };
-//
-            //    weekPeek.Add(onePeek);
-            //} //end for
-
-            //devo aggiungere un giorno vuoto per ogni giorno senza dati
-            //quindi devo generare una stringa con la data per ogni giorno mancante nel periodo
-
-            //List<DateTime> noDataDaysDates = genPurpose.GetWeekDaysInterval(allDates[0], availableDays, 7);
 
             return weekPeek;
         }

@@ -112,7 +112,7 @@
         @foreach (string oneMachine in allMachines)
         {
           <tr style="border-bottom: 0px;">
-            <td class="machine"  style="padding-left:10px;"><a asp-controller="Mes" asp-action="GetMachineHistory" asp-route-machineName="@oneMachine" onclick="showLoader()">@oneMachine</a>  </td>
+            <td class="machine"  style="padding-left:10px;"><a asp-controller="Mes" asp-action="GetMachineHistory" asp-route-machineName="@oneMachine" asp-route-startDate="@ViewBag.startDate" asp-route-endDate="@ViewBag.endDate" onclick="showLoader()">@oneMachine</a>  </td>
           </tr>
           <tr><td><br></td></tr> 
         }
