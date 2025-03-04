@@ -15,6 +15,11 @@
 
     List<MachineStatustPickerWeek> oneWeek = ViewBag.oneWeekStatus;
     List<KeyValuePair<string,string>> oneWeekProgs = ViewBag.oneWeekProgs;
+
+    string calendarStartDate = ViewBag.calendarStartDate;
+    string calendarEndDate = ViewBag.calendarEndDate;
+
+    int numberOfDays = oneWeek?.Count ?? 0;     
 }
 
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
