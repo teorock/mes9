@@ -57,9 +57,9 @@ namespace mes.Controllers
             List<string> stringifiedWeek = StringifyTimePeriod(thisWeekMonday, 5, "yyyy-MM-dd");
 
             //da qui estraggo tutti gli eventi nel modello ProductionCalendarDbModel che mi interessano
-            List<TotemBootstrapModel> weeksIncoming = GetProductionCalendarEvents(config.TotemEvents[0], stringifiedWeek);
-            List<TotemBootstrapModel> weeksOutgoing = GetProductionCalendarEvents(config.TotemEvents[1], stringifiedWeek);
-            List<TotemBootstrapModel> weeksIntervention = GetProductionCalendarEvents(config.TotemEvents[2], stringifiedWeek);
+            List<TotemBootstrapModel> weeksIncoming = GetProductionCalendarEvents(config.TotemEvents[0], stringifiedWeek, "1");
+            List<TotemBootstrapModel> weeksOutgoing = GetProductionCalendarEvents(config.TotemEvents[1], stringifiedWeek, "1");
+            List<TotemBootstrapModel> weeksIntervention = GetProductionCalendarEvents(config.TotemEvents[2], stringifiedWeek, "1");
 
             ViewBag.titleWeek = GetWeekTitle();
             //voglio passare tre models, quindi vado di ViewBag
@@ -69,7 +69,6 @@ namespace mes.Controllers
             string autoscr = (config.AutoScroll)? "true" : "false";
             ViewBag.autoScroll = autoscr;
             
-
             return View();
         }
 
@@ -92,6 +91,29 @@ namespace mes.Controllers
             }
             return RedirectToAction("Index");
         }
+
+        public IActionResult DisplayCompleted()
+        {
+            GeneralPurpose genPurpose = new GeneralPurpose();
+            DateTime thisWeekMonday = genPurpose.GetWeeksMonday(0);
+
+            List<string> stringifiedWeek = StringifyTimePeriod(thisWeekMonday, 5, "yyyy-MM-dd");
+
+            List<TotemBootstrapModel> weeksIncoming = GetProductionCalendarEvents(config.TotemEvents[0], stringifiedWeek, "0");
+            List<TotemBootstrapModel> weeksOutgoing = GetProductionCalendarEvents(config.TotemEvents[1], stringifiedWeek,"0");
+            List<TotemBootstrapModel> weeksIntervention = GetProductionCalendarEvents(config.TotemEvents[2], stringifiedWeek, "0");
+
+            ViewBag.titleWeek = GetWeekTitle();
+            //voglio passare tre models, quindi vado di ViewBag
+            ViewBag.incomingsWeek = weeksIncoming;
+            ViewBag.outgoingsWeek = weeksOutgoing;
+            ViewBag.interventionsWeek = weeksIntervention;
+            string autoscr = (config.AutoScroll)? "true" : "false";
+            ViewBag.autoScroll = autoscr;
+            
+            return View();
+        }
+
 
         private string GetWeekTitle()
         {
@@ -139,7 +161,7 @@ namespace mes.Controllers
             return result;
         }
 
-        private List<TotemBootstrapModel> GetProductionCalendarEvents(string eventFilter, List<string> dates2extract)
+        private List<TotemBootstrapModel> GetProductionCalendarEvents(string eventFilter, List<string> dates2extract, string displayTotem)
         {
             List<TotemBootstrapModel> result = new List<TotemBootstrapModel>();
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
@@ -150,7 +172,7 @@ namespace mes.Controllers
                 List<ProductionCalendarDbModel> oneDayModel = dbAccessor.Queryer<ProductionCalendarDbModel>(config.ConnString, config.Table)
                                                                 .Where(n => n.assignedTo == eventFilter)
                                                                 .Where(s => s.start.Contains(oneDate))
-                                                                .Where(d =>d.displayTotem =="1")
+                                                                .Where(d =>d.displayTotem == displayTotem)
                                                                 .Where(x => x.enabled =="1").ToList();
 
                 TotemBootstrapModel oneTotem = new TotemBootstrapModel();
