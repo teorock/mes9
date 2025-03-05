@@ -14,5 +14,6 @@ namespace mes.Models.ViewModels
         public string ReferenceDate { get; set; }
         public bool IsDateRepeated { get; set; }
         public int DateRepetition { get; set; }
+        public string IsActive {get; set;}
     }
 }

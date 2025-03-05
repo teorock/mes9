@@ -87,7 +87,7 @@ namespace mes.Controllers
             }
             catch (Exception ex)
             {
-                
+                Console.Write(ex.Message);
             }
             return RedirectToAction("Index");
         }
@@ -99,10 +99,11 @@ namespace mes.Controllers
 
             List<string> stringifiedWeek = StringifyTimePeriod(thisWeekMonday, 5, "yyyy-MM-dd");
 
+            //prendo sia gli attivi che i cancellati per ogni categoria e li passo alla view
             List<TotemBootstrapModel> weeksIncoming = GetProductionCalendarEvents(config.TotemEvents[0], stringifiedWeek, "0");
             List<TotemBootstrapModel> weeksOutgoing = GetProductionCalendarEvents(config.TotemEvents[1], stringifiedWeek,"0");
             List<TotemBootstrapModel> weeksIntervention = GetProductionCalendarEvents(config.TotemEvents[2], stringifiedWeek, "0");
-
+            
             ViewBag.titleWeek = GetWeekTitle();
             //voglio passare tre models, quindi vado di ViewBag
             ViewBag.incomingsWeek = weeksIncoming;
@@ -172,7 +173,7 @@ namespace mes.Controllers
                 List<ProductionCalendarDbModel> oneDayModel = dbAccessor.Queryer<ProductionCalendarDbModel>(config.ConnString, config.Table)
                                                                 .Where(n => n.assignedTo == eventFilter)
                                                                 .Where(s => s.start.Contains(oneDate))
-                                                                .Where(d =>d.displayTotem == displayTotem)
+                                                                .Where(d => d.displayTotem == displayTotem)
                                                                 .Where(x => x.enabled =="1").ToList();
 
                 TotemBootstrapModel oneTotem = new TotemBootstrapModel();
@@ -181,7 +182,8 @@ namespace mes.Controllers
                     oneTotem.Title = "                 ";
                     oneTotem.StartHour = "                 ";
                     oneTotem.Description = "                 ";
-                    oneTotem.ReferenceDate = DatePotabilizer(oneDate);  
+                    oneTotem.ReferenceDate = DatePotabilizer(oneDate);
+                    oneTotem.IsActive = "0";
 
                     result.Add(oneTotem);                  
                 }
@@ -193,7 +195,8 @@ namespace mes.Controllers
                         oneTotem.Title = oneProdCal.title;
                         oneTotem.StartHour = oneProdCal.start;
                         oneTotem.Description = oneProdCal.description;
-                        oneTotem.ReferenceDate = DatePotabilizer(oneDate);    
+                        oneTotem.ReferenceDate = DatePotabilizer(oneDate);
+                        oneTotem.IsActive = displayTotem;    
 
                         result.Add(oneTotem);
                         oneTotem = new TotemBootstrapModel();                   
