@@ -73,6 +73,26 @@ namespace mes.Controllers
             return View();
         }
 
+        public IActionResult HideTask(long id)
+        {
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            try
+            {
+                string filter = $"WHERE id='{id}'";
+                ProductionCalendarDbModel oneToHide = dbAccessor.Queryer<ProductionCalendarDbModel>(config.ConnString, config.Table)
+                                                        .Where(i => i.id == id)
+                                                        .FirstOrDefault();
+                oneToHide.displayTotem = "0";
+
+                var result = dbAccessor.Updater<ProductionCalendarDbModel>(config.ConnString, config.Table, oneToHide, id);
+            }
+            catch (Exception ex)
+            {
+                
+            }
+            return RedirectToAction("Index");
+        }
+
         private string GetWeekTitle()
         {
             GeneralPurpose genP = new GeneralPurpose();
@@ -130,6 +150,7 @@ namespace mes.Controllers
                 List<ProductionCalendarDbModel> oneDayModel = dbAccessor.Queryer<ProductionCalendarDbModel>(config.ConnString, config.Table)
                                                                 .Where(n => n.assignedTo == eventFilter)
                                                                 .Where(s => s.start.Contains(oneDate))
+                                                                .Where(d =>d.displayTotem =="1")
                                                                 .Where(x => x.enabled =="1").ToList();
 
                 TotemBootstrapModel oneTotem = new TotemBootstrapModel();
@@ -146,6 +167,7 @@ namespace mes.Controllers
                 {
                     foreach(ProductionCalendarDbModel oneProdCal in oneDayModel)
                     {
+                        oneTotem.id = oneProdCal.id;
                         oneTotem.Title = oneProdCal.title;
                         oneTotem.StartHour = oneProdCal.start;
                         oneTotem.Description = oneProdCal.description;

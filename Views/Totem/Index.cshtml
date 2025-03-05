@@ -16,279 +16,325 @@
     string autoScroll = ViewBag.autoScroll;
 }
 
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    
-    <style>
-		.card {
-			margin-bottom: 10px;
-			box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-			transition: 0.3s; 
-            min-height: 150px;
-            font-weight: bolder;
-		}
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 
-		.card:hover {
-			box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2); 
-		}
+<style>
+    .card {
+        margin-bottom: 10px;
+        box-shadow: 0 6px 10px 0 rgba(0, 0, 0, 0.3);
+        transition: 0.3s;
+        min-height: 150px;
+        font-weight: bolder;
+		cursor: pointer; /* Add a pointer cursor for better UX */
+    }
 
-        .row {
-            margin-bottom: 15px;
+        .card:hover {
+            box-shadow: 0 12px 20px 0 rgba(0, 0, 0, 0.4);
         }
 
-        .day-column {
-            padding-left: 5px;
-            padding-right: 5px;
-        }
+    .row {
+        margin-bottom: 15px;
+    }
 
-        .schedule-container {
-            margin-top: 20px;
-			width: 100%; 
-			padding-left: 15px;   
-			padding-right: 15px;  			
-        }
+    .day-column {
+        padding-left: 5px;
+        padding-right: 5px;
+    }
 
-        
-		
-        .incoming-row {
-            background-color: #a9baec; 
-			border: 2px solid #7180AC;
-			box-shadow: 0 4px 8px 0 rgba(0,0,0,0.3);
-			padding-top: 10px;	
-			border-radius: 6px;			
-        }
-
-        .outgoing-row {
-            background-color: #f5f5dc; 
-			border: 2px solid #A8D0DB;
-			box-shadow: 0 4px 8px 0 rgba(0,0,0,0.3);
-			padding-top: 10px;	
-			border-radius: 6px;
-        }
-
-        .intervention-row {
-            background-color: #ebaf99;
-			border: 2px solid #E49273;
-			box-shadow: 0 4px 8px 0 rgba(0,0,0,0.3);
-			padding-top: 10px;	
-			border-radius: 6px;			
-        }
-
-        .card-title {
-            font-weight: 700;
-        }
-
-		.incoming-row .card {
-			background-color: #e0f7fa; 
-            font-weight: 700;
-		}
-
-		.outgoing-row .card {
-			background-color: #78d387; 
-            font-weight: 700;
-		}
-
-		.intervention-row .card {
-			background-color: #f0fff0; 
-            font-weight: 700;
-		}
-
-    </style>
+    .schedule-container {
+        margin-top: 20px;
+        width: 100%;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
 
 
-    <h1>Settimana @titleWeek</h1>
-    <br>
-    <br>
-    <h3>Arrivi</h3>
-    <div class="row incoming-row">    
-        @{
-            if (incomingsWeek != null)
+    .incoming-row {
+        background-color: #a9baec;
+        border: 2px solid #7180AC;
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.3);
+        padding-top: 10px;
+        border-radius: 6px;
+    }
+
+    .outgoing-row {
+        background-color: #f5f5dc;
+        border: 2px solid #A8D0DB;
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.3);
+        padding-top: 10px;
+        border-radius: 6px;
+    }
+
+    .intervention-row {
+        background-color: #ebaf99;
+        border: 2px solid #E49273;
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.3);
+        padding-top: 10px;
+        border-radius: 6px;
+    }
+
+    .card-title {
+        font-weight: 700;
+    }
+
+    .incoming-row .card {
+        background-color: #e0f7fa;
+        font-weight: 700;
+    }
+
+    .outgoing-row .card {
+        background-color: #78d387;
+        font-weight: 700;
+    }
+
+    .intervention-row .card {
+        background-color: #f0fff0;
+        font-weight: 700;
+    }
+</style>
+
+
+<h1>Settimana @titleWeek</h1>
+<br>
+<br>
+<h3>Arrivi</h3>
+<div class="row incoming-row">
+    @{
+        if (incomingsWeek != null)
+        {
+            string currentIncomingDay = null;
+
+            for (int i = 0; i < incomingsWeek.Count; i++)
             {
-                string currentIncomingDay = null;
+                var incoming = incomingsWeek[i];
+                string taskName = incoming.Title; // Get task name for the modal
 
-                for (int i = 0; i < incomingsWeek.Count; i++)
+                if (incoming.ReferenceDate != currentIncomingDay)
                 {
-                    var incoming = incomingsWeek[i];
-
-                    if (incoming.ReferenceDate != currentIncomingDay)
+                    // Start a new day column
+                    if (currentIncomingDay != null)
                     {
-                        // Start a new day column
-                        if (currentIncomingDay != null)
-                        {
-                            // Close the previous day column if it exists
-                            @:</div>
-                        }
-
-                        @:<div class="col-md-2 day-column">
-                            @:<h4>@incoming.ReferenceDate</h4>
-
-                        currentIncomingDay = incoming.ReferenceDate;
+                        // Close the previous day column if it exists
+                        @:</div>
                     }
 
-                    // Display the card for the current incoming
-                    @:<div class="card">
-                        @:<div class="card-body">
-                            @:<h5 class="card-title">@incoming.Title</h5>
-                            @:<p class="card-text">@incoming.Description</p>
-                        @:</div>
-                    @:</div>
-                }
-                // Close the last day column
-                if (currentIncomingDay != null)
-                {
-                    @:</div>
+                    @:<div class="col-md-2 day-column">
+                        @:<h4>@incoming.ReferenceDate</h4>
+
+                    currentIncomingDay = incoming.ReferenceDate;
                 }
 
+                // Display the card for the current incoming
+                @:<div class="card" onclick="openConfirmationModal('@taskName', @incoming.id)">
+                    @:<div class="card-body">
+                        @:<h5 class="card-title">@incoming.Title</h5>
+                        @:<p class="card-text">@incoming.Description</p>
+                    @:</div>
+                @:</div>
             }
+            // Close the last day column
+            if (currentIncomingDay != null)
+            {
+                @:</div>
+            }
+
         }
-    </div>
+    }
+</div>
 
 
 <!-- div class="container" -->
-    <h3>Consegne</h3>
-    <div class="row outgoing-row">
-        @{
-            if (outgoingsWeek != null)
+<h3>Consegne</h3>
+<div class="row outgoing-row">
+    @{
+        if (outgoingsWeek != null)
+        {
+            string currentOutgoingDay = null;
+
+            for (int i = 0; i < outgoingsWeek.Count; i++)
             {
-                string currentOutgoingDay = null;
+                var outgoing = outgoingsWeek[i];
+                string taskName = outgoing.Title; // Get task name for the modal
 
-                for (int i = 0; i < outgoingsWeek.Count; i++)
+                if (outgoing.ReferenceDate != currentOutgoingDay)
                 {
-                    var outgoing = outgoingsWeek[i];
-
-                    if (outgoing.ReferenceDate != currentOutgoingDay)
+                    // Start a new day column
+                    if (currentOutgoingDay != null)
                     {
-                        // Start a new day column
-                        if (currentOutgoingDay != null)
-                        {
-                            // Close the previous day column if it exists
-                            @:</div>
-                        }
-
-                        @:<div class="col-md-2 day-column">
-                            @:<!-- h4>@outgoing.ReferenceDate</h4 -->
-
-                        currentOutgoingDay = outgoing.ReferenceDate;
+                        // Close the previous day column if it exists
+                        @:</div>
                     }
 
-                    // Display the card for the current outgoing
-                    @:<div class="card">
-                        @:<div class="card-body">
-                            @:<h5 class="card-title">@outgoing.Title</h5>
-                            @:<p class="card-text">@outgoing.Description</p>
-                        @:</div>
-                    @:</div>
+                    @:<div class="col-md-2 day-column">
+                        @:<!-- h4>@outgoing.ReferenceDate</h4 -->
+
+                    currentOutgoingDay = outgoing.ReferenceDate;
                 }
-                // Close the last day column
-                if (currentOutgoingDay != null)
-                {
+
+                // Display the card for the current outgoing
+                @:<div class="card" onclick="openConfirmationModal('@taskName', @outgoing.id)">
+                    @:<div class="card-body">
+                        @:<h5 class="card-title">@outgoing.Title</h5>
+                        @:<p class="card-text">@outgoing.Description</p>
                     @:</div>
-                }
+                @:</div>
+            }
+            // Close the last day column
+            if (currentOutgoingDay != null)
+            {
+                @:</div>
             }
         }
-    </div>
+    }
+</div>
 <!-- /div -->
 <!-- div class="container" -->
-    <h3>Manutenzioni e interventi</em></h3>
-    <div class="row intervention-row">
-        @{
-            if (interventionsWeek != null)
+<h3>Manutenzioni e interventi</em></h3>
+<div class="row intervention-row">
+    @{
+        if (interventionsWeek != null)
+        {
+            string currentInterventionDay = null;
+
+            for (int i = 0; i < interventionsWeek.Count; i++)
             {
-                string currentInterventionDay = null;
+                var intervention = interventionsWeek[i];
+                string taskName = intervention.Title; // Get task name for the modal
 
-                for (int i = 0; i < interventionsWeek.Count; i++)
+                if (intervention.ReferenceDate != currentInterventionDay)
                 {
-                    var intervention = interventionsWeek[i];
-
-                    if (intervention.ReferenceDate != currentInterventionDay)
+                    // Start a new day column
+                    if (currentInterventionDay != null)
                     {
-                        // Start a new day column
-                        if (currentInterventionDay != null)
-                        {
-                            // Close the previous day column if it exists
-                            @:</div>
-                        }
-
-                        @:<div class="col-md-2 day-column">
-                            @:<!-- h4>@intervention.ReferenceDate</h4 -->
-
-                        currentInterventionDay = intervention.ReferenceDate;
+                        // Close the previous day column if it exists
+                        @:</div>
                     }
 
-                    // Display the card for the current intervention
-                    @:<div class="card">
-                        @:<div class="card-body">
-                            @:<h5 class="card-title">@intervention.Title</h5>
-                            @:<p class="card-text">@intervention.Description</p>
-                        @:</div>
-                    @:</div>
+                    @:<div class="col-md-2 day-column">
+                        @:<!-- h4>@intervention.ReferenceDate</h4 -->
+
+                    currentInterventionDay = intervention.ReferenceDate;
                 }
-                // Close the last day column
-                if (currentInterventionDay != null)
-                {
+
+                // Display the card for the current intervention
+                @:<div class="card" onclick="openConfirmationModal('@taskName', @intervention.id)">
+                    @:<div class="card-body">
+                        @:<h5 class="card-title">@intervention.Title</h5>
+                        @:<p class="card-text">@intervention.Description</p>
                     @:</div>
+                @:</div>
+            }
+            // Close the last day column
+            if (currentInterventionDay != null)
+            {
+                @:</div>
+            }
+        }
+    }
+</div>
+<!-- /div -->
+
+<!-- Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmationModalLabel">Nascondi task</h5>
+                <!-- button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button -->
+            </div>
+            <div class="modal-body" id="confirmationModalBody">
+                Are you sure?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Annulla</button>
+                <button type="button" class="btn btn-primary" id="confirmButton">Conferma</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    let currentTaskId = null; // Store the ID of the task being confirmed
+
+    function openConfirmationModal(taskName, taskId) {
+        document.getElementById('confirmationModalBody').innerText = "Confirm " + taskName + "?";
+        currentTaskId = taskId; // Store the task ID
+        $('#confirmationModal').modal('show');
+    }
+
+    $(document).ready(function() {
+        // This is necessary for the data-dismiss attribute to work correctly with Bootstrap modals.
+        $('#confirmationModal').on('click', '[data-dismiss="modal"]', function(event) {
+            $('#confirmationModal').modal('hide');
+        });
+
+        $('#confirmButton').click(function() {
+            if (currentTaskId !== null) {
+                window.location.href = '/Totem/HideTask?id=' + currentTaskId;
+            } else {
+                console.error('No task ID to hide.');
+            }
+        });
+    });
+
+    window.onload = function () {
+        let scrollCount = 0;
+        const maxScrolls = 5;
+        const displayTime = 20000;
+        const pauseTime = 10000;
+        const scrollingSpeed = 10000;
+        let scrollingDown = @autoScroll;
+
+        function scrollToBottom() {
+            if (scrollingDown) {
+                window.scrollTo({
+                    top: document.body.scrollHeight,
+                    behavior: 'smooth',
+                    scrollDuration: 10000
+                });
+                setTimeout(pauseAtBottom, pauseTime);
+            }
+        }
+
+        function scrollToTop() {
+            if (scrollingDown) {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth',
+                    scrollDuration: scrollingSpeed
+                });
+                setTimeout(startDisplay, displayTime);
+            }
+        }
+
+        function pauseAtBottom() {
+            if (scrollingDown) {
+                console.log("Pausing at bottom...");
+                setTimeout(scrollToTop, pauseTime);
+            }
+        }
+
+        function startDisplay() {
+            if (scrollingDown) {
+                console.log("Scrolling Down Start, Count: " + scrollCount);
+                scrollCount++;
+
+                if (scrollCount <= maxScrolls) {
+                    scrollToBottom();
+                } else {
+                    console.log("Scrolling complete! Reloading...");
+                    window.location.reload();
                 }
             }
         }
-    </div>
-<!-- /div -->
 
-    <script>
-        window.onload = function() {
-            let scrollCount = 0;
-            const maxScrolls = 5;  // Number of times to scroll up and down
-            const displayTime = 20000; // 20 seconds (milliseconds)
-            const pauseTime = 10000; // 10 seconds (milliseconds)
-            const scrollingSpeed = 10000;
-            let scrollingDown = @autoScroll;
-
-            function scrollToBottom() {
-                if(scrollingDown)
-                {
-                    window.scrollTo({
-                        top: document.body.scrollHeight,
-                        behavior: 'smooth',
-                        scrollDuration: 10000
-                    });
-                    setTimeout(pauseAtBottom, pauseTime);
-                }
-            }
-
-            function scrollToTop() {
-                if(scrollingDown)
-                {
-                    window.scrollTo({
-                        top: 0,
-                        behavior: 'smooth',
-                        scrollDuration: scrollingSpeed
-                    });
-                    setTimeout(startDisplay, displayTime);  // Pause and then restart
-                }
-            }
-
-            function pauseAtBottom() {
-                if(scrollingDown)
-                {
-                    console.log("Pausing at bottom...");
-                    setTimeout(scrollToTop, pauseTime);
-                }
-            }
-
-            function startDisplay() {
-                if(scrollingDown)
-                {
-                    console.log("Scrolling Down Start, Count: " + scrollCount);
-                    scrollCount++;
-
-                    if (scrollCount <= maxScrolls) {
-                        scrollToBottom();
-                    } else {
-                        console.log("Scrolling complete! Reloading...");
-                        window.location.reload();  // Reload the page
-                    }
-                }
-            }
-
-            // Initial start of the scrolling
-            startDisplay();
-        };
-    </script>
+        startDisplay();
+    };
+</script>

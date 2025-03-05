@@ -10,6 +10,7 @@ namespace mes.Models.ControllersConfigModels
         public string AssignmentName { get; set; }
         public string BorderColor { get; set; }
         public string BackgroundColor { get; set; }
-        public string AuthorizedRole { get; set; }       
+        public string AuthorizedRole { get; set; }
+        public string DisplayTotem { get; set; }    
     }
 }

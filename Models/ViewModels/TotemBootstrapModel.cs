@@ -7,6 +7,7 @@ namespace mes.Models.ViewModels
 {
     public class TotemBootstrapModel
     {
+        public long id { get; set; }
         public string Title { get; set; }
         public string StartHour { get; set; }
         public string Description { get; set; }

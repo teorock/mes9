@@ -8,10 +8,9 @@ namespace mes.Models.ControllersConfig
         public string ConnString { get; set; }
         public string Table { get; set; }
         public string EventSourceUrl { get; set; }
-        public string TotemEventSourceUrl { get; set; }
-        public string TotemEventFilter { get; set; }
         public string DbContactListener { get; set; }
         public List<CalendarAssignment> CalendarAssignments { get; set; }
-        public string Authorized { get; set; }                                                                                  
+        public string Authorized { get; set; }
+                                                                                   
     }
 }

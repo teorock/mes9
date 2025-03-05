@@ -17,5 +17,6 @@ namespace mes.Models.InfrastructureModels
         public string operationType { get; set; }
         public string assignedTo { get; set; }
         public string fileLocation { get; set; }
+        public string DisplayTotem { get; set; }
     }
 }

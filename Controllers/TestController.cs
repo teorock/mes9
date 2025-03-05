@@ -95,64 +95,64 @@ namespace mes.Controllers
             return View();
         }
 
-        public IActionResult Totem(string eventFilter)
-        {
-            //string eventFilter = "Merce in Arrivo";
-            UserData userData = GetUserData();
-            //--------------------------
-            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
-            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
-            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
-            //--------------------------
-            
-
-            //leggo configurazione da file e la passo
-            string rawConf = "";
-
-            using (StreamReader sr = new StreamReader(testControllerConfigPath))
-            {
-                rawConf = sr.ReadToEnd();
-            }
-            config = JsonConvert.DeserializeObject<TestControllerConfig>(rawConf);
-            
-            //ViewBag.authorize = ((userData.UserRoles.Contains("root")
-            //                        |userData.UserRoles.Contains("CalendarOperator")
-            //                        |userData.UserRoles.Contains("CalendarOutdoor"))?true:false).ToString().ToLower();
-            ViewBag.authorize = false;
+        //public IActionResult Totem(string eventFilter)
+        //{
+        //    //string eventFilter = "Merce in Arrivo";
+        //    UserData userData = GetUserData();
+        //    //--------------------------
+        //    string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+        //    string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+        //    Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+        //    //--------------------------
+        //    
 //
-            //ViewBag.defaultView = (userData.UserRoles.Contains("root")
-            //                        |userData.UserRoles.Contains("CalendarOperator")
-            //                        |userData.UserRoles.Contains("CalendarOutdoor"))?"dayGridMonth":"dayGridWeek";
-            ViewBag.defaultView = "dayGridWeek";
-
-            ViewBag.dbContactListener = config.DbContactListener;                
-            ViewBag.baseAddress = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
-            ViewBag.config = config;
-
-            //if(eventFilter is null | eventFilter == "")
-            //{
-            //    ViewBag.eventSourceUrl = config.EventSourceUrl;
-            //}
-            //else  if(eventFilter is not null)
-            //{
-            //    ViewBag.eventSourceUrl = $"{config.EventSourceUrl}{eventFilter}";
-            //}
-            
-            ViewBag.eventSourceUrl = $"{config.TotemEventSourceUrl}{eventFilter}";
-
-            //lista dei ruoli di quest'utente
-            List<string>tempRoles = userData.UserRoles.Split(',').ToList();
-            List<string> userRoles = tempRoles.Where(s => !string.IsNullOrWhiteSpace(s)).Select(x =>x.Trim()).Distinct().ToList();
-            //prelevo la lista di tutti i CalendarAssignments
-            List<CalendarAssignment> assignments = config.CalendarAssignments;
-            //la filtro a seconda del ruolo
-            List<string> userAssignments = assignments.Where(x => userRoles.Contains(x.AuthorizedRole)).Select(x => x.AssignmentName).ToList();
-            //la passo come ViewBag alla View
-            ViewBag.userAssignments = userAssignments;
-            ViewBag.eventFilter = eventFilter;
-
-            return View();      
-        }
+        //    //leggo configurazione da file e la passo
+        //    string rawConf = "";
+//
+        //    using (StreamReader sr = new StreamReader(testControllerConfigPath))
+        //    {
+        //        rawConf = sr.ReadToEnd();
+        //    }
+        //    config = JsonConvert.DeserializeObject<TestControllerConfig>(rawConf);
+        //    
+        //    //ViewBag.authorize = ((userData.UserRoles.Contains("root")
+        //    //                        |userData.UserRoles.Contains("CalendarOperator")
+        //    //                        |userData.UserRoles.Contains("CalendarOutdoor"))?true:false).ToString().ToLower();
+        //    ViewBag.authorize = false;
+////
+        //    //ViewBag.defaultView = (userData.UserRoles.Contains("root")
+        //    //                        |userData.UserRoles.Contains("CalendarOperator")
+        //    //                        |userData.UserRoles.Contains("CalendarOutdoor"))?"dayGridMonth":"dayGridWeek";
+        //    ViewBag.defaultView = "dayGridWeek";
+//
+        //    ViewBag.dbContactListener = config.DbContactListener;                
+        //    ViewBag.baseAddress = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
+        //    ViewBag.config = config;
+//
+        //    //if(eventFilter is null | eventFilter == "")
+        //    //{
+        //    //    ViewBag.eventSourceUrl = config.EventSourceUrl;
+        //    //}
+        //    //else  if(eventFilter is not null)
+        //    //{
+        //    //    ViewBag.eventSourceUrl = $"{config.EventSourceUrl}{eventFilter}";
+        //    //}
+        //    
+        //    ViewBag.eventSourceUrl = $"{config.TotemEventSourceUrl}{eventFilter}";
+//
+        //    //lista dei ruoli di quest'utente
+        //    List<string>tempRoles = userData.UserRoles.Split(',').ToList();
+        //    List<string> userRoles = tempRoles.Where(s => !string.IsNullOrWhiteSpace(s)).Select(x =>x.Trim()).Distinct().ToList();
+        //    //prelevo la lista di tutti i CalendarAssignments
+        //    List<CalendarAssignment> assignments = config.CalendarAssignments;
+        //    //la filtro a seconda del ruolo
+        //    List<string> userAssignments = assignments.Where(x => userRoles.Contains(x.AuthorizedRole)).Select(x => x.AssignmentName).ToList();
+        //    //la passo come ViewBag alla View
+        //    ViewBag.userAssignments = userAssignments;
+        //    ViewBag.eventFilter = eventFilter;
+//
+        //    return View();      
+        //}
 
         [Authorize(Roles = "root, CalendarOperator, CalendarOutdoor")]
         [HttpPost]
@@ -174,6 +174,7 @@ namespace mes.Controllers
 
             string backgroundColor = config.CalendarAssignments.FirstOrDefault(n => n.AssignmentName == getCalendar.assignedTo).BackgroundColor;
             string borderColor = config.CalendarAssignments.FirstOrDefault(n => n.AssignmentName == getCalendar.assignedTo).BorderColor;
+            string displayTotem = config.CalendarAssignments.FirstOrDefault(n => n.AssignmentName == getCalendar.assignedTo).DisplayTotem;
 
             ProductionCalendarDbModel calendarLine = new ProductionCalendarDbModel {
                 id = getCalendar.id,
@@ -185,6 +186,7 @@ namespace mes.Controllers
                 backgroundColor = backgroundColor,
                 borderColor = borderColor,
                 fileLocation = getCalendar.fileLocation,
+                displayTotem = displayTotem,
                 enabled = "1",
                 //allDay = (getCalendar.allDay=="on")? "true": "false",
                 CreatedBy = (userData.UserId==null)?"htmlPage": userData.UserEmail,

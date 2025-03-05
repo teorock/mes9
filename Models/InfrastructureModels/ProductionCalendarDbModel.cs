@@ -16,6 +16,7 @@ namespace mes.Models.InfrastructureModels
         public string backgroundColor { get; set; }
         public string borderColor { get; set; }
         public string fileLocation { get; set; }
+        public string displayTotem { get; set; }
         public string enabled { get; set; }
         public string CreatedBy { get; set; }
         public string CreatedOn { get; set; }
