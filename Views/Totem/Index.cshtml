@@ -264,7 +264,7 @@
     let currentTaskId = null; // Store the ID of the task being confirmed
 
     function openConfirmationModal(taskName, taskId) {
-        document.getElementById('confirmationModalBody').innerText = "Confirm " + taskName + "?";
+        document.getElementById('confirmationModalBody').innerText = "Vuoi rimuovere: " + taskName + "?";
         currentTaskId = taskId; // Store the task ID
         $('#confirmationModal').modal('show');
     }
