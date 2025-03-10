@@ -111,30 +111,6 @@ namespace mes.Controllers
             return RedirectToAction("Index");
         }
 
-        public IActionResult DisplayCompleted()
-        {
-            GeneralPurpose genPurpose = new GeneralPurpose();
-            DateTime thisWeekMonday = genPurpose.GetWeeksMonday(0);
-
-            List<string> stringifiedWeek = StringifyTimePeriod(thisWeekMonday, 5, "yyyy-MM-dd");
-
-            //prendo sia gli attivi che i cancellati per ogni categoria e li passo alla view
-            List<TotemBootstrapModel> weeksIncoming = GetProductionCalendarEvents(config.TotemEvents[0], stringifiedWeek, "0");
-            List<TotemBootstrapModel> weeksOutgoing = GetProductionCalendarEvents(config.TotemEvents[1], stringifiedWeek,"0");
-            List<TotemBootstrapModel> weeksIntervention = GetProductionCalendarEvents(config.TotemEvents[2], stringifiedWeek, "0");
-            
-            ViewBag.titleWeek = GetWeekTitle();
-            //voglio passare tre models, quindi vado di ViewBag
-            ViewBag.incomingsWeek = weeksIncoming;
-            ViewBag.outgoingsWeek = weeksOutgoing;
-            ViewBag.interventionsWeek = weeksIntervention;
-            string autoscr = (config.AutoScroll)? "true" : "false";
-            ViewBag.autoScroll = autoscr;
-            
-            return View();
-        }
-
-
         private string GetWeekTitle()
         {
             GeneralPurpose genP = new GeneralPurpose();
