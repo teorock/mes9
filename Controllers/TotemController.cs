@@ -39,7 +39,7 @@ namespace mes.Controllers
              
         }
 
-        public IActionResult Index(int totemnumber, string startDate, string endDate)
+        public IActionResult Index(int totemnumber, string startDate, string showActive)
         {
             //facciamo un file di configurazione per eventuali futuri totem
             // il file contiene una lista di stringhe di filtro associate al numero id del totem da visualizzare
@@ -47,7 +47,7 @@ namespace mes.Controllers
             //che settimana è se weekNumber è nullo
             // estrai i dati di quella settimana
             //e li filtra in base 
-
+            string showActiveButton = "1";
             GeneralPurpose genPurpose = new GeneralPurpose();
             DateTime thisWeekMonday = new DateTime();
             if(startDate is null)
@@ -59,15 +59,19 @@ namespace mes.Controllers
                 thisWeekMonday = Convert.ToDateTime(startDate);
             }        
 
+            if(showActive is null) showActive ="1";
+
+            showActiveButton =(showActive =="1")?"0":"1";         
+
             //ProductionCalendarDbModel ha le proprietà start e end definite come stringhe e non come DayTime
             //refactoring troppo lungo, workaround trasformando la settimana da visualizzare in stringhe
             //così si rende possibile l'estrazione tramite linq
             List<string> stringifiedWeek = StringifyTimePeriod(thisWeekMonday, 5, "yyyy-MM-dd");
 
             //da qui estraggo tutti gli eventi nel modello ProductionCalendarDbModel che mi interessano
-            List<TotemBootstrapModel> weeksIncoming = GetProductionCalendarEvents(config.TotemEvents[0], stringifiedWeek, "1");
-            List<TotemBootstrapModel> weeksOutgoing = GetProductionCalendarEvents(config.TotemEvents[1], stringifiedWeek, "1");
-            List<TotemBootstrapModel> weeksIntervention = GetProductionCalendarEvents(config.TotemEvents[2], stringifiedWeek, "1");
+            List<TotemBootstrapModel> weeksIncoming = GetProductionCalendarEvents(config.TotemEvents[0], stringifiedWeek, showActive);
+            List<TotemBootstrapModel> weeksOutgoing = GetProductionCalendarEvents(config.TotemEvents[1], stringifiedWeek, showActive);
+            List<TotemBootstrapModel> weeksIntervention = GetProductionCalendarEvents(config.TotemEvents[2], stringifiedWeek, showActive);
 
             ViewBag.titleWeek = GetWeekTitle();
             //voglio passare tre models, quindi vado di ViewBag
@@ -78,6 +82,11 @@ namespace mes.Controllers
             ViewBag.autoScroll = autoscr;
             
             ViewBag.DisplayedWeek = thisWeekMonday;
+            ViewBag.ShowActiveButton = showActiveButton;
+            string btnCaption = "";
+            if(showActiveButton == "1") btnCaption= "torna a lavagna";
+            if(showActiveButton == "0") btnCaption = "mostra attività completate";
+            ViewBag.btnCaption = btnCaption;
 
             return View();
         }

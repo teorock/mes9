@@ -15,11 +15,29 @@
     int ouutgoingCounter = 0;
     string autoScroll = ViewBag.autoScroll;
     DateTime displayedWeek = ViewBag.DisplayedWeek != null ? (DateTime)ViewBag.DisplayedWeek : DateTime.Now;
+    string showActiveButton = ViewBag.showActiveButton;
+    string btnCaption = ViewBag.btnCaption;
 }
 
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 
 <style>
+
+
+    /* Default card font color (black) */
+    .card .card-body,
+    .card .card-title,
+    .card .card-text {
+    color: black; /* Or whatever your default color is */
+    }
+
+    /* Override when ViewBag.showActiveButton is "0" */
+    .greyed-out .card .card-body,
+    .greyed-out .card .card-title,
+    .greyed-out .card .card-text {
+    color: grey; /* Or your desired grey color */
+    }
+
     .card {
         margin-bottom: 10px;
         box-shadow: 0 6px 10px 0 rgba(0, 0, 0, 0.3);
@@ -176,7 +194,7 @@
         </div>
     </div>
     <div class="col-md-3">
-        <a class="btn btn-outline-primary btn-block" asp-controller="Totem" asp-action="DisplayCompleted" id="btnCompletate">mostra attività completate</a>
+        <a class="btn btn-outline-primary btn-block" asp-controller="Totem" asp-action="Index" asp-route-startDate="@displayedWeek" asp-route-showActive="@showActiveButton" id="btnCompletate">@btnCaption</a>
     </div>
 </div>
 <div class="row">
@@ -185,7 +203,11 @@
     </div>
 </div>
 
-<div class="row incoming-row">
+@{
+    string greyedOutClass = ViewBag.showActiveButton == "1" ? "greyed-out" : "";
+}
+
+<div class="row incoming-row @greyedOutClass">
     @{
         if (incomingsWeek != null)
         {
@@ -227,7 +249,7 @@
 
 <!-- div class="container" -->
 <h3>Consegne</h3>
-<div class="row outgoing-row">
+<div class="row outgoing-row @greyedOutClass">
     @{
         if (outgoingsWeek != null)
         {
@@ -268,7 +290,7 @@
 <!-- /div -->
 <!-- div class="container" -->
 <h3>Manutenzioni e interventi</em></h3>
-<div class="row intervention-row">
+<div class="row intervention-row @greyedOutClass">
     @{
         if (interventionsWeek != null)
         {
@@ -340,9 +362,15 @@
     let currentTaskId = null;
 
     function openConfirmationModal(taskName, taskId) {
+        const showActiveButton = '@ViewBag.showActiveButton';
+        
+        if (showActiveButton !=="1") {
         document.getElementById('confirmationModalBody').innerText = "Vuoi rimuovere: " + taskName + "?";
         currentTaskId = taskId; 
         $('#confirmationModal').modal('show');
+        } else {
+            console.log("Action is disabled because showActiveButton is 1.");
+        }
     }
 
     $(document).ready(function() {
@@ -441,7 +469,10 @@
         const endDateStr = formatDate(boundaries.end);
         
         // Redirect to the URL with the parameters
-        window.location.href = `/Totem/index?totemnumber=1&startDate=${startDateStr}&endDate=${endDateStr}`;
+        //window.location.href = `/Totem/index?totemnumber=1&startDate=${startDateStr}&endDate=${endDateStr}`;
+        //const showActiveValue = '@showActiveButton';
+
+        window.location.href = `/Totem/index?totemnumber=1&startDate=${startDateStr}&showActive=1`;
     }
     
     // Event listeners for navigation buttons
