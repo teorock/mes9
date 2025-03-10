@@ -39,7 +39,7 @@ namespace mes.Controllers
              
         }
 
-        public IActionResult Index(int totemnumber, int weekNumber)
+        public IActionResult Index(int totemnumber, string startDate, string endDate)
         {
             //facciamo un file di configurazione per eventuali futuri totem
             // il file contiene una lista di stringhe di filtro associate al numero id del totem da visualizzare
@@ -49,7 +49,15 @@ namespace mes.Controllers
             //e li filtra in base 
 
             GeneralPurpose genPurpose = new GeneralPurpose();
-            DateTime thisWeekMonday = genPurpose.GetWeeksMonday(0);
+            DateTime thisWeekMonday = new DateTime();
+            if(startDate is null)
+            {
+                thisWeekMonday = genPurpose.GetWeeksMonday(0);
+            }
+            else
+            {
+                thisWeekMonday = Convert.ToDateTime(startDate);
+            }        
 
             //ProductionCalendarDbModel ha le proprietà start e end definite come stringhe e non come DayTime
             //refactoring troppo lungo, workaround trasformando la settimana da visualizzare in stringhe
@@ -69,6 +77,8 @@ namespace mes.Controllers
             string autoscr = (config.AutoScroll)? "true" : "false";
             ViewBag.autoScroll = autoscr;
             
+            ViewBag.DisplayedWeek = thisWeekMonday;
+
             return View();
         }
 
