@@ -655,7 +655,7 @@ namespace mes.Controllers
         public IActionResult StampaEtichetta(long id, int copie)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<PannelloViewModel> pannelli = (List<PannelloViewModel>)dbAccessor.Queryer<PannelloViewModel>(config.ConnectionString, config.PannelliDbTable)
+            List<PannelloViewModel> pannelli = dbAccessor.Queryer<PannelloViewModel>(config.ConnectionString, config.PannelliDbTable)
                                         .Where(x => x.Enabled=="1").ToList(); 
 
             PannelloViewModel oneModel = pannelli.Where(x => x.id == id).FirstOrDefault();
@@ -673,7 +673,9 @@ namespace mes.Controllers
                                     $"locazione/note: {oneModel.Locazione}";                          
             
             QrCodeGeneratorService qrCodeGen = new QrCodeGeneratorService();
+            
             Bitmap qrCodeImage = qrCodeGen.GenerateQrCode(qrCodeString, dimension);
+            //var qrCodeImage = qrCodeGen.GenerateQrCode(qrCodeString, dimension);
 
             PrintLabelService printLabel = new PrintLabelService();
             bool result = printLabel.PrintBitmap(qrCodeImage, dpi, fontSize1, fontSize2, lineSpacing, oneModel.Cliente, oneModel.DataIngresso, printerName, 1150, 590, copie, oneModel.Spessore);

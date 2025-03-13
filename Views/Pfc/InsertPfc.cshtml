@@ -1,0 +1,113 @@
+@{
+    ViewBag.Title = "Insert Worktable";
+}
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+
+<h2>InsertPfc Pfc</h2>
+
+<div class="container">
+    <h2>Insert Worktable</h2>
+    
+    @using (Html.BeginForm("InsertWorktable", "Mes", FormMethod.Post, new { @class = "form", id = "worktableForm" }))
+    {
+        <!-- Row for Delivery Date with calendar control -->
+        <div class="row mb-3">
+            <div class="col-md-2">
+                <label for="deliveryDate" class="form-label">Delivery Date</label>
+            </div>
+            <div class="col-md-4">
+                <input type="date" class="form-control" id="deliveryDate" name="DeliveryDate" required>
+            </div>
+        </div>
+        
+        <!-- Row for Customer with combobox -->
+        <div class="row mb-3">
+            <div class="col-md-2">
+                <label for="customer" class="form-label">Customer</label>
+            </div>
+            <div class="col-md-6">
+                <select class="form-select" id="customer" name="Customer" required>
+                    <option value="" selected disabled>Select a customer</option>
+                    @foreach (var customer in ViewBag.Customers)
+                    {
+                        //<option value="@customer.Value">@customer.Text</option>
+                        <option value="@customer">@customer</option>
+                    }
+                </select>
+            </div>
+        </div>
+        
+        <!-- Row for Work with validation -->
+        <div class="row mb-3">
+            <div class="col-md-2">
+                <label for="work" class="form-label">Work</label>
+            </div>
+            <div class="col-md-6">
+                <input type="text" class="form-control" id="work" name="Work" required>
+                <div class="invalid-feedback">This work number already exists.</div>
+            </div>
+        </div>
+        
+        <!-- Row for Work Phases label -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <strong>Work Phases</strong>
+            </div>
+        </div>
+        
+        <!-- Container for dynamic work phase rows -->
+        <div id="workPhasesContainer">
+            <div class="work-phase-row row mb-3">
+                <div class="col-md-3">
+                    <select class="form-select work-phase-select" name="WorkPhases[0].PhaseId" required>
+                        <option value="" selected disabled>Select a work phase</option>
+                        @foreach (var phase in ViewBag.WorkPhases)
+                        {
+                            //<option value="@phase.Value">@phase.Text</option>
+                            <option value="@phase">@phase</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" name="WorkPhases[0].Checkbox1" id="checkbox1_0">
+                        <label class="form-check-label" for="checkbox1_0">Option 1</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" name="WorkPhases[0].Checkbox2" id="checkbox2_0">
+                        <label class="form-check-label" for="checkbox2_0">Option 2</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" name="WorkPhases[0].OperatorId">
+                        <option value="" selected disabled>Select an operator</option>
+                        @foreach (var op in ViewBag.Operators)
+                        {
+                            //<option value="@op.Value">@op.Text</option>
+                            <option value="@op">@op</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-success add-row-btn" disabled>Add</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Submit button -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+        </div>
+    }
+</div>
+
+<script>
+
+
+
+</script>

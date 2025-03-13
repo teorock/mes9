@@ -9,6 +9,7 @@ using intranet.Models;
 using mes.Models.ViewModels;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http.Features;
+using System.Runtime.InteropServices;
 
 namespace intranet.Controllers
 {
@@ -24,6 +25,7 @@ namespace intranet.Controllers
 
         public IActionResult Index()
         {
+            string netVersion = RuntimeInformation.FrameworkDescription;
             UserData userData = GetUserData();
             ViewBag.userRoles = userData.UserRoles;   
             return View();
