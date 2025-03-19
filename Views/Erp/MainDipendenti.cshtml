@@ -73,7 +73,9 @@
             <th style="text-align: center;">matricola</th> 
             <th style="text-align: center;">username</th>
             <th style="text-align: center;">email di notifica</th> 
-            <th style="text-align: center;">ruolo</th> 
+            <th style="text-align: center;">ruolo</th>
+            <th style="text-align: center;">ab.prod</th>
+            <th style="text-align: center;">abil.qual</th>
             <th style="text-align: center;">enabled</th> 
             <th> </th>
             <th> </th>
@@ -92,7 +94,9 @@
                         <td><input readonly style="width: 80px; text-align:center;" type="text" asp-for=@Model[x].Matricola class="form-control" value=@Model[x].Matricola  /></td>
                         <td><input readonly style="width: 230px; text-align:center;" type="text" asp-for=@Model[x].Username class="form-control" value=@Model[x].Username  /></td>
                         <td><input readonly style="width: 230px; text-align:center;" type="text" asp-for=@Model[x].NotifyAddress class="form-control" value=@Model[x].NotifyAddress  /></td>
-                        <td><input readonly style="width: 230px; text-align:center;" type="text" asp-for=@Model[x].Ruolo class="form-control" value=@Model[x].Ruolo  /></td>                    
+                        <td><input readonly style="width: 230px; text-align:center;" type="text" asp-for=@Model[x].Ruolo class="form-control" value=@Model[x].Ruolo  /></td>   
+                        <td><input readonly style="width: 80px; text-align:center;" type="text" asp-for=@Model[x].EnabledProduzione class="form-control" value=@Model[x].EnabledProduzione  /></td>
+                        <td><input readonly style="width: 80px; text-align:center;" type="text" asp-for=@Model[x].EnabledQuality class="form-control" value=@Model[x].EnabledQuality  /></td>                 
                         <td> </td>
                         <td> </td>
                         <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].id class="form-control" value=@Model[x].id readonly /></td>
@@ -107,6 +111,8 @@
                         <td><input style="width: 230px;" type="text" asp-for=@Model[x].Username class="form-control" value=@Model[x].Username readonly /></td>
                         <td><input style="width: 230px; text-align:center;" type="text" asp-for=@Model[x].NotifyAddress class="form-control" value=@Model[x].NotifyAddress readonly/></td>
                         <td><input style="width: 230px;" type="text" asp-for=@Model[x].Ruolo class="form-control" value=@Model[x].Ruolo readonly /></td>
+                        <td><input readonly style="width: 80px; text-align:center;" type="text" asp-for=@Model[x].EnabledProduzione class="form-control" value=@Model[x].EnabledProduzione  /></td>
+                        <td><input readonly style="width: 80px; text-align:center;" type="text" asp-for=@Model[x].EnabledQuality class="form-control" value=@Model[x].EnabledQuality  /></td>                         
                         <td><input style="width: 80px;" type="text" asp-for=@Model[x].Enabled class="form-control" value=@Model[x].Enabled readonly /></td>
                         <td style="padding-left: 25px;"><a asp-controller="Erp" asp-action="ModDipendente" asp-route-id="@Model[x].id"><i class="material-icons text-warning">&#xE254;</i></a></td>
                         <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].id class="form-control" value=@Model[x].id /></td>                         

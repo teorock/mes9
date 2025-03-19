@@ -27,7 +27,8 @@ namespace intranet.Controllers
         {
             string netVersion = RuntimeInformation.FrameworkDescription;
             UserData userData = GetUserData();
-            ViewBag.userRoles = userData.UserRoles;   
+            ViewBag.userRoles = userData.UserRoles;
+            ViewBag.netVersion = netVersion;
             return View();
         }
 

@@ -41,6 +41,16 @@
             $("#confirmationModal").modal('toggle');
             return;
         }
+        if(!$("#abProd").val()) {
+            alert("campo 'Ruolo' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#abQual").val()) {
+            alert("campo 'Ruolo' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }                
         if(!$("#Enabled").val()) {
             alert("campo 'Enabled' vuoto");
             $("#confirmationModal").modal('toggle');
@@ -85,7 +95,9 @@
             <th style="text-align: center;">matricola</th> 
             <th style="text-align: center;">username</th>
             <th style="text-align: center;">email notifica</th> 
-            <th style="text-align: center;">ruolo</th> 
+            <th style="text-align: center;">ruolo</th>
+            <th style="text-align: center;">ab.prod</th>
+            <th style="text-align: center;">ab.qual</th>
             <th style="text-align: center;">enabled</th> 
         </tr>
         <tr>
@@ -96,6 +108,8 @@
             <td><input style="width: 230px; text-align: center;" type="text" asp-for=@Model.Username class="form-control" id="Username" required/></td>
             <td><input style="width: 230px; text-align: center;" type="text" asp-for=@Model.NotifyAddress class="form-control" id="NotifyAddress" required/></td>
             <td><input style="width: 230px; text-align: center;" type="text" asp-for=@Model.Ruolo class="form-control" id="Ruolo" required/></td>
+            <td><input style="width: 80px; text-align: center;" type="text" asp-for=@Model.EnabledProduzione class="form-control" id="abProd" required/></td>
+            <td><input style="width: 80px; text-align: center;" type="text" asp-for=@Model.EnabledQuality class="form-control" id="abQual" required/></td>
             <td><input style="width: 80px; text-align: center;" type="text" asp-for=@Model.Enabled class="form-control" id="Enabled" required/></td>
         </tr> 
     </table>
@@ -126,6 +140,8 @@
             <th style="text-align: center;">username</th>
             <th style="text-align: center;">email notifica</th> 
             <th style="text-align: center;">ruolo</th> 
+            <th style="text-align: center;">ab.prod</th>
+            <th style="text-align: center;">ab.qual</th>
             <th style="text-align: center;">enabled</th> 
         </tr>
         @foreach (DipendenteViewModel oneModel in DipendentiList)
@@ -138,6 +154,8 @@
                 <td><input style="width: 230px; text-align: center;" type="text" asp-for=@oneModel.Username class="form-control" value=@oneModel.Username readonly /></td>
                 <td><input style="width: 230px; text-align: center;" type="text" asp-for=@oneModel.NotifyAddress class="form-control" value=@oneModel.NotifyAddress readonly /></td> 
                 <td><input style="width: 230px; text-align: center;" type="text" asp-for=@oneModel.Ruolo class="form-control" value=@oneModel.Ruolo readonly /></td> 
+                <td><input style="width: 80px; text-align: center;" type="text" asp-for=@Model.EnabledProduzione class="form-control" id="abProd" readonly/></td>
+                <td><input style="width: 80px; text-align: center;" type="text" asp-for=@Model.EnabledQuality class="form-control" id="abQual" readonly/></td>                
                 <td><input style="width: 90px; text-align: center;" type="text" asp-for=@oneModel.Enabled class="form-control" value=@oneModel.Enabled readonly /></td> 
             </tr>
         }

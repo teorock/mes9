@@ -16,6 +16,8 @@ namespace mes.Models.ViewModels
 	public string Ruolo { get; set; }
 	public string Enabled { get; set; }
 	public string NotifyAddress { get; set; }
+	public string EnabledProduzione { get; set; }
+	public string EnabledQuality { get; set; }
 	public string CreatedOn { get; set; }
 	public string CreatedBy { get; set; }        
     }

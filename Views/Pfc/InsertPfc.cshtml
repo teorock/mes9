@@ -1,98 +1,126 @@
+@using mes.Models.ViewModels;
+
 @{
     ViewBag.Title = "Insert Worktable";
+    List<string> customers = ViewBag.Customers;
+    int nCommessa = ViewBag.nCommessa;
+    string nCommessaTitle = ViewBag.nCommessaTitle;
 }
+
+@model WorkorderViewModel;
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 
-<h2>InsertPfc Pfc</h2>
-
 <div class="container">
-    <h2>Insert Worktable</h2>
-    
-    @using (Html.BeginForm("InsertWorktable", "Mes", FormMethod.Post, new { @class = "form", id = "worktableForm" }))
-    {
-        <!-- Row for Delivery Date with calendar control -->
-        <div class="row mb-3">
-            <div class="col-md-2">
-                <label for="deliveryDate" class="form-label">Delivery Date</label>
+    <h2>Compila PFC</h2>
+    <br>
+    <hr>
+    @using (Html.BeginForm("InsertPfc", "Pfc", FormMethod.Post, new { @class = "form", id = "worktableForm" }))
+    {   
+        <div class="row">
+            <div class="col-md-3">
+                <h4>numero commessa</h4>
             </div>
-            <div class="col-md-4">
-                <input type="date" class="form-control" id="deliveryDate" name="DeliveryDate" required>
+            <div class="col-md-3">
+                <h4>@nCommessaTitle</h4>
+                <input type="hidden" name="WorkNumber" value="@nCommessaTitle">
+                <input type="hidden" name="id" value="@nCommessa">
             </div>
         </div>
-        
-        <!-- Row for Customer with combobox -->
+        <br>
         <div class="row mb-3">
             <div class="col-md-2">
-                <label for="customer" class="form-label">Customer</label>
+                <label for="customer" class="form-label">Cliente</label>
             </div>
             <div class="col-md-6">
                 <select class="form-select" id="customer" name="Customer" required>
-                    <option value="" selected disabled>Select a customer</option>
-                    @foreach (var customer in ViewBag.Customers)
+                    <option value="" selected disabled>seleziona un cliente</option>
+                    @foreach (var customer in customers)
                     {
-                        //<option value="@customer.Value">@customer.Text</option>
                         <option value="@customer">@customer</option>
                     }
                 </select>
             </div>
+            <div class="col-md-2">
+                <label for="deliveryDate" class="form-label" style="text-align: right;">Data di consegna</label>
+            </div>
+            <div class="col-md-2">
+                <input type="date" class="form-control" id="deliveryDate" name="Delivery" required>
+            </div>            
         </div>
         
         <!-- Row for Work with validation -->
         <div class="row mb-3">
             <div class="col-md-2">
-                <label for="work" class="form-label">Work</label>
+                <label for="work" class="form-label">Descrizione</label>
             </div>
-            <div class="col-md-6">
-                <input type="text" class="form-control" id="work" name="Work" required>
-                <div class="invalid-feedback">This work number already exists.</div>
+            <div class="col-md-10">
+                <input type="text" class="form-control" id="work" name="Description"  required>
+                <div class="invalid-feedback">numero di commessa già esistente</div>
             </div>
         </div>
-        
+        <div class="row mb-3">
+            <div class="col-md-2">
+                <label for="work" class="form-label">Riferimento esterno</label>
+            </div>
+            <div class="col-md-10">
+                <input type="text" class="form-control" id="work" name="ExternalRef"  required>
+                <div class="invalid-feedback">Riferimento esterno già esistente</div>
+            </div>
+        </div>        
+        <br>
+        <hr>
         <!-- Row for Work Phases label -->
         <div class="row mb-3">
             <div class="col-12">
-                <strong>Work Phases</strong>
+                <strong>fasi di lavorazione</strong>
             </div>
         </div>
-        
+        <br>
         <!-- Container for dynamic work phase rows -->
         <div id="workPhasesContainer">
             <div class="work-phase-row row mb-3">
-                <div class="col-md-3">
-                    <select class="form-select work-phase-select" name="WorkPhases[0].PhaseId" required>
-                        <option value="" selected disabled>Select a work phase</option>
+                <div class="col-md-2">
+                    <select class="form-select work-phase-select" name="WorkPhases[0].WorkphaseName" required>
+                        <option value="" selected disabled>fase di lavorazione</option>
                         @foreach (var phase in ViewBag.WorkPhases)
                         {
-                            //<option value="@phase.Value">@phase.Text</option>
                             <option value="@phase">@phase</option>
                         }
                     </select>
                 </div>
+                <div class="col-md-1 hidden-fields">
+                    <input type="hidden" name="WorkPhases[0].RelatedWorkOrder" value="@nCommessa">
+                    <input type="hidden" name="WorkPhases[0].Id" value="0">
+                </div>
                 <div class="col-md-2">
-                    <div class="form-check mt-2">
-                        <input class="form-check-input" type="checkbox" name="WorkPhases[0].Checkbox1" id="checkbox1_0">
-                        <label class="form-check-label" for="checkbox1_0">Option 1</label>
+                    <div class="form-check mt-1">
+                        <input class="form-check-input" type="checkbox" name="WorkPhases[0].Completed" id="completed_0" value="true">
+                        <input type="hidden" name="WorkPhases[0].Completed" value="false">
+                        <label class="form-check-label" for="completed_0">completata</label>
                     </div>
                 </div>
                 <div class="col-md-2">
-                    <div class="form-check mt-2">
-                        <input class="form-check-input" type="checkbox" name="WorkPhases[0].Checkbox2" id="checkbox2_0">
-                        <label class="form-check-label" for="checkbox2_0">Option 2</label>
+                    <div class="form-check mt-1">
+                        <input class="form-check-input" type="checkbox" name="WorkPhases[0].QualityCheck" id="qualitycheck_0" value="true">
+                        <input type="hidden" name="WorkPhases[0].QualityCheck" value="false">
+                        <label class="form-check-label" for="qualitycheck_0">controllo qualità</label>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <select class="form-select" name="WorkPhases[0].OperatorId">
-                        <option value="" selected disabled>Select an operator</option>
+                <div class="col-md-2">
+                    <select class="form-select" name="WorkPhases[0].QualityOperator">
+                        <option value="" selected disabled>firma operatore</option>
                         @foreach (var op in ViewBag.Operators)
                         {
-                            //<option value="@op.Value">@op.Text</option>
                             <option value="@op">@op</option>
                         }
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <button type="button" class="btn btn-success add-row-btn" disabled>Add</button>
+                    <button type="button" class="btn btn-outline-success btn-block add-row-btn" disabled>aggiungi fase</button>                    
+                </div>
+                <div class="col-md-1">
+                    <button type="button" class="btn btn-outline-warning btn-block remove-row-btn" disabled>rimuovi</button>
                 </div>
             </div>
         </div>
@@ -100,14 +128,110 @@
         <!-- Submit button -->
         <div class="row mt-4">
             <div class="col-12">
-                <button type="submit" class="btn btn-primary">Submit</button>
+                <button type="submit" class="btn btn-primary">salva</button>
             </div>
         </div>
     }
 </div>
 
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmRemoveModal" tabindex="-1" aria-labelledby="confirmRemoveModalLabel" aria-hidden="true">
+<div class="modal-dialog">
+    <div class="modal-content">
+    <div class="modal-header">
+        <h5 class="modal-title" id="confirmRemoveModalLabel">Conferma Eliminazione</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="modal-body">
+        Sei sicuro di voler eliminare questa fase di lavorazione?
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+        <button type="button" class="btn btn-danger" id="confirmRemoveBtn">Conferma</button>
+    </div>
+    </div>
+</div>
+</div>
+
 <script>
+    $(document).ready(function() {
 
+        var existingWorks = JSON.parse('@Html.Raw(Json.Serialize(@ViewBag.Works))');
 
+        // Set today as the minimum date and default value for the delivery date
+        var today = new Date().toISOString().split('T')[0];
+        $('#deliveryDate').attr('min', today);
+        $('#deliveryDate').val(today);
+
+        var rowToRemove = null;
+        
+        $('#work').on('change', function() {
+            var workValue = $(this).val();
+            if (existingWorks.includes(workValue)) {
+                $(this).addClass('is-invalid');
+            } else {
+                $(this).removeClass('is-invalid');
+            }
+        });
+
+            $(document).on('change', '.work-phase-select', function() {
+                var row = $(this).closest('.work-phase-row');
+                var addButton = row.find('.add-row-btn');
+                var removeButton = row.find('.remove-row-btn');
+                var hasValue = $(this).val() !== '';
+                
+                addButton.prop('disabled', !hasValue);
+                removeButton.prop('disabled', !hasValue);
+            });
+            
+            // Handle remove button click to show modal
+            $(document).on('click', '.remove-row-btn', function() {
+                rowToRemove = $(this).closest('.work-phase-row');
+                $('#confirmRemoveModal').modal('show');
+            });
+            
+            // Handle confirmation in modal
+            $('#confirmRemoveBtn').on('click', function() {
+                if (rowToRemove) {
+                    rowToRemove.remove();
+                    rowToRemove = null;
+                }
+                $('#confirmRemoveModal').modal('hide');
+            });
+            
+            // Add new row when "Add" button is clicked
+            var rowIndex = 0;
+            $(document).on('click', '.add-row-btn', function() {
+                rowIndex++;
+                var newRow = $('.work-phase-row').first().clone();
+
+                // Update IDs and names
+                newRow.find('select, input').val('');
+                newRow.find('select[name^="WorkPhases"]').first().attr('name', 'WorkPhases[' + rowIndex + '].WorkphaseName');
+                
+                // Update hidden fields
+                newRow.find('input[name$=".RelatedWorkOrder"]').attr('name', 'WorkPhases[' + rowIndex + '].RelatedWorkOrder').val('@nCommessa');
+                newRow.find('input[name$=".Id"]').attr('name', 'WorkPhases[' + rowIndex + '].Id').val(rowIndex);
+                
+                // Update other fields
+                newRow.find('input[id^="completed"]').attr({
+                    'name': 'WorkPhases[' + rowIndex + '].Completed',
+                    'id': 'completed_' + rowIndex
+                });
+                newRow.find('label[for^="completed"]').attr('for', 'completed_' + rowIndex);
+                newRow.find('input[id^="qualitycheck"]').attr({
+                    'name': 'WorkPhases[' + rowIndex + '].QualityCheck',
+                    'id': 'qualitycheck_' + rowIndex
+                });
+                newRow.find('label[for^="qualitycheck"]').attr('for', 'qualitycheck_' + rowIndex);
+                newRow.find('select').last().attr('name', 'WorkPhases[' + rowIndex + '].QualityOperator');
+                
+                // Disable the Add and Remove buttons
+                newRow.find('.add-row-btn').prop('disabled', true);
+                newRow.find('.remove-row-btn').prop('disabled', true);
+                
+                $('#workPhasesContainer').append(newRow);
+            });
+        });
 
 </script>

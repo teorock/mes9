@@ -17,6 +17,7 @@ using System.Text;
 using AutoMapper;
 using mes.Models.ControllersConfigModels;
 using ServiceStack;
+using System.Runtime.InteropServices;
 
 namespace mes.Controllers
 {
@@ -44,6 +45,7 @@ namespace mes.Controllers
 
         public IActionResult Index()
         {
+            
             UserData userData = GetUserData();            
             //--------------------------
             string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
@@ -55,6 +57,7 @@ namespace mes.Controllers
 
         public IActionResult Index_programs()
         {
+            string netVersion = RuntimeInformation.FrameworkDescription;
             UserData userData = GetUserData();            
             //--------------------------
             string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
@@ -78,6 +81,7 @@ namespace mes.Controllers
             Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
             //--------------------------            
 
+            string netVersion = RuntimeInformation.FrameworkDescription;
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<BordoViewModel> bordi = new List<BordoViewModel>();
 

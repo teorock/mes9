@@ -301,8 +301,7 @@ namespace intranet.Controllers
 
     #endregion
 
-
-
+    #region Ordini
         [HttpGet]
         [Authorize(Roles = "root, DataInput")]
         public IActionResult Orders()
@@ -310,7 +309,9 @@ namespace intranet.Controllers
             //commesse o ordini
             return View("Orders");
         }
-        
+    #endregion
+
+    #region Materiali
         [HttpGet]
         [Authorize(Roles = "root, DataInput")]
         public IActionResult Materials()
@@ -318,15 +319,121 @@ namespace intranet.Controllers
             //materiali
             return View("Materials");
         }    
-        
+    #endregion
+
+    #region Lavorazioni
+
         [HttpGet]
         [Authorize(Roles = "root, DataInput")]
-        public IActionResult ProcessType()
+        public IActionResult MainLavorazioni()
         {
-            //tipi di lavorazioni
-            return View("ProcessType");
+            UserData userData = GetUserData();
+            ViewBag.userRoles = userData.UserRoles;  
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            //--------------------------      
+
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            List<LavorazioneViewModel> lavorazioni = dbAccessor.Queryer<LavorazioneViewModel>(config.ConnString, config.LavorazioniDbTable)
+                                                                .Where(e => e.Enabled == "1").ToList();
+            //ViewBag.allLav = lavorazioni;
+
+            return View(lavorazioni);
         }            
         
+        [Authorize(Roles = "root")]
+        public IActionResult AggiornaLavorazioni(List<LavorazioneViewModel> Lavorazioni)
+        {
+                UserData userData = GetUserData();
+                DatabaseAccessor dbAccessor = new DatabaseAccessor();
+                foreach(LavorazioneViewModel oneModel in Lavorazioni)
+                {
+                    oneModel.CreatedBy = userData.UserName;
+                    oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
+                    int result = dbAccessor.Updater<LavorazioneViewModel>(config.ConnString, config.LavorazioniDbTable, oneModel, oneModel.id);
+                }
+            return RedirectToAction("MainLavorazioni");
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "root")]
+        public IActionResult InsertLavorazione()
+        {
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            List<LavorazioneViewModel> Lavorazioni = dbAccessor.Queryer<LavorazioneViewModel>(config.ConnString, "Lavorazioni")
+                                        .Where(x => x.Enabled=="1").ToList();            
+            
+            ViewBag.LavorazioniList = Lavorazioni;
+
+            return View();
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "root")]
+        public IActionResult InsertLavorazione(LavorazioneViewModel newLavorazione)
+        {
+            UserData userData = GetUserData();
+
+            newLavorazione.CreatedBy = userData.UserName;
+            newLavorazione.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
+            newLavorazione.Enabled = "1";            
+
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            List<LavorazioneViewModel> Lavorazioni = (List<LavorazioneViewModel>)dbAccessor.Queryer<LavorazioneViewModel>(config.ConnString, config.LavorazioniDbTable);
+
+            //long max = (from l in Lavorazioni select l.id).Max();
+            if(Lavorazioni.Count() > 0)
+            {
+                long max = (from l in Lavorazioni select l.id).Max();
+                newLavorazione.id = max + 1;
+            } else {
+                newLavorazione.id = 0;
+            }
+
+            //newLavorazione.id = max + 1;
+
+            int result = dbAccessor.Insertor<LavorazioneViewModel>(config.ConnString, config.LavorazioniDbTable, newLavorazione);
+
+            return RedirectToAction("MainLavorazioni");
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "root")]
+        public IActionResult ModLavorazione(long id)
+        {
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            List<LavorazioneViewModel> Lavorazioni = (List<LavorazioneViewModel>)dbAccessor.Queryer<LavorazioneViewModel>(config.ConnString, config.LavorazioniDbTable)
+                                        .Where(x => x.Enabled=="1").ToList(); 
+            ViewBag.LavorazioniList = Lavorazioni;
+            LavorazioneViewModel oneModel = Lavorazioni.Where(x => x.id == id).FirstOrDefault();
+
+            return View(oneModel);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "root")]
+        public IActionResult ModLavorazione(LavorazioneViewModel oneModel)
+        {
+            UserData userData = GetUserData();
+
+            oneModel.CreatedBy = userData.UserName;
+            oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
+            //oneModel.Enabled = "1";
+
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+
+            int result = dbAccessor.Updater<LavorazioneViewModel>(config.ConnString, config.LavorazioniDbTable, oneModel, oneModel.id);
+
+            return RedirectToAction("MainLavorazioni");
+        }        
+
+
+    #endregion
+
+
+
         [HttpGet]
         [Authorize(Roles = "root, DataInput")]
         public IActionResult AssignTo()

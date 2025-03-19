@@ -14,5 +14,6 @@ namespace mes.Models.ControllersConfigModels
         public string PanelsTable { get; set; }
         public string SemilavConnString { get; set; }
         public string SemilavDbTable { get; set; }
+        public string LavorazioniDbTable { get; set; }
     }
 }

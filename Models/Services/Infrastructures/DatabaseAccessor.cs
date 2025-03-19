@@ -65,6 +65,7 @@ namespace mes.Models.Services.Infrastructures
             catch(Exception excp)
             {
                 Log2File($"ERRORE: {excp.Message}");
+                return 1;
             }
             return 0;
         }

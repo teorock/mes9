@@ -1,0 +1,118 @@
+@using mes.Models.ViewModels
+@using System.Collections.Generic
+@model LavorazioneViewModel
+@{ List<LavorazioneViewModel> LavorazioniList = ViewBag.LavorazioniList; }
+
+<style>
+    table, th {
+        font-size: 16px;
+        text-align: center;
+        width: 230px;
+    }
+    input, td {
+        font-size: 14px;
+        text-align: center;
+        width: 230px;
+        background-color: none;
+    }
+    input:hover {
+        background-color: gold;
+    }
+    input:focus {
+        background-color: lightyellow;
+    } 
+</style>
+
+<script>
+
+function conferma() {
+
+        if(!$("#NomeLavorazione").val()) {
+            alert("campo 'NomeLavorazione' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#CodiceLavorazione").val()) {
+            alert("campo 'CodiceLavorazione' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#Enabled").val()) {
+            alert("campo 'Enabled' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        $("#frmInsLavorazione").submit();
+    }
+
+</script>
+
+<!-- Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Creazione nuovo lavorazione</h5>
+      </div>
+      <div class="modal-body">
+        <p>confermi creazione nuovo lavorazione?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">annulla</button>
+        <button type="button" class="btn btn-outline-success" onclick="conferma()">salva</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal end -->
+
+
+<h2>crea nuovo Lavorazione</h2>
+<br>
+@using(Html.BeginForm("InsertLavorazione", "DataInput", FormMethod.Post, new { name = "frmInsLavorazione", id = "frmInsLavorazione" }))
+{
+    <table>
+        <tr>
+            <th>nome lavorazione</th> 
+            <th>codice lavorazione</th> 
+            <th>enabled</th> 
+        </tr>
+        <tr>
+            <td><input id="Nome Lavorazione" type="text" asp-for=@Model.NomeLavorazione class="form-control" required/></td>
+            <td><input id="Codice Lavorazione" type="text" asp-for=@Model.CodiceLavorazione class="form-control" required/></td>
+            <td><input id="Enabled" type="text" value="1" asp-for=@Model.Enabled class="form-control" required/></td>
+        </tr> 
+    </table>
+    <br>
+    <br>
+
+    <div class="row">
+        <div class="col-md-3 d-grid">
+            <button type="button" class="btn btn-outline-primary btn-block" data-bs-toggle="modal" data-bs-target="#confirmationModal">salva</button>            
+        </div>
+        <div class="col-md-3 d-grid">
+            <a class="btn btn-outline-secondary  btn-block" asp-controller="DataInput" asp-action="MainLavorazioni">annulla</a>
+        </div>             
+    </div>  
+}
+
+<hr>
+<h4>lista lavorazioni presenti</h4>
+<br>
+<table>
+        <tr>
+            <th>nome lavorazione</th> 
+            <th>codice lavorazione</th> 
+            <th>enabled</th> 
+        </tr>
+        @foreach (LavorazioneViewModel oneModel in LavorazioniList)
+        {
+            <tr>
+                <td><input type="text" asp-for=@oneModel.NomeLavorazione class="form-control" value=@oneModel.NomeLavorazione readonly /></td> 
+                <td><input type="text" asp-for=@oneModel.CodiceLavorazione class="form-control" value=@oneModel.CodiceLavorazione readonly /></td> 
+                <td><input type="text" asp-for=@oneModel.Enabled class="form-control" value=@oneModel.Enabled readonly /></td> 
+            </tr>  
+        }        
+
+    
+</table>

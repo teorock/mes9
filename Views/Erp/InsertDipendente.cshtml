@@ -45,6 +45,16 @@ function conferma() {
             $("#confirmationModal").modal('toggle');
             return;
         }
+        if(!$("#AbilProd").val()) {
+            alert("campo 'Abil.Produzione' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#AbilQual").val()) {
+            alert("campo 'Abil.Qualita' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }                
 
         $("#frmInsDipendente").submit();
     }
@@ -84,6 +94,8 @@ function conferma() {
             <th style="text-align: center;">username</th>
             <th style="text-align: center;">email di notifica</th>
             <th style="text-align: center;">ruolo</th>
+            <th style="text-align: center;">ab.prod</th>
+            <th style="text-align: center;">ab.qual</th>
         </tr>
         <tr>
             <td><input id="Nome" style="width: 180px; text-align: center;" type="text" asp-for=@Model.Nome class="form-control" required/></td>
@@ -92,7 +104,9 @@ function conferma() {
             <td><input id="Matricola" style="width: 80px; text-align: center;" type="text" asp-for=@Model.Matricola class="form-control" required/></td>
             <td><input id="Username" style="width: 230px; text-align: center;" type="text" asp-for=@Model.Username class="form-control" required/></td>
             <td><input id="NotifyAddress" style="width: 230px; text-align: center;" type="text" asp-for=@Model.NotifyAddress class="form-control" required/></td>
-            <td><input id="Ruolo" style="width: 230px; text-align: center;" type="text" asp-for=@Model.Ruolo class="form-control" required/></td>
+            <td><input id="Ruolo" style="width: 200px; text-align: center;" type="text" asp-for=@Model.Ruolo class="form-control" required/></td>
+            <td><input id="AbilProd" style="width: 80px; text-align: center;" type="text" asp-for=@Model.EnabledProduzione class="form-control" required/></td>
+            <td><input id="AbilQual" style="width: 80px; text-align: center;" type="text" asp-for=@Model.EnabledQuality class="form-control" required/></td>
         </tr> 
     </table>
     <br>
@@ -120,6 +134,8 @@ function conferma() {
             <th style="text-align: center;">username</th> 
             <th style="text-align: center;">email di notifica</th>
             <th style="text-align: center;">ruolo</th> 
+            <th style="text-align: center;">ab.prod</th>
+            <th style="text-align: center;">ab.qual</th>            
             <th style="text-align: center;">enabled</th> 
         </tr>
         @foreach (DipendenteViewModel oneModel in DipendentiList)
@@ -131,7 +147,9 @@ function conferma() {
                 <td><input style="width: 80px; text-align: center;" type="text" asp-for=@oneModel.Matricola class="form-control" value=@oneModel.Matricola readonly /></td> 
                 <td><input style="width: 230px; text-align: center;" type="text" asp-for=@oneModel.Username class="form-control" value=@oneModel.Username readonly /></td> 
                 <td><input style="width: 230px; text-align: center;" type="text" asp-for=@oneModel.NotifyAddress class="form-control" value=@oneModel.NotifyAddress readonly /></td> 
-                <td><input style="width: 230px; text-align: center;" type="text" asp-for=@oneModel.Ruolo class="form-control" value=@oneModel.Ruolo readonly /></td> 
+                <td><input style="width: 230px; text-align: center;" type="text" asp-for=@oneModel.Ruolo class="form-control" value=@oneModel.Ruolo readonly /></td>
+                <td><input id="AbilProd" style="width: 80px; text-align: center;" type="text" asp-for=@oneModel.EnabledProduzione class="form-control" readonly/></td>
+                <td><input id="AbilQual" style="width: 80px; text-align: center;" type="text" asp-for=@oneModel.EnabledQuality class="form-control" readonly/></td>                
                 <td><input style="width: 80px; text-align: center;" type="text" asp-for=@oneModel.Enabled class="form-control" value=@oneModel.Enabled readonly /></td> 
             </tr>  
         }        

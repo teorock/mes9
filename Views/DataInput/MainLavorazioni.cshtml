@@ -1,8 +1,10 @@
-@using mes.Models.ViewModels
-@using mes.Models.InfrastructureModels
-@using System.Collections.Generic
 
-@model List<PfcModel>
+
+
+
+@using mes.Models.ViewModels
+@using System.Collections.Generic
+@model List<LavorazioneViewModel>
 @{
     string userRoles = ViewBag.userRoles;
     bool authorize = false;
@@ -11,7 +13,7 @@
 
 <script>
     function conferma() {
-            $("#frmAggCommesse").submit();
+            $("#frmAggLavorazioni").submit();
         }
 
 </script>
@@ -30,7 +32,6 @@
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">annulla</button>
         <button type="button" class="btn btn-outline-success" onclick="conferma()">aggiorna</button>
       </div>
-    using mes.Models.InfrastructureModels;
     </div>
   </div>
 </div>
@@ -39,13 +40,12 @@
 <style>
     table, th {
         font-size: 16px;
-        text-align: center;
     }
     input, td {
         font-size: 14px;
+        text-align: center;
         width: 230px;
         background-color: none;
-        text-align: center;
     }
     input:hover {
         background-color: gold;
@@ -55,35 +55,33 @@
     } 
 </style>
 
-<h2>gestione magazzino commesse</h2>
+<h2>gestione  lavorazioni</h2>
 <br>
 <br>
-<h4>commesse a magazzino</h4>
+<h4>lavorazioni presenti</h4>
 <hr>
-@using(Html.BeginForm("AggiornaCommesse", "PfcController", FormMethod.Post, new { name = "frmAggCommesse", id = "frmAggCommesse" }))
+@using(Html.BeginForm("AggiornaLavorazioni", "DataInput", FormMethod.Post, new { name = "frmAggLavorazioni", id = "frmAggLavorazioni" }))
 {
     <table>
         <tr>
-            <th >numero commessa</th> 
-            <th >cliente</th> 
-            <th >rif. esterno</th> 
-            <th >data consegna</th> 
-            <th >lavorazioni</th> 
-            <th >enabled</th> 
+            <th style="text-align: center;">nome lavorazione</th> 
+            <th style="text-align: center;">codice lavorazione</th> 
+            <th style="text-align: center;">abilitata</th> 
             <th> </th>
             <th> </th>
         </tr>
             @for(int x=0; x<Model.Count; x++)
             {
+                //int quan = Convert.ToInt16(Model[x].Quantita);
+                //int qMin = Convert.ToInt16(Model[x].QuantitaMin);
+                //string color=( quan > qMin)? "none" : "orange";
+                string color= "none";
                 <tr>
                     @if(!authorize)
                     {
-                        <td><input readonly  type="text" asp-for=@Model[x].NumeroCommessa class="form-control" value=@Model[x].NumeroCommessa  /></td>
-                        <td><input readonly  type="text" asp-for=@Model[x].Cliente class="form-control" value=@Model[x].Cliente  /></td>
-                        <td><input readonly  type="text" asp-for=@Model[x].RifEsterno class="form-control" value=@Model[x].RifEsterno  /></td>
-                        <td><input readonly  type="text" asp-for=@Model[x].DataConsegna class="form-control" value=@Model[x].DataConsegna  /></td>
-                        <td><input readonly  type="text" asp-for=@Model[x].LavorazioniJsonString class="form-control" value=@Model[x].LavorazioniJsonString  /></td>
-                        <td><input readonly  type="text" asp-for=@Model[x].Enabled class="form-control" value=@Model[x].Enabled  /></td>
+                        <td><input readonly type="text" asp-for=@Model[x].NomeLavorazione class="form-control" value=@Model[x].NomeLavorazione  /></td>
+                        <td><input readonly type="text" asp-for=@Model[x].CodiceLavorazione class="form-control" value=@Model[x].CodiceLavorazione  /></td>
+                        <td><input readonly type="text" asp-for=@Model[x].Enabled class="form-control" value=@Model[x].Enabled  /></td>
                         <td> </td>
                         <td> </td>
                         <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].id class="form-control" value=@Model[x].id readonly /></td>
@@ -91,13 +89,10 @@
                     }
                     else
                     {
-                        <td><input type="text" asp-for=@Model[x].NumeroCommessa class="form-control" value=@Model[x].NumeroCommessa readonly /></td>
-                        <td><input type="text" asp-for=@Model[x].Cliente class="form-control" value=@Model[x].Cliente readonly /></td>
-                        <td><input type="text" asp-for=@Model[x].RifEsterno class="form-control" value=@Model[x].RifEsterno readonly /></td>
-                        <td><input type="text" asp-for=@Model[x].DataConsegna class="form-control" value=@Model[x].DataConsegna readonly /></td>
-                        <td><input type="text" asp-for=@Model[x].LavorazioniJsonString class="form-control" value=@Model[x].LavorazioniJsonString readonly /></td>
+                        <td><input type="text" asp-for=@Model[x].NomeLavorazione class="form-control" value=@Model[x].NomeLavorazione readonly /></td>
+                        <td><input type="text" asp-for=@Model[x].CodiceLavorazione class="form-control" value=@Model[x].CodiceLavorazione readonly /></td>
                         <td><input type="text" asp-for=@Model[x].Enabled class="form-control" value=@Model[x].Enabled readonly /></td>
-                        <td style="padding-left: 25px;"><a asp-controller="PfcController" asp-action="ModCommessa" asp-route-id="@Model[x].id"><i class="material-icons text-warning">&#xE254;</i></a></td>
+                        <td style="padding-left: 25px;"><a asp-controller="DataInput" asp-action="ModLavorazione" asp-route-id="@Model[x].id"><i class="material-icons text-warning">&#xE254;</i></a></td>
                         <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].id class="form-control" value=@Model[x].id /></td>                         
                         <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].Enabled class="form-control" value=@Model[x].Enabled readonly/></td>
                     }                   
@@ -113,7 +108,7 @@
                 <button type="button" class="btn btn-outline-primary btn-block" data-bs-toggle="modal" data-bs-target="#confirmationModal">aggiorna</button>          
             </div>
             <div class="col-md-3 d-grid">
-                <a class="btn btn-outline-success btn-block" asp-controller="Pfc" asp-action="InsertPfc">crea nuovo commessa</a>
+                <a class="btn btn-outline-success btn-block" asp-controller="DataInput" asp-action="InsertLavorazione">crea nuovo lavorazione</a>
             </div>    
         </div>  
     }
