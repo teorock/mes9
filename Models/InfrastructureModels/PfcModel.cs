@@ -11,6 +11,7 @@ namespace mes.Models.InfrastructureModels
         public string NumeroCommessa { get; set; }
         public string Cliente { get; set; }
         public string RifEsterno { get; set; }
+        public string Descrizione { get; set; }
         public string DataConsegna { get; set; }
         public string LavorazioniJsonString { get; set; }
         public string Enabled { get; set; }

@@ -61,18 +61,20 @@ namespace mes.Controllers
             List<string> customers = clienti.Select(n => n.Nome).ToList();
             ViewBag.Customers = customers;
 
+
             List<LavorazioneViewModel> lavorazioni = dbAccessor.Queryer<LavorazioneViewModel>(config.ConnString2, config.WorkphaseTable);
             List<string> works = lavorazioni.Select(n => n.NomeLavorazione).ToList();
             ViewBag.WorkPhases = works;
+
 
             List<DipendenteViewModel> dipendenti = dbAccessor.Queryer<DipendenteViewModel>(config.ConnString, config.OperatorsTable)
                                                     .Where(e => e.Enabled == "1")
                                                     .Where(ap => ap.EnabledProduzione == "1").ToList();
             List<string>operators = dipendenti.Select(op => $"{op.Nome} {op.Cognome}").ToList();
+            operators.Insert(0, "-----");
             ViewBag.Operators = operators;
             
-            //numero di commessa disponibile
-            //prendi il numero di record in config.PfcTable
+
             List<PfcModel> allPfc = dbAccessor.Queryer<PfcModel>(config.ConnString2, config.PfcTable).ToList();
             int pfcPresenti = allPfc.Count();
             
@@ -109,7 +111,7 @@ namespace mes.Controllers
                     LavorazioniJsonString = jsonLavorazioni,
                     Enabled = "1",
                     CreatedBy = userData.UserName,
-                    CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm")
+                    CreatedOn = DateTime.Now.ToString("dd/MM/yyyy HH:mm")
                 };
 
                 DatabaseAccessor dbAccessor = new DatabaseAccessor();
@@ -117,6 +119,133 @@ namespace mes.Controllers
                 if(result == 1) return RedirectToAction("Error");
             }
             return RedirectToAction("Index");
+        }
+
+        //===================================================================
+
+        [HttpGet]
+        public IActionResult ModPfc(long inputId)
+        {
+            // Get the record to modify
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            var pfc = dbAccessor.Queryer<PfcModel>(config.ConnString2, config.PfcTable)
+                .Where(i => i.id == inputId)
+                .FirstOrDefault();
+
+            if (pfc == null)
+            {
+                return NotFound();
+            }
+
+            // Prepare the view model from the PfcModel
+            var viewModel = new WorkorderViewModel
+            {
+                id = pfc.id,
+                WorkNumber = pfc.NumeroCommessa,
+                Customer = pfc.Cliente,
+                ExternalRef = pfc.RifEsterno,
+                Delivery = DateTime.Parse(pfc.DataConsegna),
+                Description = pfc.Descrizione, 
+                // Convert LavorazioniJsonString to WorkPhases collection
+                WorkPhases = JsonConvert.DeserializeObject<List<WorkphaseViewModel>>(pfc.LavorazioniJsonString)
+            };
+
+            // Populate ViewBag with necessary data
+            ViewBag.nCommessa = pfc.id;
+            ViewBag.nCommessaTitle = pfc.NumeroCommessa;
+            ViewBag.Customers = GetCustomersList(); 
+            ViewBag.WorkPhases = GetWorkPhasesList(); 
+            ViewBag.Operators = GetOperatorsList(); 
+            //ViewBag.Works = GetExistingWorks(); 
+
+            return View(viewModel);
+        }
+
+        //===================================================================
+
+        [HttpPost]
+        public IActionResult ModPfc(WorkorderViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                // Model is valid, process the update
+
+                //Ottengo l'utente connesso
+                UserData userData = GetUserData();
+                //--------------------------
+                string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+                string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+                Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+
+                // 1. Serialize WorkPhases to JSON
+                string jsonLavorazioni = JsonConvert.SerializeObject(model.WorkPhases);
+
+                // 2. Create a PfcModel object to update the database
+                PfcModel pcf2update = new PfcModel() {
+                    id = model.id,
+                    NumeroCommessa = model.WorkNumber,
+                    Cliente = model.Customer,
+                    Descrizione = model.Description,
+                    RifEsterno = model.ExternalRef,
+                    DataConsegna = Convert.ToDateTime(model.Delivery).ToString("dd/MM/yyyy HH:mm"),
+                    LavorazioniJsonString = jsonLavorazioni,
+                    Enabled = "1",
+                    CreatedBy = userData.UserName,
+                    CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm") 
+                };
+
+                // 3. Access the database and update the record
+                DatabaseAccessor dbAccessor = new DatabaseAccessor();
+
+                //var result = dbAccessor.Updater<PfcModel>(config.ConnString2, config.PfcTable, pcf2update);
+                var result = dbAccessor.Updater<PfcModel>(config.ConnString2, config.PfcTable, pcf2update, model.id);
+
+                return RedirectToAction("Index"); // Redirect to the index page
+            }
+            else
+            {
+                // If the model is not valid, return the view with the model
+                // Populate ViewBag with necessary data
+                ViewBag.nCommessa = model.id;
+                ViewBag.nCommessaTitle = model.WorkNumber;
+                ViewBag.Customers = GetCustomersList(); 
+                ViewBag.WorkPhases = GetWorkPhasesList(); 
+                ViewBag.Operators = GetOperatorsList(); 
+                //ViewBag.Works = GetExistingWorks(); 
+                return View(model);
+            }
+        }
+
+        //===================================================================
+
+        private List<string>GetCustomersList()
+        {
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            List<string> clienti = dbAccessor.Queryer<ClienteViewModel>(config.ConnString2, config.CustomerTable)
+                                                        .Where(e => e.Enabled =="1")
+                                                        .Select(c =>c.Nome).ToList();
+
+            return clienti;
+        }
+
+        private List<string>GetWorkPhasesList()
+        {
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            List<LavorazioneViewModel> lavorazioni = dbAccessor.Queryer<LavorazioneViewModel>(config.ConnString2, config.WorkphaseTable);
+            List<string> works = lavorazioni.Select(n => n.NomeLavorazione).ToList();    
+
+            return works;      
+        }
+
+        private List<string> GetOperatorsList()
+        {
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            List<DipendenteViewModel> dipendenti = dbAccessor.Queryer<DipendenteViewModel>(config.ConnString, config.OperatorsTable)
+                                        .Where(e => e.Enabled == "1")
+                                        .Where(ap => ap.EnabledProduzione == "1").ToList();
+            List<string>operators = dipendenti.Select(op => $"{op.Nome} {op.Cognome}").ToList();
+            operators.Insert(0, "-----");
+            return operators;
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

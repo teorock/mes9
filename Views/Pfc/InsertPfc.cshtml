@@ -9,7 +9,7 @@
 
 @model WorkorderViewModel;
 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+<!-- script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script -->
 
 <div class="container">
     <h2>Compila PFC</h2>
@@ -95,24 +95,42 @@
                 </div>
                 <div class="col-md-2">
                     <div class="form-check mt-1">
-                        <input class="form-check-input" type="checkbox" name="WorkPhases[0].Completed" id="completed_0" value="true">
                         <input type="hidden" name="WorkPhases[0].Completed" value="false">
+                        <input class="form-check-input" type="checkbox" name="WorkPhases[0].Completed" id="completed_0" value="true">
+                        <!-- input type="hidden" name="WorkPhases[0].Completed" value="false" -->
                         <label class="form-check-label" for="completed_0">completata</label>
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-check mt-1">
-                        <input class="form-check-input" type="checkbox" name="WorkPhases[0].QualityCheck" id="qualitycheck_0" value="true">
                         <input type="hidden" name="WorkPhases[0].QualityCheck" value="false">
+                        <input class="form-check-input" type="checkbox" name="WorkPhases[0].QualityCheck" id="qualitycheck_0" value="true">                        
                         <label class="form-check-label" for="qualitycheck_0">controllo qualità</label>
                     </div>
                 </div>
                 <div class="col-md-2">
                     <select class="form-select" name="WorkPhases[0].QualityOperator">
-                        <option value="" selected disabled>firma operatore</option>
-                        @foreach (var op in ViewBag.Operators)
+                        @{
+                            bool isFirst = true;
+                        }
+                        @if (ViewBag.Operators != null && ViewBag.Operators.Count > 0)
                         {
-                            <option value="@op">@op</option>
+                            @foreach (var op in ViewBag.Operators)
+                            {
+                                if (isFirst)
+                                {
+                                    <option value="@op" selected>@op</option>
+                                    isFirst = false;
+                                }
+                                else
+                                {
+                                    <option value="@op">@op</option>
+                                }
+                            }
+                        }
+                        else
+                        {
+                            <option value="" selected disabled>firma operatore</option>
                         }
                     </select>
                 </div>
@@ -157,12 +175,12 @@
     $(document).ready(function() {
 
         var existingWorks = JSON.parse('@Html.Raw(Json.Serialize(@ViewBag.Works))');
-
+        
         // Set today as the minimum date and default value for the delivery date
         var today = new Date().toISOString().split('T')[0];
         $('#deliveryDate').attr('min', today);
         $('#deliveryDate').val(today);
-
+        
         var rowToRemove = null;
         
         $('#work').on('change', function() {
@@ -207,6 +225,8 @@
 
                 // Update IDs and names
                 newRow.find('select, input').val('');
+                // Ensure checkboxes are unchecked
+                newRow.find('input[type="checkbox"]').prop('checked', false);
                 newRow.find('select[name^="WorkPhases"]').first().attr('name', 'WorkPhases[' + rowIndex + '].WorkphaseName');
                 
                 // Update hidden fields
@@ -214,15 +234,33 @@
                 newRow.find('input[name$=".Id"]').attr('name', 'WorkPhases[' + rowIndex + '].Id').val(rowIndex);
                 
                 // Update other fields
+                // Update checkboxes and add hidden fields for "Completed"
                 newRow.find('input[id^="completed"]').attr({
                     'name': 'WorkPhases[' + rowIndex + '].Completed',
-                    'id': 'completed_' + rowIndex
+                    'id': 'completed_' + rowIndex,
+                    'value': 'true'
                 });
+                // Update or add hidden field for unchecked state
+                var completedHidden = newRow.find('input[type="hidden"][name$=".Completed"]');
+                if (completedHidden.length) {
+                    completedHidden.attr('name', 'WorkPhases[' + rowIndex + '].Completed').val('false');
+                } else {
+                    newRow.find('#completed_' + rowIndex).after('<input type="hidden" name="WorkPhases[' + rowIndex + '].Completed" value="false">');
+                }
                 newRow.find('label[for^="completed"]').attr('for', 'completed_' + rowIndex);
+                // Update checkboxes and add hidden fields for "QualityCheck"
                 newRow.find('input[id^="qualitycheck"]').attr({
                     'name': 'WorkPhases[' + rowIndex + '].QualityCheck',
-                    'id': 'qualitycheck_' + rowIndex
+                    'id': 'qualitycheck_' + rowIndex,
+                    'value': 'true'
                 });
+                // Update or add hidden field for unchecked state
+                var qualityCheckHidden = newRow.find('input[type="hidden"][name$=".QualityCheck"]');
+                if (qualityCheckHidden.length) {
+                    qualityCheckHidden.attr('name', 'WorkPhases[' + rowIndex + '].QualityCheck').val('false');
+                } else {
+                    newRow.find('#qualitycheck_' + rowIndex).after('<input type="hidden" name="WorkPhases[' + rowIndex + '].QualityCheck" value="false">');
+                }
                 newRow.find('label[for^="qualitycheck"]').attr('for', 'qualitycheck_' + rowIndex);
                 newRow.find('select').last().attr('name', 'WorkPhases[' + rowIndex + '].QualityOperator');
                 
