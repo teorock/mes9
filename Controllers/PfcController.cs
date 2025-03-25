@@ -168,8 +168,6 @@ namespace mes.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Model is valid, process the update
-
                 //Ottengo l'utente connesso
                 UserData userData = GetUserData();
                 //--------------------------
@@ -177,10 +175,8 @@ namespace mes.Controllers
                 string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
                 Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
 
-                // 1. Serialize WorkPhases to JSON
                 string jsonLavorazioni = JsonConvert.SerializeObject(model.WorkPhases);
 
-                // 2. Create a PfcModel object to update the database
                 PfcModel pcf2update = new PfcModel() {
                     id = model.id,
                     NumeroCommessa = model.WorkNumber,
@@ -194,13 +190,10 @@ namespace mes.Controllers
                     CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm") 
                 };
 
-                // 3. Access the database and update the record
                 DatabaseAccessor dbAccessor = new DatabaseAccessor();
-
-                //var result = dbAccessor.Updater<PfcModel>(config.ConnString2, config.PfcTable, pcf2update);
                 var result = dbAccessor.Updater<PfcModel>(config.ConnString2, config.PfcTable, pcf2update, model.id);
 
-                return RedirectToAction("Index"); // Redirect to the index page
+                return RedirectToAction("Index"); 
             }
             else
             {

@@ -4,12 +4,7 @@
 @{ List<LavorazioneViewModel> LavorazioniList = ViewBag.LavorazioniList; }
 
 <style>
-    table, th {
-        font-size: 16px;
-        text-align: center;
-        width: 230px;
-    }
-    input, td {
+    input, td, th {
         font-size: 14px;
         text-align: center;
         width: 230px;
@@ -67,7 +62,7 @@ function conferma() {
 <!-- Modal end -->
 
 
-<h2>crea nuovo Lavorazione</h2>
+<h2>Crea nuova lavorazione</h2>
 <br>
 @using(Html.BeginForm("InsertLavorazione", "DataInput", FormMethod.Post, new { name = "frmInsLavorazione", id = "frmInsLavorazione" }))
 {
@@ -78,8 +73,8 @@ function conferma() {
             <th>enabled</th> 
         </tr>
         <tr>
-            <td><input id="Nome Lavorazione" type="text" asp-for=@Model.NomeLavorazione class="form-control" required/></td>
-            <td><input id="Codice Lavorazione" type="text" asp-for=@Model.CodiceLavorazione class="form-control" required/></td>
+            <td><input id="NomeLavorazione" type="text" asp-for=@Model.NomeLavorazione class="form-control" required/></td>
+            <td><input id="CodiceLavorazione" type="text" asp-for=@Model.CodiceLavorazione class="form-control" required/></td>
             <td><input id="Enabled" type="text" value="1" asp-for=@Model.Enabled class="form-control" required/></td>
         </tr> 
     </table>

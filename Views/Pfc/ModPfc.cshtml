@@ -1,10 +1,11 @@
 @using mes.Models.ViewModels;
 
 @{
-    ViewBag.Title = "Modify Worktable";
+    ViewBag.Title = "Modifica Pfc";
     List<string> customers = ViewBag.Customers;
     int nCommessa = Convert.ToInt32(Model.id);
     string nCommessaTitle = Model.WorkNumber;
+    
 }
 
 @model WorkorderViewModel;
@@ -97,18 +98,18 @@
                         <input type="hidden" name="WorkPhases[@i].Id" value="@phase.id">
                     </div>
                     <div class="col-md-2">
-                       
-                        <div class="form-check mt-1">
 
+                        <div class="form-check mt-1">
+                            <input type="hidden" name="WorkPhases[@i].Completed" value="false">
                             <input class="form-check-input" type="checkbox" name="WorkPhases[@i].Completed" id="completed_@i" value="true" @(phase.Completed == "true" ? "checked" : "")>
                             <label class="form-check-label" for="completed_@i">completata</label>
                         </div>
 
                     </div>
                     <div class="col-md-2">
-                      
-                        <div class="form-check mt-1">
 
+                        <div class="form-check mt-1">
+                            <input type="hidden" name="WorkPhases[@i].QualityCheck" value="false">
                             <input class="form-check-input" type="checkbox" name="WorkPhases[@i].QualityCheck" id="qualitycheck_@i" value="true" @(phase.QualityCheck == "true" ? "checked" : "")>
                             <label class="form-check-label" for="qualitycheck_@i">controllo qualità</label>
                         </div>
@@ -137,7 +138,7 @@
         <!-- Submit button -->
         <div class="row mt-4">
             <div class="col-12">
-                <button type="submit" class="btn btn-primary">salva modifiche</button>
+                <button type="button" class="btn btn-primary" id="submitBtn">salva modifiche</button>
             </div>
         </div>
     }
@@ -156,17 +157,38 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
-                <button type="button" class="btn btn-danger" id="confirmRemoveBtn">Conferma</button>
+                <button type="button" class="btn btn-warning" id="confirmRemoveBtn">Conferma</button>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Submit Confirmation Modal -->
+<div class="modal fade" id="confirmSubmitModal" tabindex="-1" aria-labelledby="confirmSubmitModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmSubmitModalLabel">Conferma Salvataggio</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Sei sicuro di voler salvare le modifiche?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <button type="button" class="btn btn-primary" id="confirmSubmitBtn">Conferma</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <script>
     $(document).ready(function () {
         var existingWorks = JSON.parse('@Html.Raw(Json.Serialize(@ViewBag.Works))');
-        var rowIndex = @Model.WorkPhases.Count - 1;
+        var rowIndex = @Model.WorkPhases.Count; // Corrected rowIndex initialization.
         var rowToRemove = null;
+        var firstOperator = '@(ViewBag.Operators != null && ViewBag.Operators.Count > 0 ? ViewBag.Operators[0] : "")'; //Get first operator
 
         $('#work').on('change', function () {
             var workValue = $(this).val();
@@ -175,31 +197,25 @@
             } else {
                 $(this).removeClass('is-invalid');
             }
-
-// Function to update hidden input based on checkbox state
-function updateHiddenInput($checkbox) {
-    var isChecked = $checkbox.prop('checked');
-    var hiddenInput = $checkbox.closest('.form-check').find('input[type="hidden"]');
-    hiddenInput.val(isChecked.toString().toLowerCase());
-}
-
-// Handle existing and dynamically added checkboxes
-$(document).on('change', 'input[type="checkbox"][name$=".Completed"]', function() {
-    updateHiddenInput($(this));
-});
-
-// Initialize all existing checkboxes on page load
-$('input[type="checkbox"][name$=".Completed"]').each(function() {
-    updateHiddenInput($(this));
-});
-
-// Add this to your add-row-btn click handler
-// After creating the new row and before appending it:
-newRow.find('input[type="checkbox"][name$=".Completed"]').each(function() {
-    updateHiddenInput($(this));
-});
-            
         });
+
+         // Function to update hidden input based on checkbox state
+        function updateHiddenInput($checkbox) {
+            var isChecked = $checkbox.prop('checked');
+            var hiddenInput = $checkbox.closest('.form-check').find('input[type="hidden"]');
+            hiddenInput.val(isChecked.toString().toLowerCase());
+        }
+
+        // Handle existing and dynamically added checkboxes
+        $(document).on('change', 'input[type="checkbox"][name$=".Completed"]', function() {
+            updateHiddenInput($(this));
+        });
+
+        // Initialize all existing checkboxes on page load
+        $('input[type="checkbox"][name$=".Completed"]').each(function() {
+            updateHiddenInput($(this));
+        });
+
 
         $(document).on('change', '.work-phase-select', function () {
             var row = $(this).closest('.work-phase-row');
@@ -228,38 +244,63 @@ newRow.find('input[type="checkbox"][name$=".Completed"]').each(function() {
 
         // Add new row when "Add" button is clicked
         $(document).on('click', '.add-row-btn', function () {
-            rowIndex++;
-            var newRow = $('.work-phase-row').first().clone();
+            // Clone the *first* row.
+            var newRow = $($('.work-phase-row')[0]).clone();
+
 
             // Update IDs and names
             newRow.find('select, input').val('');
-            newRow.find('select[name^="WorkPhases"]').first().attr('name', 'WorkPhases[' + rowIndex + '].WorkphaseName');
-
-            // Uncheck checkboxes
+            // Ensure checkboxes are unchecked
             newRow.find('input[type="checkbox"]').prop('checked', false);
+            newRow.find('select[name^="WorkPhases"]').first().attr('name', 'WorkPhases[' + rowIndex + '].WorkphaseName');
 
             // Update hidden fields
             newRow.find('input[name$=".RelatedWorkOrder"]').attr('name', 'WorkPhases[' + rowIndex + '].RelatedWorkOrder').val('@Model.id');
             newRow.find('input[name$=".Id"]').attr('name', 'WorkPhases[' + rowIndex + '].Id').val(0);
 
             // Update other fields
+            // Update checkboxes and add hidden fields for "Completed"
             newRow.find('input[id^="completed"]').attr({
                 'name': 'WorkPhases[' + rowIndex + '].Completed',
-                'id': 'completed_' + rowIndex
+                'id': 'completed_' + rowIndex,
+                'value': 'true'
             });
+            // Update or add hidden field for unchecked state
+            var completedHidden = newRow.find('input[type="hidden"][name$=".Completed"]');
+            if (completedHidden.length) {
+                completedHidden.attr('name', 'WorkPhases[' + rowIndex + '].Completed').val('false');
+            } else {
+                newRow.find('#completed_' + rowIndex).after('<input type="hidden" name="WorkPhases[' + rowIndex + '].Completed" value="false">');
+            }
             newRow.find('label[for^="completed"]').attr('for', 'completed_' + rowIndex);
+            // Update checkboxes and add hidden fields for "QualityCheck"
             newRow.find('input[id^="qualitycheck"]').attr({
                 'name': 'WorkPhases[' + rowIndex + '].QualityCheck',
-                'id': 'qualitycheck_' + rowIndex
+                'id': 'qualitycheck_' + rowIndex,
+                'value': 'true'
             });
+            // Update or add hidden field for unchecked state
+            var qualityCheckHidden = newRow.find('input[type="hidden"][name$=".QualityCheck"]');
+            if (qualityCheckHidden.length) {
+                qualityCheckHidden.attr('name', 'WorkPhases[' + rowIndex + '].QualityCheck').val('false');
+            } else {
+                newRow.find('#qualitycheck_' + rowIndex).after('<input type="hidden" name="WorkPhases[' + rowIndex + '].QualityCheck" value="false">');
+            }
             newRow.find('label[for^="qualitycheck"]').attr('for', 'qualitycheck_' + rowIndex);
-            newRow.find('select').last().attr('name', 'WorkPhases[' + rowIndex + '].QualityOperator');
+
+              //Update QualityOperator select element
+            var qualityOperatorSelect = newRow.find('select[name$=".QualityOperator"]');
+            qualityOperatorSelect.attr('name', 'WorkPhases[' + rowIndex + '].QualityOperator');
+
+            // Set the selected option to the first operator
+            qualityOperatorSelect.val(firstOperator);
 
             // Enable the Add and Remove buttons for populated rows
             newRow.find('.add-row-btn').prop('disabled', false);
             newRow.find('.remove-row-btn').prop('disabled', false);
 
             $('#workPhasesContainer').append(newRow);
+            rowIndex++; // Increment rowIndex *after* appending.
         });
 
         // Initialize buttons state on page load
@@ -272,45 +313,17 @@ newRow.find('input[type="checkbox"][name$=".Completed"]').each(function() {
             addButton.prop('disabled', !hasValue);
             removeButton.prop('disabled', !hasValue);
         });
+
+
+          // Show submit confirmation modal
+        $('#submitBtn').on('click', function (e) {
+            e.preventDefault(); // Prevent the form from submitting immediately
+            $('#confirmSubmitModal').modal('show');
+        });
+
+        // Handle confirmation in submit modal
+        $('#confirmSubmitBtn').on('click', function () {
+            $('#worktableForm').submit(); // Submit the form
+        });
     });
-
-
-
-
-
-
-
-// Handle form submission
-$('#worktableForm').on('submit', function() {
-    $('.form-check-input[type="checkbox"]').each(function() {
-        var $checkbox = $(this);
-        var name = $checkbox.attr('name');
-        
-        // Create or update hidden field
-        var $hidden = $('<input type="hidden">')
-            .attr('name', name)
-            .val($checkbox.is(':checked') ? 'true' : 'false');
-        
-        // Add hidden field to form
-        $checkbox.after($hidden);
-    });
-    return true;
-});
-
-// Initialize new rows
-$(document).on('click', '.add-row-btn', function() {
-    // ... your existing add row code ...
-    
-    // After appending the new row, update the checkboxes
-    newRow.find('.form-check-input[type="checkbox"]').each(function() {
-        $(this).prop('checked', false)
-               .val('false');
-    });
-});
-
-
-
-
-
-
 </script>
