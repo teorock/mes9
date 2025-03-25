@@ -10,8 +10,8 @@
     bool cannotSign = true;
     if(!userRoles.Contains("PfcQualita")||!userRoles.Contains("PfcCrea")||!userRoles.Contains("root")) cannotSign=false;
     
-    bool canUpdate= false;
-    if(userRoles.Contains("PfcAggiorna")||userRoles.Contains("root")) canUpdate=true;    
+    bool cannotCreate= true;
+    if(userRoles.Contains("PfcCrea")||userRoles.Contains("root")) cannotCreate=false;        
     
 }
 
@@ -132,10 +132,10 @@
                         </select>
                     </div>                
                     <div class="col-md-2">
-                        <button type="button" class="btn btn-outline-success btn-block add-row-btn">aggiungi fase</button>
+                        <button type="button" class="btn btn-outline-success btn-block add-row-btn" disabled="@cannotCreate">aggiungi fase</button>
                     </div>
                     <div class="col-md-1">
-                        <button type="button" class="btn btn-outline-warning btn-block remove-row-btn">rimuovi</button>
+                        <button type="button" class="btn btn-outline-warning btn-block remove-row-btn" disabled="@cannotCreate">rimuovi</button>
                     </div>
                 </div>
             }

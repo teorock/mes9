@@ -1,6 +1,8 @@
 @{
     ViewData["Title"] = "Erp Home Page";
     string userRoles = ViewBag.userRoles;
+    bool authorize= false;
+    if(userRoles.Contains("PfcAggiorna")||userRoles.Contains("PfcCrea")||userRoles.Contains("root")) authorize=true;
 }
 
 <div class="container">
@@ -44,7 +46,7 @@
         </div>
     </div>
     <hr>
-    @if(userRoles.Contains("Pfc"))
+    @if(authorize)
     {
         <div class="row">
             <div class="col-md-1" align="center">
