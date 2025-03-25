@@ -12,14 +12,14 @@
 <!-- script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script -->
 
 <div class="container">
-    <h2>Compila PFC</h2>
+    <h2>Compila modulo pfc</h2>
     <br>
     <hr>
     @using (Html.BeginForm("InsertPfc", "Pfc", FormMethod.Post, new { @class = "form", id = "worktableForm" }))
     {   
         <div class="row">
             <div class="col-md-3">
-                <h4>numero commessa</h4>
+                <h4>modulo numero</h4>
             </div>
             <div class="col-md-3">
                 <h4>@nCommessaTitle</h4>
@@ -142,12 +142,15 @@
                 </div>
             </div>
         </div>
-        
+        <hr>
         <!-- Submit button -->
         <div class="row mt-4">
-            <div class="col-12">
-                <button type="submit" class="btn btn-primary">salva</button>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-success btn-block">salva</button>
             </div>
+            <div class="col-md-2">
+                <a class="btn btn-outline-secondary btn-block" asp-controller="Pfc" asp-action="Index">annulla</a>
+            </div>            
         </div>
     }
 </div>

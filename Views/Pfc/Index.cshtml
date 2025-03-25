@@ -6,7 +6,7 @@
 @{
     string userRoles = ViewBag.userRoles;
     bool authorize = false;
-    if(userRoles.Contains("NuovoRuolo")||userRoles.Contains("root")) authorize=true;
+    if(userRoles.Contains("PfcAggiorna")||userRoles.Contains("PfcCrea")||userRoles.Contains("root")) authorize=true;
 }
 
 <script>
@@ -55,16 +55,16 @@
     } 
 </style>
 
-<h2>gestione magazzino commesse</h2>
+<h2>gestione moduli pfc</h2>
 <br>
 <br>
-<h4>commesse a magazzino</h4>
+<h4>moduli presenti</h4>
 <hr>
 @using(Html.BeginForm("AggiornaCommesse", "PfcController", FormMethod.Post, new { name = "frmAggCommesse", id = "frmAggCommesse" }))
 {
     <table>
         <tr>
-            <th >numero commessa</th> 
+            <th >modulo numero</th> 
             <th >cliente</th> 
             <th >rif. esterno</th> 
             <th >data consegna</th> 
@@ -108,11 +108,8 @@
     {
         <div class="row">
             <div class="col-md-3 d-grid">
-                <button type="button" class="btn btn-outline-primary btn-block" data-bs-toggle="modal" data-bs-target="#confirmationModal">aggiorna</button>          
+                <a class="btn btn-outline-success btn-block" asp-controller="Pfc" asp-action="InsertPfc">inserisci modulo</a>          
             </div>
-            <div class="col-md-3 d-grid">
-                <a class="btn btn-outline-success btn-block" asp-controller="Pfc" asp-action="InsertPfc">crea nuovo commessa</a>
-            </div>    
         </div>  
     }
 }

@@ -5,6 +5,13 @@
     List<string> customers = ViewBag.Customers;
     int nCommessa = Convert.ToInt32(Model.id);
     string nCommessaTitle = Model.WorkNumber;
+    string userRoles = ViewBag.userRoles;
+
+    bool cannotSign = true;
+    if(!userRoles.Contains("PfcQualita")||!userRoles.Contains("PfcCrea")||!userRoles.Contains("root")) cannotSign=false;
+    
+    bool canUpdate= false;
+    if(userRoles.Contains("PfcAggiorna")||userRoles.Contains("root")) canUpdate=true;    
     
 }
 
@@ -18,7 +25,7 @@
     {
         <div class="row">
             <div class="col-md-3">
-                <h4>numero commessa</h4>
+                <h4>modulo numero</h4>
             </div>
             <div class="col-md-3">
                 <h4>@nCommessaTitle</h4>
@@ -107,16 +114,15 @@
 
                     </div>
                     <div class="col-md-2">
-
                         <div class="form-check mt-1">
                             <input type="hidden" name="WorkPhases[@i].QualityCheck" value="false">
-                            <input class="form-check-input" type="checkbox" name="WorkPhases[@i].QualityCheck" id="qualitycheck_@i" value="true" @(phase.QualityCheck == "true" ? "checked" : "")>
+                            <input class="form-check-input" type="checkbox" name="WorkPhases[@i].QualityCheck" id="qualitycheck_@i" value="true" @(phase.QualityCheck == "true" ? "checked" : "") disabled="@cannotSign">
                             <label class="form-check-label" for="qualitycheck_@i">controllo qualità</label>
                         </div>
 
                     </div>
                     <div class="col-md-2">
-                        <select class="form-select" name="WorkPhases[@i].QualityOperator">
+                        <select class="form-select" name="WorkPhases[@i].QualityOperator" disabled="@cannotSign">
                             <option value="" disabled>firma operatore</option>
                             @foreach (var op in ViewBag.Operators)
                             {
@@ -124,7 +130,7 @@
                                 <option value="@op" selected="@(phase.QualityOperator == op ? "selected" : null)">@op</option>
                             }
                         </select>
-                    </div>
+                    </div>                
                     <div class="col-md-2">
                         <button type="button" class="btn btn-outline-success btn-block add-row-btn">aggiungi fase</button>
                     </div>
@@ -134,11 +140,14 @@
                 </div>
             }
         </div>
-
+        <hr>
         <!-- Submit button -->
         <div class="row mt-4">
-            <div class="col-12">
-                <button type="button" class="btn btn-primary" id="submitBtn">salva modifiche</button>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-outline-success btn-block" id="submitBtn">salva modifiche</button>
+            </div>
+            <div class="col-md-2">
+                <a class="btn btn-outline-secondary btn-block" asp-controller="Pfc" asp-action="Index">annulla</a>
             </div>
         </div>
     }

@@ -9,6 +9,7 @@ using mes.Models.ControllersConfigModels;
 using mes.Models.InfrastructureModels;
 using mes.Models.Services.Infrastructures;
 using mes.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -37,6 +38,7 @@ namespace mes.Controllers
             config = JsonConvert.DeserializeObject<PfcControllerConfig>(rawConf);              
         }
 
+        [Authorize(Roles ="root, PfcAggiorna, PfcCrea, PfcLeggi")]
         public IActionResult Index()
         {
             UserData userData = GetUserData();
@@ -48,12 +50,23 @@ namespace mes.Controllers
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<PfcModel> allPfc = dbAccessor.Queryer<PfcModel>(config.ConnString2, config.PfcTable);
 
+            ViewBag.userRoles = userData.UserRoles;
+
             return View(allPfc);
         }
 
         [HttpGet]
+        [Authorize(Roles ="root, PfcAggiorna, PfcCrea")]
         public IActionResult InsertPfc()
         {
+            UserData userData = GetUserData();
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");            
+            //-------------------------);
+            ViewBag.userRoles = userData.UserRoles;
+
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<ClienteViewModel> clienti = dbAccessor.Queryer<ClienteViewModel>(config.ConnString2, config.CustomerTable)
                                                         .Where(e => e.Enabled =="1").ToList();
@@ -86,6 +99,7 @@ namespace mes.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles ="root, PfcAggiorna, PfcCrea")]
         public IActionResult InsertPfc(WorkorderViewModel inputModel)
         {
             if(ModelState.IsValid)
@@ -124,8 +138,18 @@ namespace mes.Controllers
         //===================================================================
 
         [HttpGet]
+        [Authorize(Roles ="root, PfcAggiorna, PfcCrea")]
         public IActionResult ModPfc(long inputId)
         {
+            UserData userData = GetUserData();
+            //--------------------------
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");            
+            //-------------------------);
+            ViewBag.userRoles = userData.UserRoles;
+
+
             // Get the record to modify
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             var pfc = dbAccessor.Queryer<PfcModel>(config.ConnString2, config.PfcTable)
@@ -164,6 +188,7 @@ namespace mes.Controllers
         //===================================================================
 
         [HttpPost]
+        [Authorize(Roles ="root, PfcAggiorna, PfcCrea")]
         public IActionResult ModPfc(WorkorderViewModel model)
         {
             if (ModelState.IsValid)

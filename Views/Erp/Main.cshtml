@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Erp Home Page";
     string userRoles = ViewBag.userRoles;
 }
 
@@ -42,6 +42,21 @@
         <div class="col-md-3 d-grid">
             <a class="btn btn-outline-primary btn-block" asp-controller="Totem" asp-action="Index" >arrivi e consegne</a>
         </div>
-    </div>    
+    </div>
+    <hr>
+    @if(userRoles.Contains("Pfc"))
+    {
+        <div class="row">
+            <div class="col-md-1" align="center">
+                <i class="fa-solid fa-clipboard-list fa-2xl"></i>
+            </div>
+            <div class="col-md-4">
+                <h5>gestione pfc</h5>
+            </div>
+            <div class="col-md-3 d-grid">
+                <a class="btn btn-outline-primary btn-block" asp-controller="Pfc" asp-action="Index" >moduli pfc</a>
+            </div>
+        </div>      
+    }
 </div>
 
