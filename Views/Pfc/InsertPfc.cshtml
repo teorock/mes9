@@ -50,18 +50,18 @@
         </div>
         
         <!-- Row for Work with validation -->
-        <div class="row mb-3">
+        <!-- div class="row mb-3">
             <div class="col-md-2">
-                <label for="work" class="form-label">Descrizione</label>
+                <label for="work" class="form-label">Commessa</label>
             </div>
             <div class="col-md-10">
                 <input type="text" class="form-control" id="work" name="Description"  required>
                 <div class="invalid-feedback">numero di commessa già esistente</div>
             </div>
-        </div>
+        </div -->
         <div class="row mb-3">
             <div class="col-md-2">
-                <label for="work" class="form-label">Riferimento esterno</label>
+                <label for="work" class="form-label">Commessa</label>
             </div>
             <div class="col-md-10">
                 <input type="text" class="form-control" id="work" name="ExternalRef"  required>
@@ -93,14 +93,7 @@
                     <input type="hidden" name="WorkPhases[0].RelatedWorkOrder" value="@nCommessa">
                     <input type="hidden" name="WorkPhases[0].Id" value="0">
                 </div>
-                <div class="col-md-2">
-                    <div class="form-check mt-1">
-                        <input type="hidden" name="WorkPhases[0].Completed" value="false">
-                        <input class="form-check-input" type="checkbox" name="WorkPhases[0].Completed" id="completed_0" value="true">
-                        <!-- input type="hidden" name="WorkPhases[0].Completed" value="false" -->
-                        <label class="form-check-label" for="completed_0">completata</label>
-                    </div>
-                </div>
+                
                 <div class="col-md-2">
                     <div class="form-check mt-1">
                         <input type="hidden" name="WorkPhases[0].QualityCheck" value="false">
@@ -150,7 +143,14 @@
             </div>
             <div class="col-md-2">
                 <a class="btn btn-outline-secondary btn-block" asp-controller="Pfc" asp-action="Index">annulla</a>
-            </div>            
+            </div>
+               
+        </div>
+        <hr>
+        <div class="row-mt-4">
+            <div class="col-md-3">
+                <a class="btn btn-outline-primary btn-block" asp-controller="Pfc" asp-action="CsvOrderUpload" id="UploadFile">carica csv ordini</a>
+            </div>                 
         </div>
     }
 </div>
@@ -274,5 +274,7 @@
                 $('#workPhasesContainer').append(newRow);
             });
         });
+
+
 
 </script>

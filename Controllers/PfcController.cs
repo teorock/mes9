@@ -7,6 +7,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using mes.Models.ControllersConfigModels;
 using mes.Models.InfrastructureModels;
+using mes.Models.Services;
 using mes.Models.Services.Infrastructures;
 using mes.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -22,12 +23,14 @@ namespace mes.Controllers
     public class PfcController : Controller
     {
         private readonly ILogger<PfcController> _logger;
+        private readonly IFileUploadService _fileUploadService;
         PfcControllerConfig config = new PfcControllerConfig();
         const string mesControllerConfigPath = @"c:\core\mes\ControllerConfig\PfcController.json";   
         const string intranetLog=@"c:\temp\intranet.log";           
-        public PfcController(ILogger<PfcController> logger)
+        public PfcController(ILogger<PfcController> logger, IFileUploadService fileUploadService)
         {
             _logger = logger;
+            _fileUploadService = fileUploadService;
 
             string rawConf = "";
 
@@ -184,9 +187,7 @@ namespace mes.Controllers
 
             return View(viewModel);
         }
-
         //===================================================================
-
         [HttpPost]
         [Authorize(Roles ="root, PfcAggiorna, PfcCrea")]
         public IActionResult ModPfc(WorkorderViewModel model)
@@ -233,8 +234,155 @@ namespace mes.Controllers
                 return View(model);
             }
         }
-
         //===================================================================
+
+        [HttpGet]
+        [Authorize(Roles ="root, PfcAggiorna, PfcCrea")]
+        [HttpGet]
+        [Authorize(Roles ="root, PfcAggiorna, PfcCrea")]
+        public IActionResult CsvOrderUpload()
+        {
+            // Configure view model specifically for CSV files
+            var viewModel = new FileUploadViewModel
+            {
+                // File type configuration
+                AllowedExtensions = new List<string> { ".csv" },
+                AllowedMimeTypes = new List<string> { "text/csv" },
+                MaxFileSizeBytes = 5 * 1024 * 1024, // 5MB limit for CSV files
+                MaxFileSizeDisplay = "5 MB",
+                
+                // Form customization
+                FormTitle = "CSV Order Upload",
+                FormDescription = "Upload a CSV file containing order information",
+                ShowFileTypeRestrictions = true,
+                
+                // Button configuration
+                UploadButtonText = "Upload CSV",
+                ConfirmBeforeUpload = true,
+                UploadConfirmationMessage = "Are you sure you want to upload this CSV file? Existing data might be affected."
+            };
+            
+            UserData userData = GetUserData();
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        [Authorize(Roles ="root, PfcAggiorna, PfcCrea")]
+        public async Task<IActionResult> CsvOrderUpload(FileUploadViewModel model)
+        {
+            // Get user data for logging
+            UserData userData = GetUserData();
+            string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+            string actionName = this.ControllerContext.RouteData.Values["action"].ToString();
+            
+            // Check if the request is AJAX
+            bool isAjaxRequest = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+            
+            // Check model state
+            if (!ModelState.IsValid)
+            {
+                string errorMessage = "Please select a valid file.";
+                _logger.LogWarning($"Invalid model state in {actionName}: {string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))}");
+                
+                if (isAjaxRequest)
+                {
+                    return Json(new { success = false, message = errorMessage });
+                }
+                
+                ViewBag.Message = errorMessage;
+                return View(model);
+            }
+            
+            // Validate file is specifically a CSV
+            if (model.FileToUpload != null)
+            {
+                string fileExtension = Path.GetExtension(model.FileToUpload.FileName).ToLowerInvariant();
+                if (fileExtension != ".csv")
+                {
+                    string errorMessage = "Only CSV files are allowed for order uploads.";
+                    _logger.LogWarning($"Invalid file type attempted: {fileExtension}");
+                    
+                    if (isAjaxRequest)
+                    {
+                        return Json(new { success = false, message = errorMessage });
+                    }
+                    
+                    ViewBag.Message = errorMessage;
+                    return View(model);
+                }
+            }
+
+            try
+            {
+                // Use the file upload service with specific settings for CSV files
+                var result = await _fileUploadService.UploadFileAsync(
+                    model.FileToUpload, 
+                    true // Use unique filename
+                );
+
+                if (result.Success)
+                {
+                    // Log the successful upload
+                    Log2File($"{userData.UserEmail}-->{controllerName},{actionName} - CSV file uploaded: {result.FilePath}");
+                    _logger.LogInformation($"CSV uploaded successfully by {userData.UserEmail}: {result.FileName}");
+                    
+                    string successMessage = $"CSV file uploaded successfully. File: {result.FileName}";
+                    
+                    if (isAjaxRequest)
+                    {
+                        return Json(new { 
+                            success = true, 
+                            message = successMessage,
+                            filePath = result.FilePath,
+                            fileName = result.FileName
+                        });
+                    }
+                    
+                    // Provide feedback to the user
+                    ViewBag.Message = successMessage;
+                    return View(new FileUploadViewModel
+                    {
+                        FormTitle = "CSV Order Upload",
+                        FormDescription = "Upload a CSV file containing order information",
+                        AllowedExtensions = new List<string> { ".csv" }
+                    });
+                }
+                else
+                {
+                    // Log the error
+                    Log2File($"{userData.UserEmail}-->{controllerName},{actionName} - Upload failed: {result.ErrorMessage}");
+                    _logger.LogError($"CSV upload failed for user {userData.UserEmail}: {result.ErrorMessage}");
+                    
+                    if (isAjaxRequest)
+                    {
+                        return Json(new { success = false, message = result.ErrorMessage });
+                    }
+                    
+                    // Provide error feedback to the user
+                    ViewBag.Message = result.ErrorMessage;
+                    return View(model);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle any unexpected exceptions
+                string errorMessage = $"An error occurred during file upload: {ex.Message}";
+                Log2File($"{userData.UserEmail}-->{controllerName},{actionName} - Exception: {ex.Message}");
+                _logger.LogError(ex, $"Exception during CSV upload by {userData.UserEmail}");
+                
+                if (isAjaxRequest)
+                {
+                    return Json(new { success = false, message = errorMessage });
+                }
+                
+                ViewBag.Message = errorMessage;
+                return View(model);
+            }
+        }
 
         private List<string>GetCustomersList()
         {

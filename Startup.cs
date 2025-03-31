@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using mes.Models.Services.Infrastructures;
 using mes.Models.Options;
 using System.Net;
+using mes.Models.Services;
 
 namespace intranet
 {
@@ -57,6 +58,8 @@ namespace intranet
 
             services.Configure<AppOptions>(Configuration.GetSection("AppOptions"));
 
+            // Register FileUploadService
+            services.AddScoped<IFileUploadService, FileUploadService>();
             //services.Configure<IdentityOptions>(options =>
             //{
             //    options.Password.RequiredLength = 8;

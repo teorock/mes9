@@ -1,0 +1,42 @@
+@model mes.Models.ViewModels.FileUploadViewModel
+
+@{
+    ViewData["Title"] = "File Upload";
+}
+
+<div class="text-center">
+    <h1 class="display-4">File Upload</h1>
+
+    @if (!string.IsNullOrEmpty(ViewBag.Message))
+    {
+        <div class="alert alert-info">@ViewBag.Message</div>
+    }
+
+    <form asp-action="CsvOrderUpload" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label asp-for="FileToUpload">@Html.DisplayNameFor(model => model.FileToUpload)</label>  <!-- Use DisplayNameFor -->
+            <div class="custom-file">
+                <input asp-for="FileToUpload" type="file" class="custom-file-input" id="customFile">
+                <label class="custom-file-label" for="customFile">Choose file</label>
+                <span asp-validation-for="FileToUpload" class="text-danger"></span>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Upload</button>
+    </form>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+
+    <script>
+        // Add this script to update the file name in the label
+        $(document).ready(function () {
+            $('#customFile').on('change', function () {
+                var fileName = $(this).val().split('\\').pop();  // Extract file name
+                $(this).next('.custom-file-label').html(fileName);  // Update label
+            });
+        });
+    </script>
+}
