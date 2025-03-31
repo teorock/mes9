@@ -236,6 +236,12 @@ namespace mes.Controllers
 
         //===================================================================
 
+        [HttpGet]
+        public IActionResult LoadCsv(string filename)
+        {
+            return RedirectToAction("Index");
+        }
+
         private List<string>GetCustomersList()
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();

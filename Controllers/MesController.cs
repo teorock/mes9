@@ -17,7 +17,7 @@ using Microsoft.AspNetCore.Builder.Extensions;
 
 namespace mes.Controllers
 {
-    [Route("[controller]")]
+    //[Route("[controller]")]
     public class MesController : Controller
     {
        private readonly ILogger<MesController> _logger;
