@@ -381,7 +381,7 @@ namespace intranet.Controllers
             newLavorazione.Enabled = "1";            
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<LavorazioneViewModel> Lavorazioni = (List<LavorazioneViewModel>)dbAccessor.Queryer<LavorazioneViewModel>(config.ConnString, config.LavorazioniDbTable);
+            List<LavorazioneViewModel> Lavorazioni = dbAccessor.Queryer<LavorazioneViewModel>(config.ConnString, config.LavorazioniDbTable);
 
             //long max = (from l in Lavorazioni select l.id).Max();
             if(Lavorazioni.Count() > 0)

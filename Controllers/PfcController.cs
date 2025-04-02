@@ -319,18 +319,15 @@ namespace mes.Controllers
             try
             {
                 // Use the file upload service with specific settings for CSV files
-                var result = await _fileUploadService.UploadFileAsync(
-                    model.FileToUpload, 
-                    true // Use unique filename
-                );
+                var result = await _fileUploadService.UploadFileAsync(model.FileToUpload);
 
                 if (result.Success)
                 {
                     // Log the successful upload
                     Log2File($"{userData.UserEmail}-->{controllerName},{actionName} - CSV file uploaded: {result.FilePath}");
-                    _logger.LogInformation($"CSV uploaded successfully by {userData.UserEmail}: {result.FileName}");
+                    _logger.LogInformation($"CSV uploaded successfully by {userData.UserEmail}: {Path.GetFileName(result.FilePath)}");
                     
-                    string successMessage = $"CSV file uploaded successfully. File: {result.FileName}";
+                    string successMessage = $"CSV file uploaded successfully. File: {Path.GetFileName(result.FilePath)}";
                     
                     if (isAjaxRequest)
                     {
@@ -338,7 +335,7 @@ namespace mes.Controllers
                             success = true, 
                             message = successMessage,
                             filePath = result.FilePath,
-                            fileName = result.FileName
+                            fileName = Path.GetFileName(result.FilePath)
                         });
                     }
                     
@@ -383,6 +380,18 @@ namespace mes.Controllers
                 return View(model);
             }
         }
+
+        [HttpGet]
+        public IActionResult LoadCsv(string filename)
+        {
+            return RedirectToAction("Index");
+        }
+
+        public IActionResult LoadCsvToDatabase(string file2load)
+        {
+            return RedirectToAction("InsertPfc");
+        }
+
 
         private List<string>GetCustomersList()
         {

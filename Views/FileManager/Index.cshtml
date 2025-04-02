@@ -1,0 +1,82 @@
+@model mes.Models.ViewModels.FileUploadViewModel
+
+@{
+    ViewData["Title"] = "File Upload";
+}
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>    
+
+<style>
+
+    .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    }
+
+    html {
+    position: relative;
+    min-height: 100%;
+    }
+
+    body {
+    margin-bottom: 60px;
+    }
+
+    .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+    color: var(--bs-secondary-color);
+    text-align: end;
+    }
+
+    .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+    text-align: start;
+    } 
+</style>
+
+<div class="text-center">
+    @if (!string.IsNullOrEmpty(ViewBag.Message))
+    {
+        <div class="alert alert-info" id="filenameMessage">@ViewBag.Message</div>
+    }
+
+    <form asp-action="Upload" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label asp-for="FileToUpload">@Html.DisplayNameFor(model => model.FileToUpload)</label> 
+            <div class="custom-file">
+                <input asp-for="FileToUpload" type="file" class="custom-file-input" id="customFile">
+                <label class="custom-file-label" for="customFile">scegli un file</label>
+                <span asp-validation-for="FileToUpload" class="text-danger"></span>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-outline-primary">Carica</button>
+        <button type="button" class="btn btn-outline-success" id="processFile">elabora file</button>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#customFile').on('change', function () {
+                var fileName = $(this).val().split('\\').pop();
+                $(this).next('.custom-file-label').html(fileName);
+            });
+
+            var serverFileName = @Html.Raw(Json.Serialize(ViewBag.filename));
+            
+            $('#processFile').click(function() {
+                console.log('Button clicked');
+                console.log('File:', serverFileName);
+                
+                if(serverFileName) {
+                    console.log('Redirecting to:', "/Pfc/LoadCsvToDatabase?file2load=" + encodeURIComponent(serverFileName));
+                    window.location.href = "/Pfc/LoadCsvToDatabase?file2load=" + encodeURIComponent(serverFileName);
+                } else {
+                    alert('Please select a file first');
+                }
+            });
+        });
+    </script>
+}
