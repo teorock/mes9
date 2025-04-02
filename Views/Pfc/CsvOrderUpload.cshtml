@@ -35,6 +35,11 @@
 
     <script>
         // Add this script to update the file name in the label
+        //var controllerfileName = '@ViewBag.filename';
+        var controllerfileName = @Html.Raw(Json.Serialize(ViewBag.filename));
+
+        console.log('file in ingresso:', controllerfileName)
+
         $(document).ready(function () {
             $('#customFile').on('change', function () {
                 var fileName = $(this).val().split('\\').pop();
@@ -44,20 +49,18 @@
             // Process file button click handler
             $('#processFile').click(function() {
                 console.log('Button clicked');
-                var fileInput = document.getElementById('customFile');
-                var file = fileInput.files[0];
-                console.log('File:', file);
+                //var fileInput = document.getElementById('customFile');
+                //var file = fileInput.files[0];
+                console.log('File:', controllerfileName);
                 
-                if(file) {
-                    var fileName = file.name;
-                    console.log('File name:', fileName);
-                    console.log('Redirecting to:', "/Pfc/LoadCsvToDatabase?file2load=" + fileName);
-                    window.location.href = "/Pfc/LoadCsvToDatabase?file2load=" + fileName;
+                if(controllerfileName) {
+                    console.log('File name:', controllerfileName);
+                    console.log('Redirecting to:', "/Pfc/LoadCsvToDatabase?file2load=" + controllerfileName);
+                    window.location.href = "/Pfc/LoadCsvToDatabase?file2load=" + controllerfileName;
                 } else {
                     alert('Seleziona un file');
                 }
             });
-
         });
 
     </script>

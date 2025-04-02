@@ -339,12 +339,17 @@ namespace mes.Controllers
                     
                     // Provide feedback to the user
                     ViewBag.Message = successMessage;
+                    //passo io il nome del file
+                    ViewBag.filename = result.FilePath;
+                                        
                     return View(new FileUploadViewModel
                     {
                         FormTitle = "CSV Order Upload",
                         FormDescription = "Upload a CSV file containing order information",
                         AllowedExtensions = new List<string> { ".csv" }
                     });
+
+
                 }
                 else
                 {
