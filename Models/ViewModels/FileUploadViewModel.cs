@@ -13,7 +13,7 @@ namespace mes.Models.ViewModels
         /// The file to be uploaded
         /// </summary>
         [Required(ErrorMessage = "Please select a file.")]
-        [Display(Name = "Choose file:")]
+        [Display(Name = "Scegli un file:")]
         public IFormFile? FileToUpload { get; set; }
 
         #region File Type Configuration

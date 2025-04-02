@@ -238,8 +238,6 @@ namespace mes.Controllers
 
         [HttpGet]
         [Authorize(Roles ="root, PfcAggiorna, PfcCrea")]
-        [HttpGet]
-        [Authorize(Roles ="root, PfcAggiorna, PfcCrea")]
         public IActionResult CsvOrderUpload()
         {
             // Configure view model specifically for CSV files
@@ -381,11 +379,11 @@ namespace mes.Controllers
             }
         }
 
-        [HttpGet]
-        public IActionResult LoadCsv(string filename)
-        {
-            return RedirectToAction("Index");
-        }
+        //[HttpGet]
+        //public IActionResult LoadCsv(string filename)
+        //{
+        //    return RedirectToAction("Index");
+        //}
 
         public IActionResult LoadCsvToDatabase(string file2load)
         {

@@ -4,39 +4,61 @@
     ViewData["Title"] = "File Upload";
 }
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+
+
 <div class="text-center">
-    <h1 class="display-4">File Upload</h1>
 
     @if (!string.IsNullOrEmpty(ViewBag.Message))
     {
         <div class="alert alert-info">@ViewBag.Message</div>
     }
-
     <form asp-action="CsvOrderUpload" method="post" enctype="multipart/form-data">
         <div class="form-group">
-            <label asp-for="FileToUpload">@Html.DisplayNameFor(model => model.FileToUpload)</label>  <!-- Use DisplayNameFor -->
+            <label asp-for="FileToUpload">@Html.DisplayNameFor(model => model.FileToUpload)</label>
+            <br>
             <div class="custom-file">
                 <input asp-for="FileToUpload" type="file" class="custom-file-input" id="customFile">
-                <label class="custom-file-label" for="customFile">Choose file</label>
-                <span asp-validation-for="FileToUpload" class="text-danger"></span>
+                <!-- label class="custom-file-label" for="customFile">scegli un file</label -->
+                <span asp-validation-for="FileToUpload" class="text-warning"></span>
             </div>
         </div>
-
-        <button type="submit" class="btn btn-primary">Upload</button>
+        <br>
+        <button type="submit" class="btn btn-outline-primary">Upload</button>
+        <button type="button" class="btn btn-outline-success" id="processFile">elabora file</button>
     </form>
 </div>
 
 @section Scripts {
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+
 
     <script>
         // Add this script to update the file name in the label
         $(document).ready(function () {
             $('#customFile').on('change', function () {
-                var fileName = $(this).val().split('\\').pop();  // Extract file name
-                $(this).next('.custom-file-label').html(fileName);  // Update label
+                var fileName = $(this).val().split('\\').pop();
+                $(this).next('.custom-file-label').html(fileName);
             });
+
+            // Process file button click handler
+            $('#processFile').click(function() {
+                console.log('Button clicked');
+                var fileInput = document.getElementById('customFile');
+                var file = fileInput.files[0];
+                console.log('File:', file);
+                
+                if(file) {
+                    var fileName = file.name;
+                    console.log('File name:', fileName);
+                    console.log('Redirecting to:', "/Pfc/LoadCsvToDatabase?file2load=" + fileName);
+                    window.location.href = "/Pfc/LoadCsvToDatabase?file2load=" + fileName;
+                } else {
+                    alert('Seleziona un file');
+                }
+            });
+
         });
+
     </script>
 }
