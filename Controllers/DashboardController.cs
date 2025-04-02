@@ -52,7 +52,7 @@ namespace mes.Controllers
         }
         
         [HttpGet]
-        [Route("/Dashboard/DashboardMateriali")]
+        //[Route("/Dashboard/DashboardMateriali")]
         [Authorize(Roles ="root, MagMaterialiScrivi")]
         public IActionResult DashboardMateriali()
         {

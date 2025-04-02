@@ -238,7 +238,7 @@ namespace mes.Controllers
 
         [HttpGet]
         [Authorize(Roles ="root, PfcAggiorna, PfcCrea")]
-        public IActionResult CsvOrderUpload()
+        public IActionResult CsvOrderUpload(string message)
         {
             // Configure view model specifically for CSV files
             var viewModel = new FileUploadViewModel
@@ -265,6 +265,12 @@ namespace mes.Controllers
             string actionName = this.ControllerContext.RouteData.Values["action"].ToString();
             Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
             
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            List<PfcCsvDaneaSource> actuals = dbAccessor.Queryer<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable)
+                                                        .Where(t => t.Taken =="0").ToList();
+            ViewBag.actualCsvDanea = actuals;            
+            ViewBag.message = message;
+
             return View(viewModel);
         }
 
@@ -309,6 +315,11 @@ namespace mes.Controllers
                         return Json(new { success = false, message = errorMessage });
                     }
                     
+                    DatabaseAccessor dbAccessor = new DatabaseAccessor();
+                    List<PfcCsvDaneaSource> actuals = dbAccessor.Queryer<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable)
+                                                                .Where(t => t.Taken =="0").ToList();
+                    ViewBag.actualCsvDanea = actuals;    
+
                     ViewBag.Message = errorMessage;
                     return View(model);
                 }
@@ -325,7 +336,10 @@ namespace mes.Controllers
                     Log2File($"{userData.UserEmail}-->{controllerName},{actionName} - CSV file uploaded: {result.FilePath}");
                     _logger.LogInformation($"CSV uploaded successfully by {userData.UserEmail}: {Path.GetFileName(result.FilePath)}");
                     
-                    string successMessage = $"CSV file uploaded successfully. File: {Path.GetFileName(result.FilePath)}";
+                    string additionaMessage ="";
+                    LoadCsvToDatabase(result.FilePath, out additionaMessage);
+
+                    string successMessage = $"Caricato file: {Path.GetFileName(result.FilePath)} - {additionaMessage}";
                     
                     if (isAjaxRequest)
                     {
@@ -341,15 +355,18 @@ namespace mes.Controllers
                     ViewBag.Message = successMessage;
                     //passo io il nome del file
                     ViewBag.filename = result.FilePath;
-                                        
+
+                    DatabaseAccessor dbAccessor = new DatabaseAccessor();
+                    List<PfcCsvDaneaSource> actuals = dbAccessor.Queryer<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable)
+                                                                .Where(t => t.Taken =="0").ToList();
+                    ViewBag.actualCsvDanea = actuals;                        
+
                     return View(new FileUploadViewModel
                     {
                         FormTitle = "CSV Order Upload",
                         FormDescription = "Upload a CSV file containing order information",
                         AllowedExtensions = new List<string> { ".csv" }
                     });
-
-
                 }
                 else
                 {
@@ -385,21 +402,39 @@ namespace mes.Controllers
         }
 
 
-        public IActionResult LoadCsvToDatabase(string file2load)
+        public IActionResult LoadCsvToDatabase(string file2load, out string internalMessage)
         {
-            //carica file raw in lista oggett
+            //carica file raw in lista oggetti
             PfcServices pfcServices = new PfcServices();
             List<PfcCsvDaneaSource> csvFile = pfcServices.LoadCsvDaneaToList(file2load, config.CsvFilter1, config.CsvFilter2);
             
             //mette la lista su database
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            foreach(var oneObj in csvFile)
-            {
-                int res = dbAccessor.Insertor<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable, oneObj);
-            }
-            
 
-            return RedirectToAction("InsertPfc");
+            //verifica se i record sono già presenti
+            //prelevo tutti
+            List<PfcCsvDaneaSource> actuals = dbAccessor.Queryer<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable);
+
+            //ottieni differenza tra le liste
+            List<string> actualCommesse = actuals.Select(n => n.NCommessa).ToList();
+            List<PfcCsvDaneaSource> newOnes = csvFile.Where(n => !actualCommesse.Contains(n.NCommessa)).ToList();
+            
+            if(newOnes.Count==0)
+            {
+                internalMessage = "nessun nuovo record caricato";
+            }
+            else
+            {
+                foreach(var oneObj in newOnes)
+                {
+                    oneObj.Taken="0";
+                    int res = dbAccessor.Insertor<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable, oneObj);
+                }                
+                internalMessage = $"caricati {newOnes.Count} nuovi record";
+            }
+
+
+            return RedirectToAction("CsvOrderUpload");
         }
 
         private List<string>GetCustomersList()
@@ -408,7 +443,6 @@ namespace mes.Controllers
             List<string> clienti = dbAccessor.Queryer<ClienteViewModel>(config.ConnString2, config.CustomerTable)
                                                         .Where(e => e.Enabled =="1")
                                                         .Select(c =>c.Nome).ToList();
-
             return clienti;
         }
 

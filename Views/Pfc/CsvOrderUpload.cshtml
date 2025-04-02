@@ -1,12 +1,84 @@
+@using mes.Models.InfrastructureModels
 @model mes.Models.ViewModels.FileUploadViewModel
 
 @{
     ViewData["Title"] = "File Upload";
+    // Cast ViewBag data to the correct type for easier handling and potential null check
+    var csvData = ViewBag.actualCsvDanea as List<PfcCsvDaneaSource>;
 }
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+    @* --- DataTables CSS --- *@
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 
+<style>
+    /* Style the main form container */
+    form[enctype="multipart/form-data"] {
+        display: flex; /* Use flexbox for alignment */
+        flex-wrap: wrap; /* Allow items to wrap on smaller screens */
+        align-items: flex-end; /* Align items vertically to the bottom */
+        gap: 15px; /* Space between flex items (input group and buttons) */
+        padding: 20px; /* Padding inside the border */
+        border: 1px solid #dee2e6; /* Add a border around the form */
+        border-radius: 5px; /* Rounded corners for the border */
+        background-color: #f8f9fa; /* Optional: Light background */
+        justify-content: center; /* Center items if they wrap */
+        margin-top: 15px; /* Add some space above the form */
+    }
+
+    /* Style the group containing the label and file input */
+    form[enctype="multipart/form-data"] .form-group {
+        margin-bottom: 0; /* Remove default bottom margin */
+        flex-grow: 1; /* Allow this group to take available horizontal space */
+        max-width: 450px; /* Optional: Prevent it from becoming too wide */
+        text-align: left; /* Align label text to the left */
+    }
+
+    /* Style the label */
+    form[enctype="multipart/form-data"] .form-group label {
+        margin-bottom: .3rem; /* Reduce space below label */
+        display: block; /* Ensure label is on its own line above input */
+        font-weight: 500;
+    }
+
+    /* Style the container holding the actual file input */
+    form[enctype="multipart/form-data"] .custom-file {
+        border: 1px solid #ced4da; /* Add the border here */
+        border-radius: .25rem; /* Match standard Bootstrap input rounding */
+        display: flex; /* Use flex to manage inner elements if needed */
+        background-color: #fff; /* White background like standard inputs */
+        height: calc(1.5em + .75rem + 10px); /* Match Bootstrap input height */
+        width: auto;
+        padding: .375rem .75rem; /* Match Bootstrap input padding */
+        overflow: hidden; /* Hide overflow from the actual input */
+    }
+
+    /* Style the actual file input */
+    /* Note: Direct styling of file inputs is limited */
+    form[enctype="multipart/form-data"] .custom-file-input {
+        opacity: 1; /* Ensure it's visible and clickable if not using label overlay */
+        padding: 0; /* Remove default padding */
+        border: none; /* Remove default browser border */
+        flex-grow: 1; /* Allow input to fill container */
+        /* You might need vendor prefixes or specific overrides depending
+            on how browsers render the default file input button */
+    }
+
+    /* Style the validation message */
+    form[enctype="multipart/form-data"] .text-warning {
+        font-size: 0.875em;
+        margin-top: .25rem;
+        display: block; /* Ensure it appears below */
+    }
+
+    /* Style the buttons */
+    form[enctype="multipart/form-data"] .btn {
+        white-space: nowrap; /* Prevent button text from wrapping */
+        margin-bottom: 0; /* Align with bottom of input group */
+        height: calc(1.5em + .75rem + 2px); /* Match input height */
+    }    
+</style>
 
 <div class="text-center">
 
@@ -17,45 +89,108 @@
     <form asp-action="CsvOrderUpload" method="post" enctype="multipart/form-data">
         <div class="form-group">
             <label asp-for="FileToUpload">@Html.DisplayNameFor(model => model.FileToUpload)</label>
-            <br>
             <div class="custom-file">
+                @* This using statement seems misplaced here, maybe delete it? *@
+                @* using mes.Models.InfrastructureModels; *@
                 <input asp-for="FileToUpload" type="file" class="custom-file-input" id="customFile">
                 <!-- label class="custom-file-label" for="customFile">scegli un file</label -->
                 <span asp-validation-for="FileToUpload" class="text-warning"></span>
             </div>
         </div>
-        <br>
         <button type="submit" class="btn btn-outline-primary">Upload</button>
-        <button type="button" class="btn btn-outline-success" id="processFile">elabora file</button>
+        <a class="btn btn-outline-success" asp-controller="Pfc" asp-action="insertPfc">torna inserisci modulo pfc</a>
     </form>
 </div>
 
+<hr>
+
+@* --- Refactored Table Section --- *@
+@if (csvData != null && csvData.Any()) // Check if there is data to display
+{
+    <div class="mt-4"> @* Add some margin top for spacing *@
+        <h3>Ordini Danea presenti</h3>
+        <br>
+        <table id="csvDataTable" class="table table-striped table-bordered table-hover" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Commessa</th>
+                    <th>Data consegna</th>
+                    <th>Commento</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (PfcCsvDaneaSource oneCsv in csvData)
+                {
+                    <tr>
+                        <td>@oneCsv.Cliente</td>
+                        <td>@oneCsv.NCommessa</td>
+                        <td>@oneCsv.DataConsegna</td>
+                        <td>@oneCsv.Commento</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else if (ViewBag.filename != null) // Check if a file was processed but resulted in no data
+{
+     <div class="alert alert-warning mt-4">Nessun dato trovato nel file CSV o il file è vuoto.</div>
+}
+@* --- End Refactored Table Section --- *@
+
+
 @section Scripts {
 
+    @* --- DataTables JS (make sure jQuery is loaded before this) --- *@
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
-    <script>
-        var controllerfileName = @Html.Raw(Json.Serialize(ViewBag.filename));
+<script>
+        // Ensure ViewBag.filename is properly serialized, even if null or empty
+        var controllerfileName = @Html.Raw(Json.Serialize(ViewBag.filename ?? string.Empty));
 
-        console.log('file in ingresso:', controllerfileName)
+        console.log('file in ingresso:', controllerfileName);
 
         $(document).ready(function () {
+
+            // --- Initialize DataTables ---
+            // Check if the table exists before trying to initialize DataTables
+            if ($('#csvDataTable').length) {
+                 $('#csvDataTable').DataTable({ // Start DataTable options object
+                     language: {
+                         url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/it-IT.json'
+                     } // End language object
+                 }); // <<-- ADDED THE CLOSING } HERE before the );
+            }
+            // --- End DataTables Initialization ---
+
+
             $('#customFile').on('change', function () {
+                // Get the file name for display purposes if needed (label is commented out)
                 var fileName = $(this).val().split('\\').pop();
-                $(this).next('.custom-file-label').html(fileName);
+                // Example: Update a separate element if you don't have the label
+                // $('#selectedFileNameDisplay').text(fileName);
+                 console.log('Selected file:', fileName); // Log selected file name from the input
             });
 
-            $('#processFile').click(function() {
-                console.log('Button clicked');
-                console.log('File:', controllerfileName);
-                
-                if(controllerfileName) {
-                    console.log('File name:', controllerfileName);
-                    console.log('Redirecting to:', "/Pfc/LoadCsvToDatabase?file2load=" + controllerfileName);
-                    window.location.href = "/Pfc/LoadCsvToDatabase?file2load=" + controllerfileName;
-                } else {
-                    alert('Seleziona un file');
-                }
-            });
+            //$('#processFile').click(function() {
+            //    console.log('Process button clicked');
+            //    // Use the filename received from the controller (ViewBag)
+            //    console.log('File to process (from controller):', controllerfileName);
+//
+            //    // Check if the controller provided a filename to process
+            //    if(controllerfileName && controllerfileName.length > 0) { // More robust check
+            //        console.log('Filename from controller exists:', controllerfileName);
+            //        var url = "/Pfc/LoadCsvToDatabase?file2load=" + encodeURIComponent(controllerfileName);
+            //        console.log('Redirecting to:', url);
+            //        window.location.href = url; // Redirect
+            //    } else {
+            //        // Give a clearer error message
+            //        alert('Errore: Il nome del file da processare non è disponibile. Assicurarsi che un file sia stato caricato correttamente nella fase precedente.');
+            //        console.error('controllerfileName is missing or empty.');
+            //    }
+            //});
         });
 
     </script>

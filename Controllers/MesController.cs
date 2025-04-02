@@ -39,7 +39,6 @@ namespace mes.Controllers
        }
 
 
-        [Route("Main")]
         public IActionResult Main()
         {
             UserData userData = GetUserData();
@@ -51,7 +50,7 @@ namespace mes.Controllers
     #region ProductionStatus
 
         [HttpGet]
-        [Route("ProductionStatus")]
+        //[Route("ProductionStatus")]
         public IActionResult ProductionStatus()
         {
             List<MachineStatusPicker> lastMachinesStatus = new List<MachineStatusPicker>();
@@ -146,7 +145,7 @@ namespace mes.Controllers
         }
 
         [HttpGet]
-        [Route("GetMachineHistory")]
+        //[Route("GetMachineHistory")]
         public IActionResult GetMachineHistory(string machineName, string startDate, string endDate)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
