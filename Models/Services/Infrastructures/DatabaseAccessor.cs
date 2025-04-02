@@ -10,7 +10,7 @@ namespace mes.Models.Services.Infrastructures
 {    
     public class DatabaseAccessor
     {
-        private bool LogEnabled = true;
+        private bool LogEnabled = false;
         private string logConnectionString = "Data Source=../mesData/dbmovements.db";
 
         // versione 2.0 - 12 giu 2024

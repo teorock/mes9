@@ -34,8 +34,6 @@
 
 
     <script>
-        // Add this script to update the file name in the label
-        //var controllerfileName = '@ViewBag.filename';
         var controllerfileName = @Html.Raw(Json.Serialize(ViewBag.filename));
 
         console.log('file in ingresso:', controllerfileName)
@@ -46,11 +44,8 @@
                 $(this).next('.custom-file-label').html(fileName);
             });
 
-            // Process file button click handler
             $('#processFile').click(function() {
                 console.log('Button clicked');
-                //var fileInput = document.getElementById('customFile');
-                //var file = fileInput.files[0];
                 console.log('File:', controllerfileName);
                 
                 if(controllerfileName) {

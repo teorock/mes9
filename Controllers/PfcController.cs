@@ -51,7 +51,7 @@ namespace mes.Controllers
             Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");            
             //--------------------------
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<PfcModel> allPfc = dbAccessor.Queryer<PfcModel>(config.ConnString2, config.PfcTable);
+            List<PfcModel> allPfc = dbAccessor.Queryer<PfcModel>(config.PfcConnString, config.PfcTable);
 
             ViewBag.userRoles = userData.UserRoles;
 
@@ -384,17 +384,23 @@ namespace mes.Controllers
             }
         }
 
-        //[HttpGet]
-        //public IActionResult LoadCsv(string filename)
-        //{
-        //    return RedirectToAction("Index");
-        //}
 
         public IActionResult LoadCsvToDatabase(string file2load)
         {
+            //carica file raw in lista oggett
+            PfcServices pfcServices = new PfcServices();
+            List<PfcCsvDaneaSource> csvFile = pfcServices.LoadCsvDaneaToList(file2load, config.CsvFilter1, config.CsvFilter2);
+            
+            //mette la lista su database
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            foreach(var oneObj in csvFile)
+            {
+                int res = dbAccessor.Insertor<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable, oneObj);
+            }
+            
+
             return RedirectToAction("InsertPfc");
         }
-
 
         private List<string>GetCustomersList()
         {
