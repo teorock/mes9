@@ -242,6 +242,12 @@ namespace mes.Controllers
             return RedirectToAction("Index");
         }
 
+        public IActionResult LoadCsvToDatabase(string file2load)
+        {
+            return RedirectToAction("InsertPfc");
+        }
+
+
         private List<string>GetCustomersList()
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
