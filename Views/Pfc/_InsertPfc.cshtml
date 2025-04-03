@@ -1,0 +1,397 @@
+@using mes.Models.ViewModels;
+
+@{
+    ViewBag.Title = "Inserisci Pfc";
+    List<string> customers = ViewBag.Customers;
+    int nCommessa = ViewBag.nCommessa;
+    string nCommessaTitle = ViewBag.nCommessaTitle;
+    List<string> selectableOrders = ViewBag.selectableOrders ?? new List<string>();
+    // Generate unique IDs based on the number of orders for robustness
+    string dropdownButtonId = $"selectableOrdersDropdownButton_{Guid.NewGuid().ToString("N").Substring(0, 8)}";
+    string dropdownMenuId = $"selectableOrdersDropdownMenu_{Guid.NewGuid().ToString("N").Substring(0, 8)}";
+}
+
+@model WorkorderViewModel;
+
+@* Add the necessary CSS from Example 1 - Place this in your <head> or a linked CSS file *@
+@section Styles {
+    <style>
+        /* Styles from Example 1 - Adjust as needed */
+        .checkbox-dropdown .dropdown-menu {
+            padding: 0.5rem 0; /* Remove default padding */
+            max-height: 250px; /* Optional: limit height */
+            overflow-y: auto; /* Optional: add scroll if needed */
+            width: 100%; /* Make dropdown match button width */
+        }
+        .checkbox-dropdown .dropdown-item-text {
+            padding: 0.25rem 1rem; /* Adjust padding for items */
+            cursor: default; /* Make it look less like a link */
+            display: block; /* Ensure it takes full width */
+            white-space: normal; /* Allow text wrapping */
+        }
+        .checkbox-dropdown .dropdown-item-text:hover {
+            background-color: #f8f9fa; /* Subtle hover */
+        }
+        .checkbox-dropdown .form-check-label {
+             cursor: pointer; /* Indicate clickable label */
+             width: 100%; /* Make label take full width */
+        }
+        /* Style for invalid state on the button */
+        .checkbox-dropdown .btn.is-invalid {
+            border-color: var(--bs-danger); /* Use Bootstrap's danger color */
+        }
+    </style>
+}
+
+<div class="container">
+    <h2>Compila modulo pfc</h2>
+    <br>
+    <hr>
+    @using (Html.BeginForm("InsertPfc", "Pfc", FormMethod.Post, new { @class = "form", id = "worktableForm", enctype = "multipart/form-data" }))
+    {
+        <div class="row">
+            <div class="col-md-3">
+                <h4>modulo numero</h4>
+            </div>
+            <div class="col-md-3">
+                <h4>@nCommessaTitle</h4>
+                <input type="hidden" name="WorkNumber" value="@nCommessaTitle">
+                <input type="hidden" name="id" value="@nCommessa">
+            </div>
+        </div>
+        <br>
+        <div class="row mb-3">
+            <div class="col-md-2">
+                <label for="customer" class="form-label">Cliente</label>
+            </div>
+            <div class="col-md-6">
+                <select class="form-select" id="customer" name="Customer" required>
+                    <option value="" selected disabled>seleziona un cliente</option>
+                    @foreach (var customer in customers)
+                    {
+                        <option value="@customer">@customer</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="deliveryDate" class="form-label" style="text-align: right;">Data di consegna</label>
+            </div>
+            <div class="col-md-2">
+                <input type="date" class="form-control" id="deliveryDate" name="Delivery" required>
+            </div>
+        </div>
+
+
+        <!-- =========================================================== -->
+        <!-- Start: Replaced Commesse Selezionabili with Checkbox Dropdown -->
+        <!-- =========================================================== -->
+        <div class="row mb-3">
+            <div class="col-md-2">
+                <label class="form-label pt-1">Commesse</label> <!-- Adjusted label -->
+            </div>
+            <div class="col-md-10">
+                <div class="dropdown checkbox-dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button"
+                            id="@dropdownButtonId"
+                            data-bs-toggle="dropdown"
+                            data-bs-auto-close="outside"
+                            aria-expanded="false">
+                        Seleziona Commesse
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="@dropdownButtonId" id="@dropdownMenuId">
+                        @if (selectableOrders != null && selectableOrders.Any())
+                        {
+                            int orderIndex = 0;
+                            foreach (var order in selectableOrders)
+                            {
+                                string checkboxId = $"selectableOrderCheck_{orderIndex}";
+                                <li>
+                                    <div class="dropdown-item-text">
+                                        <div class="form-check">
+                                            <input class="form-check-input"
+                                                   type="checkbox"
+                                                   name="SelectedOrders"   /* IMPORTANT: Name for model binding */
+                                                   value="@order"
+                                                   id="@checkboxId">
+                                            <label class="form-check-label" for="@checkboxId">
+                                                @order
+                                            </label>
+                                        </div>
+                                    </div>
+                                </li>
+                                orderIndex++;
+                            }
+                        }
+                        else
+                        {
+                            <li><span class="dropdown-item-text text-muted fst-italic">Nessuna commessa selezionabile disponibile.</span></li>
+                        }
+                    </ul>
+                     <!-- Validation message placeholder -->
+                     <div id="selectedOrdersValidation" class="invalid-feedback" style="display: none;">Selezionare almeno una commessa.</div>
+                </div>
+                @* Optional: Hidden input
+                <input type="hidden" name="SelectedOrders" value="" /> *@
+            </div>
+        </div>
+        <!-- =========================================================== -->
+        <!-- End: Replaced Commesse Selezionabili                         -->
+        <!-- =========================================================== -->
+
+
+        <br>
+        <hr>
+
+         <!-- Original "Commesse" section / Renamed "Riferimenti Esterni" -->
+         <!-- Keep or remove this section based on your actual needs -->
+        <div class="row mb-3">
+            <div class="col-md-2">
+                <label class="form-label pt-1">Riferimenti Esterni (Esempio)</label>
+            </div>
+            <div class="col-md-10">
+                @if (selectableOrders != null && selectableOrders.Any())
+                {
+                    <div id="externalRefsContainer">
+                        @for (int i = 0; i < selectableOrders.Count; i++)
+                        {
+                            var order = selectableOrders[i];
+                            string checkboxId = $"externalRefCheck_{i}";
+                            <div class="form-check mb-1">
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       name="SelectedExternalRefs"  /* Different name assumed */
+                                       value="@order"
+                                       id="@checkboxId">
+                                <label class="form-check-label" for="@checkboxId">
+                                    @order
+                                </label>
+                            </div>
+                        }
+                    </div>
+                    <div id="selectedExternalRefsValidation" class="invalid-feedback" style="display: none;">
+                        Selezionare almeno un riferimento.
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted fst-italic">Nessun riferimento esterno disponibile.</p>
+                }
+            </div>
+        </div>
+
+
+        <br>
+        <hr>
+
+        <!-- Submit buttons -->
+        <div class="row mt-4">
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-success btn-block">salva</button>
+            </div>
+            <div class="col-md-2">
+                <a class="btn btn-outline-secondary btn-block" asp-controller="Pfc" asp-action="Index">annulla</a>
+            </div>
+            <div class="col-md-5"></div>
+            <div class="col-md-3">
+                <a class="btn btn-outline-primary btn-block" asp-controller="Pfc" asp-action="CsvOrderUpload" id="UploadFile">carica csv ordini</a>
+            </div>
+        </div>
+        <hr>
+    }
+</div>
+
+<!-- Confirmation Modal (Keep as is) -->
+<div class="modal fade" id="confirmRemoveModal" tabindex="-1" aria-labelledby="confirmRemoveModalLabel" aria-hidden="true">
+    <!-- Modal content here -->
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmRemoveModalLabel">Conferma Eliminazione</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Sei sicuro di voler eliminare questa fase di lavorazione?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <button type="button" class="btn btn-danger" id="confirmRemoveBtn">Conferma</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } @* Include if using standard ASP.NET Core validation *@
+
+    <script>
+    $(document).ready(function() {
+
+        // --- Checkbox Dropdown Logic (jQuery) ---
+        var $dropdownMenu = $('#@dropdownMenuId');
+        var $dropdownButton = $('#@dropdownButtonId');
+        var $validationMessageDiv = $('#selectedOrdersValidation');
+
+        // Function to update the dropdown button text
+        function updateButtonText() {
+            // Find checked checkboxes within the specific dropdown menu
+            var $checkedCheckboxes = $dropdownMenu.find('input[type="checkbox"][name="SelectedOrders"]:checked');
+            var count = $checkedCheckboxes.length;
+
+            if (count === 0) {
+                $dropdownButton.text('Seleziona Commesse');
+            } else {
+                // Get labels of selected checkboxes
+                var selectedLabels = $checkedCheckboxes.map(function() {
+                    return $(this).closest('.form-check').find('label').text().trim();
+                }).get(); // .get() converts jQuery map result to a standard array
+
+                if (count <= 2) { // Show names if few are selected
+                    $dropdownButton.text(selectedLabels.join(', '));
+                } else { // Show count if many are selected
+                    $dropdownButton.text(count + ' commesse selezionate');
+                }
+            }
+
+            // Clear validation state when selection changes
+            $dropdownButton.removeClass('is-invalid');
+            $validationMessageDiv.hide();
+        }
+
+        // Attach change event listener to checkboxes within the dropdown
+        // Use event delegation on the menu for potentially dynamically added items (though not the case here)
+        $dropdownMenu.on('change', 'input[type="checkbox"][name="SelectedOrders"]', function() {
+            updateButtonText();
+        });
+
+        // Initial update on page load
+        updateButtonText();
+        // --- End Checkbox Dropdown Logic ---
+
+
+        // --- Existing Logic (jQuery) ---
+        // var existingWorks = JSON.parse('@Html.Raw(Json.Serialize(@ViewBag.Works))'); // Keep if needed elsewhere
+
+        // Set today as the minimum date and default value for the delivery date
+        var today = new Date().toISOString().split('T')[0];
+        var $deliveryDateInput = $('#deliveryDate');
+        if($deliveryDateInput.length) { // Check if element exists
+            $deliveryDateInput.attr('min', today);
+             if (!$deliveryDateInput.val()) { // Set default only if not already set
+                 $deliveryDateInput.val(today);
+            }
+        }
+
+        var rowToRemove = null;
+
+        // Keep your original jQuery handlers for selects, modals, dynamic rows etc.
+        // Example: change handler (ensure selectors are correct)
+        $(document).on('change', '.work-phase-select', function() {
+            var row = $(this).closest('.work-phase-row'); // Adjust selector if needed
+            var addButton = row.find('.add-row-btn');
+            var removeButton = row.find('.remove-row-btn');
+            var hasValue = $(this).val() !== '';
+
+            addButton.prop('disabled', !hasValue);
+            removeButton.prop('disabled', !hasValue);
+        });
+
+        // Handle remove button click to show modal
+        $(document).on('click', '.remove-row-btn', function() {
+            rowToRemove = $(this).closest('.work-phase-row'); // Adjust selector if needed
+            $('#confirmRemoveModal').modal('show');
+        });
+
+        // Handle confirmation in modal
+        $('#confirmRemoveBtn').on('click', function() {
+            if (rowToRemove) {
+                rowToRemove.remove();
+                rowToRemove = null; // Clear the reference
+            }
+            $('#confirmRemoveModal').modal('hide');
+        });
+
+        // Add new row when "Add" button is clicked
+        // (Keep your complex cloning logic as it was)
+        var rowIndex = 0; // Ensure this is correctly scoped if defined elsewhere
+         $(document).on('click', '.add-row-btn', function() {
+             rowIndex++; // Make sure rowIndex logic is correct based on existing rows if needed
+             var newRow = $('.work-phase-row').first().clone(); // Adjust selector if needed
+
+             // Your existing logic for updating IDs, names, values, disabling buttons etc.
+             // ... (Example snippets) ...
+             newRow.find('select, input').val('');
+             newRow.find('input[type="checkbox"]').prop('checked', false);
+             newRow.find('select[name^="WorkPhases"]').first().attr('name', 'WorkPhases[' + rowIndex + '].WorkphaseName');
+             // ... rest of your cloning logic ...
+
+             $('#workPhasesContainer').append(newRow); // Adjust selector if needed
+        });
+
+
+        // --- Form Validation (Adapted for Checkbox Dropdown - jQuery) ---
+        $('#worktableForm').on('submit', function(event) {
+             var isValid = true; // Assume valid initially
+
+             // Checkbox dropdown validation
+             var $dropdownCheckboxes = $dropdownMenu.find('input[type="checkbox"][name="SelectedOrders"]');
+             var checkedDropdownCount = $dropdownCheckboxes.filter(':checked').length;
+
+             if (checkedDropdownCount === 0 && $dropdownCheckboxes.length > 0) { // Only validate if options exist
+                 $dropdownButton.addClass('is-invalid');
+                 $validationMessageDiv.show(); // Show the message
+                 isValid = false; // Mark form as invalid
+                 console.log("Validation Failed: No 'Commesse' selected.");
+             } else {
+                 $dropdownButton.removeClass('is-invalid');
+                 $validationMessageDiv.hide();
+             }
+
+             // --- Add other validation checks here using jQuery if needed ---
+             // Example: Check the "Riferimenti Esterni" checkboxes
+             /*
+             var $externalRefsCheckboxes = $('#externalRefsContainer input[type="checkbox"][name="SelectedExternalRefs"]');
+             var checkedExternalRefsCount = $externalRefsCheckboxes.filter(':checked').length;
+             var $externalRefsValidationDiv = $('#selectedExternalRefsValidation');
+
+             if (checkedExternalRefsCount === 0 && $externalRefsCheckboxes.length > 0) {
+                 // Optionally add 'is-invalid' to the container or a related element
+                 $externalRefsValidationDiv.show();
+                 isValid = false;
+                 console.log("Validation Failed: No 'Riferimenti Esterni' selected.");
+             } else {
+                 $externalRefsValidationDiv.hide();
+             }
+             */
+
+             // --- Prevent submission if anything is invalid ---
+             if (!isValid) {
+                 event.preventDefault(); // Stop the form submission
+                 event.stopPropagation();
+                 // Optionally scroll to the first invalid element or show a general message
+                 console.log("Form submission prevented due to validation errors.");
+
+                  // Find the first invalid input/select/button within the form and focus it
+                  var $firstError = $(this).find('.is-invalid').first();
+                  if ($firstError.length) {
+                       // Scroll to the element, accounting for potential fixed headers
+                       $('html, body').animate({
+                           scrollTop: $firstError.offset().top - 100 // Adjust offset as needed
+                       }, 500, function() {
+                           // Focus the element after scrolling (if it's focusable)
+                           if ($firstError.is(':input, button')) {
+                               $firstError.focus();
+                           }
+                       });
+                  }
+
+             } else {
+                 // Optional: Disable submit button to prevent double clicks
+                 $(this).find('button[type="submit"]').prop('disabled', true);
+                 // Maybe show a loading indicator
+             }
+        }); // End form submit listener
+
+    }); // End document ready
+    </script>
+}

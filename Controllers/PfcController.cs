@@ -97,7 +97,13 @@ namespace mes.Controllers
             ViewBag.allPfc = allPfc;
             ViewBag.nCommessa = pfcPresenti +1;
             ViewBag.nCommessaTitle = $"{pfcPresenti + 1}/{DateTime.Now.ToString("yyyy")}";
-                
+
+            //preleva tutti i numeri commessa da PfcDatasource.db, CsvDanea table
+            List<string> allDaneaOrders = dbAccessor.Queryer<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable)
+                                                                .Where(t => t.Taken =="0")
+                                                                .Select(n => n.NCommessa).ToList();
+            ViewBag.selectableOrders = allDaneaOrders;
+
             return View();
         }
 
