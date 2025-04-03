@@ -84,7 +84,10 @@ namespace intranet.Controllers
         public IActionResult ModCustomer(ClienteViewModel oneModel)
         {
             UserData userData = GetUserData();
+            GeneralPurpose genPurpose = new GeneralPurpose();
+            oneModel = genPurpose.DenullifyObj<ClienteViewModel>(oneModel);
 
+            oneModel.Enabled = "1";
             oneModel.CreatedBy = userData.UserName;
             oneModel.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");
 
@@ -100,7 +103,7 @@ namespace intranet.Controllers
         public IActionResult InsertCustomer()
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<ClienteViewModel> clienti = (List<ClienteViewModel>)dbAccessor.Queryer<ClienteViewModel>(config.ConnString, config.CustomersDbTable);            
+            List<ClienteViewModel> clienti = dbAccessor.Queryer<ClienteViewModel>(config.ConnString, config.CustomersDbTable);            
             
             ViewBag.CustomersList = clienti;
 
@@ -117,7 +120,7 @@ namespace intranet.Controllers
             newCustomer.CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm");          
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<ClienteViewModel> clienti = (List<ClienteViewModel>)dbAccessor.Queryer<ClienteViewModel>(config.ConnString, config.CustomersDbTable);      
+            List<ClienteViewModel> clienti = dbAccessor.Queryer<ClienteViewModel>(config.ConnString, config.CustomersDbTable);      
 
             long max = (from l in clienti select l.id).Max();
 
@@ -206,7 +209,7 @@ namespace intranet.Controllers
             newArticolo.Enabled = "1";            
 
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<ArticoloViewModel> Articoli = (List<ArticoloViewModel>)dbAccessor.Queryer<ArticoloViewModel>(config.ConnString, config.ArticlesDbTable);
+            List<ArticoloViewModel> Articoli = dbAccessor.Queryer<ArticoloViewModel>(config.ConnString, config.ArticlesDbTable);
 
             //verifica se Articoli = null
             long max = (from l in Articoli select l.id).Max();
@@ -223,7 +226,7 @@ namespace intranet.Controllers
         public IActionResult ModArticolo(long id)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<ArticoloViewModel> Articoli = (List<ArticoloViewModel>)dbAccessor.Queryer<ArticoloViewModel>(config.ConnString, config.ArticlesDbTable)
+            List<ArticoloViewModel> Articoli = dbAccessor.Queryer<ArticoloViewModel>(config.ConnString, config.ArticlesDbTable)
                                         .Where(x => x.Enabled=="1").ToList(); 
             ViewBag.ArticoliList = Articoli;
             
@@ -404,7 +407,7 @@ namespace intranet.Controllers
         public IActionResult ModLavorazione(long id)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<LavorazioneViewModel> Lavorazioni = (List<LavorazioneViewModel>)dbAccessor.Queryer<LavorazioneViewModel>(config.ConnString, config.LavorazioniDbTable)
+            List<LavorazioneViewModel> Lavorazioni = dbAccessor.Queryer<LavorazioneViewModel>(config.ConnString, config.LavorazioniDbTable)
                                         .Where(x => x.Enabled=="1").ToList(); 
             ViewBag.LavorazioniList = Lavorazioni;
             LavorazioneViewModel oneModel = Lavorazioni.Where(x => x.id == id).FirstOrDefault();

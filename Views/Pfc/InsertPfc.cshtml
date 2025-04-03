@@ -10,37 +10,22 @@
     string dropdownButtonId = $"externalRefsDropdownButton_{Guid.NewGuid().ToString("N").Substring(0, 8)}";
     string dropdownMenuId = $"externalRefsDropdownMenu_{Guid.NewGuid().ToString("N").Substring(0, 8)}";
     string validationDivId = $"externalRefsValidation_{Guid.NewGuid().ToString("N").Substring(0, 8)}";
+    // ID for the hidden input holding the CSV string
+    string hiddenCsvInputId = $"externalRefsCsv_{Guid.NewGuid().ToString("N").Substring(0, 8)}"; // ID can remain descriptive
+    string dataDaController = ViewBag.selectedDeliveryDate;
 }
 
 @model WorkorderViewModel;
 
-@* Add the necessary CSS for the Checkbox Dropdown *@
+@* Styles section remains the same *@
 @section Styles {
     <style>
         /* Styles from Example 1 - Adjust as needed */
-        .checkbox-dropdown .dropdown-menu {
-            padding: 0.5rem 0;
-            max-height: 250px;
-            overflow-y: auto;
-            width: 100%; /* Match button width */
-        }
-        .checkbox-dropdown .dropdown-item-text {
-            padding: 0.25rem 1rem;
-            cursor: default;
-            display: block;
-            white-space: normal;
-        }
-        .checkbox-dropdown .dropdown-item-text:hover {
-            background-color: #f8f9fa;
-        }
-        .checkbox-dropdown .form-check-label {
-             cursor: pointer;
-             width: 100%;
-        }
-        /* Style for invalid state on the button */
-        .checkbox-dropdown .btn.is-invalid {
-            border-color: var(--bs-danger); /* Bootstrap's danger color */
-        }
+        .checkbox-dropdown .dropdown-menu { padding: 0.5rem 0; max-height: 250px; overflow-y: auto; width: 100%; }
+        .checkbox-dropdown .dropdown-item-text { padding: 0.25rem 1rem; cursor: default; display: block; white-space: normal; }
+        .checkbox-dropdown .dropdown-item-text:hover { background-color: #f8f9fa; }
+        .checkbox-dropdown .form-check-label { cursor: pointer; width: 100%; }
+        .checkbox-dropdown .btn.is-invalid { border-color: var(--bs-danger); }
     </style>
 }
 
@@ -50,53 +35,38 @@
     <hr>
     @using (Html.BeginForm("InsertPfc", "Pfc", FormMethod.Post, new { @class = "form", id = "worktableForm", enctype = "multipart/form-data" }))
     {
+        <!-- Fields for module number, customer, delivery date (remain the same) -->
         <div class="row">
-            <div class="col-md-3">
-                <h4>modulo numero</h4>
-            </div>
-            <div class="col-md-3">
-                <h4>@nCommessaTitle</h4>
-                <input type="hidden" name="WorkNumber" value="@nCommessaTitle">
-                <input type="hidden" name="id" value="@nCommessa">
-            </div>
+             <div class="col-md-3"><h4>modulo numero</h4></div>
+             <div class="col-md-3">
+                 <h4>@nCommessaTitle</h4>
+                 <input type="hidden" name="WorkNumber" value="@nCommessaTitle">
+                 <input type="hidden" name="id" value="@nCommessa">
+             </div>
         </div>
         <br>
         <div class="row mb-3">
-            <div class="col-md-2">
-                <label for="customer" class="form-label">Cliente</label>
-            </div>
-            <div class="col-md-6">
-                <select class="form-select" id="customer" name="Customer" required>
-                    <option value="" selected disabled>seleziona un cliente</option>
-                    @foreach (var customer in customers)
-                    {
-                        <option value="@customer">@customer</option>
-                    }
-                </select>
-            </div>
-            <div class="col-md-2">
-                <label for="deliveryDate" class="form-label" style="text-align: right;">Data di consegna</label>
-            </div>
-            <div class="col-md-2">
-                <input type="date" class="form-control" id="deliveryDate" name="Delivery" required>
-            </div>
+             <div class="col-md-2"><label for="customer" class="form-label">Cliente</label></div>
+             <div class="col-md-6">
+                 <select class="form-select" id="customer" name="Customer" required>
+                     <option value="" selected disabled>seleziona un cliente</option>
+                     @foreach (var customer in customers) { <option value="@customer">@customer</option> }
+                 </select>
+             </div>
+             <div class="col-md-2"><label for="deliveryDate" class="form-label" style="text-align: right;">Data di consegna</label></div>
+             <div class="col-md-2"><input type="date" class="form-control" id="deliveryDate" name="deliveryDate" required></div>
         </div>
 
 
-        <!-- =========================================================== -->
-        <!-- Start: Replaced Commessa Input with Checkbox Dropdown       -->
-        <!-- =========================================================== -->
+        <!-- Checkbox Dropdown Section -->
          <div class="row mb-3">
             <div class="col-md-2">
-                <label class="form-label pt-1">Commesse Correlate</label> <!-- Updated label text -->
+                <label class="form-label pt-1">Commesse Correlate</label>
             </div>
             <div class="col-md-10">
                 <div class="dropdown checkbox-dropdown">
                     <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button"
-                            id="@dropdownButtonId"
-                            data-bs-toggle="dropdown"
-                            data-bs-auto-close="outside"
-                            aria-expanded="false">
+                            id="@dropdownButtonId" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                         Seleziona Commesse
                     </button>
                     <ul class="dropdown-menu" aria-labelledby="@dropdownButtonId" id="@dropdownMenuId">
@@ -109,14 +79,9 @@
                                 <li>
                                     <div class="dropdown-item-text">
                                         <div class="form-check">
-                                            <input class="form-check-input"
-                                                   type="checkbox"
-                                                   name="SelectedExternalRefs"   /* IMPORTANT: Name for model binding - adjust if needed */
-                                                   value="@order"
-                                                   id="@checkboxId">
-                                            <label class="form-check-label" for="@checkboxId">
-                                                @order
-                                            </label>
+                                            <input class="form-check-input" type="checkbox" name="SelectedExternalRefs_Source"
+                                                   value="@order" id="@checkboxId">
+                                            <label class="form-check-label" for="@checkboxId">@order</label>
                                         </div>
                                     </div>
                                 </li>
@@ -128,29 +93,21 @@
                             <li><span class="dropdown-item-text text-muted fst-italic">Nessuna commessa selezionabile disponibile.</span></li>
                         }
                     </ul>
-                     <!-- Validation message placeholder -->
-                     <div id="@validationDivId" class="invalid-feedback" style="display: none;">Selezionare almeno una commessa correlata.</div>
+                    <div id="@validationDivId" class="invalid-feedback" style="display: none;">Selezionare almeno una commessa correlata.</div>
                 </div>
-                 @* Optional: Add a hidden input if needed for backend logic if nothing is selected
-                    <input type="hidden" name="SelectedExternalRefs" value="" /> *@
+                <!-- === Hidden Input with updated name === -->
+                <input type="hidden" name="ExternalRef" id="@hiddenCsvInputId" />
+                 <!-- === Backend Model property name is now "ExternalRef" === -->
             </div>
         </div>
-        <!-- =========================================================== -->
-        <!-- End: Replaced Commessa Input                                -->
-        <!-- =========================================================== -->
-
+        <!-- End Checkbox Dropdown Section -->
 
         <br>
         <hr>
 
-        <!-- Row for Work Phases label -->
-        <div class="row mb-3">
-            <div class="col-12">
-                <strong>fasi di lavorazione</strong>
-            </div>
-        </div>
+        <!-- Work Phases Section (remains the same) -->
+        <div class="row mb-3"><div class="col-12"><strong>fasi di lavorazione</strong></div></div>
         <br>
-        <!-- Container for dynamic work phase rows -->
         <div id="workPhasesContainer">
             <!-- Initial work phase row -->
             <div class="work-phase-row row mb-3">
@@ -158,10 +115,7 @@
                  <div class="col-md-2">
                     <select class="form-select work-phase-select" name="WorkPhases[0].WorkphaseName" required>
                         <option value="" selected disabled>fase di lavorazione</option>
-                        @foreach (var phase in ViewBag.WorkPhases)
-                        {
-                            <option value="@phase">@phase</option>
-                        }
+                        @foreach (var phase in ViewBag.WorkPhases) { <option value="@phase">@phase</option> }
                     </select>
                 </div>
                 <div class="col-md-1 hidden-fields">
@@ -178,71 +132,43 @@
                  <div class="col-md-2">
                      <select class="form-select" name="WorkPhases[0].QualityOperator">
                          @{ bool isFirst = true; }
-                         @if (ViewBag.Operators != null && ((List<string>)ViewBag.Operators).Count > 0) // Safe cast
+                         @if (ViewBag.Operators != null && ((List<string>)ViewBag.Operators).Count > 0)
                          {
                              @foreach (var op in (List<string>)ViewBag.Operators)
                              {
-                                 if (isFirst)
-                                 {
-                                     <option value="@op" selected>@op</option> isFirst = false;
-                                 }
+                                 if (isFirst) { <option value="@op" selected>@op</option> isFirst = false; }
                                  else { <option value="@op">@op</option> }
                              }
                          }
-                         else
-                         { <option value="" selected disabled>firma operatore</option> }
+                         else { <option value="" selected disabled>firma operatore</option> }
                      </select>
                  </div>
-                <div class="col-md-2">
-                    <button type="button" class="btn btn-outline-success btn-block add-row-btn" disabled>aggiungi fase</button>
-                </div>
-                <div class="col-md-1">
-                    <button type="button" class="btn btn-outline-warning btn-block remove-row-btn" disabled>rimuovi</button>
-                </div>
+                <div class="col-md-2"><button type="button" class="btn btn-outline-success btn-block add-row-btn" disabled>aggiungi fase</button></div>
+                <div class="col-md-1"><button type="button" class="btn btn-outline-warning btn-block remove-row-btn" disabled>rimuovi</button></div>
             </div>
         </div>
         <br>
         <hr>
 
-        <!-- Submit buttons -->
+        <!-- Submit buttons (remain the same) -->
         <div class="row mt-4">
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-outline-success btn-block">salva</button>
-            </div>
-            <div class="col-md-2">
-                <a class="btn btn-outline-secondary btn-block" asp-controller="Pfc" asp-action="Index">annulla</a>
-            </div>
+            <div class="col-md-2"><button type="submit" class="btn btn-outline-success btn-block">salva</button></div>
+            <div class="col-md-2"><a class="btn btn-outline-secondary btn-block" asp-controller="Pfc" asp-action="Index">annulla</a></div>
             <div class="col-md-5"></div>
-            <div class="col-md-3">
-                <a class="btn btn-outline-primary btn-block" asp-controller="Pfc" asp-action="CsvOrderUpload" id="UploadFile">carica csv ordini</a>
-            </div>
+            <div class="col-md-3"><a class="btn btn-outline-primary btn-block" asp-controller="Pfc" asp-action="CsvOrderUpload" id="UploadFile">carica csv ordini</a></div>
         </div>
         <hr>
     }
 </div>
 
-<!-- Confirmation Modal -->
+<!-- Confirmation Modal (remains the same) -->
 <div class="modal fade" id="confirmRemoveModal" tabindex="-1" aria-labelledby="confirmRemoveModalLabel" aria-hidden="true">
     <!-- Modal content -->
-     <div class="modal-dialog">
-        <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title" id="confirmRemoveModalLabel">Conferma Eliminazione</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-            Sei sicuro di voler eliminare questa fase di lavorazione?
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
-            <button type="button" class="btn btn-danger" id="confirmRemoveBtn">Conferma</button>
-        </div>
-        </div>
-    </div>
+     <div class="modal-dialog"> <div class="modal-content"> <div class="modal-header"> <h5 class="modal-title" id="confirmRemoveModalLabel">Conferma Eliminazione</h5> <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> </div> <div class="modal-body"> Sei sicuro di voler eliminare questa fase di lavorazione? </div> <div class="modal-footer"> <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button> <button type="button" class="btn btn-danger" id="confirmRemoveBtn">Conferma</button> </div> </div> </div>
 </div>
 
 @section Scripts {
-    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } @* Optional: For ASP.NET Core validation *@
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
 
 <script>
     $(document).ready(function() {
@@ -251,166 +177,98 @@
         var $dropdownMenu = $('#@dropdownMenuId');
         var $dropdownButton = $('#@dropdownButtonId');
         var $validationMessageDiv = $('#@validationDivId');
+        var $hiddenCsvInput = $('#@hiddenCsvInputId'); // Selector uses ID, which hasn't changed
 
-        // Function to update the dropdown button text
+        // Checkboxes used for selection
+        var sourceCheckboxSelector = 'input[type="checkbox"][name="SelectedExternalRefs_Source"]';
+
         function updateButtonText() {
-            var $checkedCheckboxes = $dropdownMenu.find('input[type="checkbox"][name="SelectedExternalRefs"]:checked'); // Use correct name
+            var $checkedCheckboxes = $dropdownMenu.find(sourceCheckboxSelector + ':checked');
             var count = $checkedCheckboxes.length;
-
-            if (count === 0) {
-                $dropdownButton.text('Seleziona Commesse');
-            } else {
-                var selectedLabels = $checkedCheckboxes.map(function() {
-                    return $(this).closest('.form-check').find('label').text().trim();
-                }).get();
-
-                if (count <= 2) {
-                    $dropdownButton.text(selectedLabels.join(', '));
-                } else {
-                    $dropdownButton.text(count + ' commesse selezionate');
-                }
-            }
-            // Clear validation state when selection changes
+            // Update button text logic (remains the same)
+             if (count === 0) { $dropdownButton.text('Seleziona Commesse'); }
+             else {
+                 var selectedLabels = $checkedCheckboxes.map(function() { return $(this).closest('.form-check').find('label').text().trim(); }).get();
+                 if (count <= 2) { $dropdownButton.text(selectedLabels.join(', ')); }
+                 else { $dropdownButton.text(count + ' commesse selezionate'); }
+             }
             $dropdownButton.removeClass('is-invalid');
             $validationMessageDiv.hide();
         }
 
-        // Attach change event listener to checkboxes within the dropdown
-        $dropdownMenu.on('change', 'input[type="checkbox"][name="SelectedExternalRefs"]', function() { // Use correct name
-            updateButtonText();
-        });
-
-        // Initial update on page load
+        $dropdownMenu.on('change', sourceCheckboxSelector, function() { updateButtonText(); });
         updateButtonText();
         // --- End Checkbox Dropdown Logic ---
 
 
-        // --- Existing Logic ---
-        var existingWorks = JSON.parse('@Html.Raw(Json.Serialize(ViewBag.Works ?? new List<string>()))'); // Added null check
+        // --- Existing Logic (remains the same) ---
+        //var today = new Date().toISOString().split('T')[0];
+        //$('#deliveryDate').attr('min', today).val(function() { return this.value || today; });
+        
+        //--deliveryDate da controller
+        var deliveryDateFromViewBag = '@(ViewBag.selectedDeliveryDate ?? "")';
+        console.log('data da controller');
+        console.log( deliveryDateFromViewBag);
+        $('#deliveryDate').val('@ViewBag.selectedDeliveryDate');
 
-        // Set today as the minimum date and default value for the delivery date
-        var today = new Date().toISOString().split('T')[0];
-        var $deliveryDateInput = $('#deliveryDate');
-         if ($deliveryDateInput.length) {
-             $deliveryDateInput.attr('min', today);
-             if (!$deliveryDateInput.val()) {
-                 $deliveryDateInput.val(today);
-             }
-         }
+        //--customer da controller
+        console.log('cliente da controller');
+        console.log('@ViewBag.selectedCustomer');
+        $('#customer').val('@ViewBag.selectedCustomer');
 
         var rowToRemove = null;
-
-        // REMOVED: $('#work').on('change', ...) as #work input no longer exists
-
-        // Keep existing handlers for work phase select change, remove button, modal confirm
-        $(document).on('change', '.work-phase-select', function() {
-             var row = $(this).closest('.work-phase-row');
-             var addButton = row.find('.add-row-btn');
-             var removeButton = row.find('.remove-row-btn');
-             var hasValue = $(this).val() !== '';
-             addButton.prop('disabled', !hasValue);
-             removeButton.prop('disabled', !hasValue);
-         });
-
-        $(document).on('click', '.remove-row-btn', function() {
-             rowToRemove = $(this).closest('.work-phase-row');
-             $('#confirmRemoveModal').modal('show');
-         });
-
-        $('#confirmRemoveBtn').on('click', function() {
-             if (rowToRemove) {
-                 rowToRemove.remove();
-                 rowToRemove = null;
-             }
-             $('#confirmRemoveModal').modal('hide');
-         });
+         $(document).on('change', '.work-phase-select', function() { var row = $(this).closest('.work-phase-row'); var addButton = row.find('.add-row-btn'); var removeButton = row.find('.remove-row-btn'); var hasValue = $(this).val() !== ''; addButton.prop('disabled', !hasValue); removeButton.prop('disabled', !hasValue); });
+         $(document).on('click', '.remove-row-btn', function() { rowToRemove = $(this).closest('.work-phase-row'); $('#confirmRemoveModal').modal('show'); });
+         $('#confirmRemoveBtn').on('click', function() { if (rowToRemove) { rowToRemove.remove(); rowToRemove = null; } $('#confirmRemoveModal').modal('hide'); });
+         var rowIndex = $('#workPhasesContainer .work-phase-row').length - 1;
+         $(document).on('click', '.add-row-btn', function() { rowIndex++; var newRow = $('.work-phase-row').first().clone(); newRow.find('select, input[type="text"]').val(''); newRow.find('input[type="checkbox"]').prop('checked', false); newRow.find('input[type="hidden"][name$=".Id"]').val(rowIndex); newRow.find('[name^="WorkPhases"]').each(function() { var currentName = $(this).attr('name'); if (currentName) { var newName = currentName.replace(/WorkPhases\[\d+\]/, 'WorkPhases[' + rowIndex + ']'); $(this).attr('name', newName); if (currentName.includes('RelatedWorkOrder')) $(this).val('@nCommessa'); } }); newRow.find('input[type="checkbox"][id]').each(function() { var currentId = $(this).attr('id'); if (currentId) { var newId = currentId.replace(/_\d+$/, '_' + rowIndex); $(this).attr('id', newId); newRow.find('label[for="' + currentId + '"]').attr('for', newId); } }); newRow.find('.add-row-btn, .remove-row-btn').prop('disabled', true); $('#workPhasesContainer').append(newRow); });
+        // --- End Existing Logic ---
 
 
-         // Keep existing Add Row logic
-         var rowIndex = $('#workPhasesContainer .work-phase-row').length - 1; // Start index based on existing rows
-         $(document).on('click', '.add-row-btn', function() {
-             rowIndex++;
-             var newRow = $('.work-phase-row').first().clone();
+        $('#customer').on('change', function(){
+            console.log(this.value + ' delivery: ' + $('#deliveryDate').val());
+            var delivery = $('#deliveryDate').val();
+            window.location.href ="/Pfc/insertPfc?daneaCustomer=" + this.value + "&deliveryDate=" + delivery;
+        });
 
-             // Clear values, update indices, re-enable buttons - IMPORTANT: Review this cloning logic carefully
-             newRow.find('select').val(''); // Clear select values
-             newRow.find('input[type="text"]').val(''); // Clear any text inputs if added later
-             newRow.find('input[type="checkbox"]').prop('checked', false); // Uncheck checkboxes
-             newRow.find('input[type="hidden"][name$=".Id"]').val(rowIndex); // Update hidden Id
+        $('#deliveryDate').on('change', function(){
+            console.log(this.value + ' customer: ' + $('#customer').val());
+            var customer = $('#customer').val();
+            window.location.href ="/Pfc/insertPfc?daneaCustomer=" + customer + "&deliveryDate=" + this.value;
+        });        
 
-             // --- Update names for all relevant inputs/selects ---
-             newRow.find('select[name^="WorkPhases"]').each(function() {
-                 var currentName = $(this).attr('name');
-                 var newName = currentName.replace(/WorkPhases\[\d+\]/, 'WorkPhases[' + rowIndex + ']');
-                 $(this).attr('name', newName);
-             });
-             newRow.find('input[name^="WorkPhases"]').each(function() {
-                  var currentName = $(this).attr('name');
-                  var newName = currentName.replace(/WorkPhases\[\d+\]/, 'WorkPhases[' + rowIndex + ']');
-                  $(this).attr('name', newName);
-                  // Also update hidden RelatedWorkOrder value if needed (though it's static here)
-                  if (currentName.includes('RelatedWorkOrder')) $(this).val('@nCommessa');
-             });
-
-             // --- Update IDs and 'for' attributes for checkboxes/labels ---
-             newRow.find('input[type="checkbox"]').each(function() {
-                 var currentId = $(this).attr('id');
-                 if (currentId) {
-                    var newId = currentId.replace(/_\d+$/, '_' + rowIndex);
-                    $(this).attr('id', newId);
-                    // Find corresponding label and update 'for'
-                    newRow.find('label[for="' + currentId + '"]').attr('for', newId);
-                 }
-             });
-
-             // Ensure new row buttons are disabled initially
-             newRow.find('.add-row-btn').prop('disabled', true);
-             newRow.find('.remove-row-btn').prop('disabled', true); // Enable remove for new rows? Maybe depends on logic
-
-             $('#workPhasesContainer').append(newRow);
-         });
-
-
-        // --- Form Validation ---
+        // --- Form Validation and CSV Generation ---
          $('#worktableForm').on('submit', function(event) {
              var isValid = true;
 
-             // Checkbox dropdown validation (at least one selected)
-             var $dropdownCheckboxes = $dropdownMenu.find('input[type="checkbox"][name="SelectedExternalRefs"]');
-             var checkedDropdownCount = $dropdownCheckboxes.filter(':checked').length;
+             // Dropdown Validation (remains the same)
+             var $dropdownCheckboxes = $dropdownMenu.find(sourceCheckboxSelector);
+             var $checkedDropdownCheckboxes = $dropdownCheckboxes.filter(':checked');
+             var checkedDropdownCount = $checkedDropdownCheckboxes.length;
+             if (checkedDropdownCount === 0 && $dropdownCheckboxes.length > 0) { $dropdownButton.addClass('is-invalid'); $validationMessageDiv.show(); isValid = false; }
+             else { $dropdownButton.removeClass('is-invalid'); $validationMessageDiv.hide(); }
 
-             if (checkedDropdownCount === 0 && $dropdownCheckboxes.length > 0) { // Only validate if options exist
-                 $dropdownButton.addClass('is-invalid');
-                 $validationMessageDiv.show();
-                 isValid = false;
-             } else {
-                 $dropdownButton.removeClass('is-invalid');
-                 $validationMessageDiv.hide();
-             }
+             // Other validation checks...
 
-             // Add any other client-side validation checks here (e.g., for work phases)
-
-
-             // --- Prevent submission if invalid ---
+             // Process and Submit
              if (!isValid) {
-                 event.preventDefault();
-                 event.stopPropagation();
-                 console.log("Form submission prevented due to validation errors.");
-                  // Optional: Scroll to first error
-                  var $firstError = $(this).find('.is-invalid').first();
-                  if ($firstError.length) {
-                       $('html, body').animate({
-                           scrollTop: $firstError.offset().top - 100 // Adjust offset
-                       }, 500, function() {
-                           if ($firstError.is(':input, button')) { $firstError.focus(); }
-                       });
-                  }
+                 event.preventDefault(); event.stopPropagation(); console.log("Form submission prevented...");
+                  var $firstError = $(this).find('.is-invalid').first(); if ($firstError.length) { $('html, body').animate({ scrollTop: $firstError.offset().top - 100 }, 500, function() { if ($firstError.is(':input, button')) { $firstError.focus(); } }); }
              } else {
-                 // Optional: Disable submit button
+                 // Generate CSV and Populate Hidden Input (logic remains the same)
+                 var selectedValuesArray = $checkedDropdownCheckboxes.map(function() { return $(this).val(); }).get();
+                 var csvString = selectedValuesArray.join(',');
+
+                 // Use the jQuery selector for the hidden input (which uses the ID)
+                 $hiddenCsvInput.val(csvString);
+
+                 // Disable original checkboxes (remains the same)
+                 $dropdownCheckboxes.prop('disabled', true);
+
+                 console.log('Submitting CSV to ExternalRef:', csvString);
                  $(this).find('button[type="submit"]').prop('disabled', true);
              }
          }); // End form submit
-
 
     }); // End document ready
 </script>

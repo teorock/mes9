@@ -10,7 +10,7 @@ namespace mes.Models.ViewModels
         public long id { get; set; }
         public string Customer { get; set; }
         public string WorkNumber { get; set; }
-        public DateTime Delivery { get; set; }
+        public DateTime deliveryDate { get; set; }
         public string Description { get; set; }
         public string ExternalRef { get; set; }
         public List<WorkphaseViewModel> WorkPhases { get; set; }

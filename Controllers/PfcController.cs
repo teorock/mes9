@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ServiceStack.Text;
+using ServiceStack.Text.Common;
 
 namespace mes.Controllers
 {
@@ -60,8 +61,12 @@ namespace mes.Controllers
 
         [HttpGet]
         [Authorize(Roles ="root, PfcAggiorna, PfcCrea")]
-        public IActionResult InsertPfc()
+        public IActionResult InsertPfc(string daneaCustomer, string deliveryDate)
         {
+            // mettere filtro commesse da Danea per data selezionata
+
+            if(deliveryDate == null) deliveryDate = DateTime.Now.ToString("yyyy-MM-dd");
+
             UserData userData = GetUserData();
             //--------------------------
             string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
@@ -99,10 +104,35 @@ namespace mes.Controllers
             ViewBag.nCommessaTitle = $"{pfcPresenti + 1}/{DateTime.Now.ToString("yyyy")}";
 
             //preleva tutti i numeri commessa da PfcDatasource.db, CsvDanea table
-            List<string> allDaneaOrders = dbAccessor.Queryer<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable)
-                                                                .Where(t => t.Taken =="0")
-                                                                .Select(n => n.NCommessa).ToList();
+            //=================== FILTRI DANEA ====================================
+            // 1) nessun filtro
+            // 2) solo filtro cliente
+            // 3) solo filtro data
+            // 4) entrambe 
+            List<string> allDaneaOrders = new List<string>();
+            DateTime deliveryLimit = Convert.ToDateTime(deliveryDate);
+
+            if(daneaCustomer =="" | daneaCustomer is null | daneaCustomer =="null")
+            {
+                allDaneaOrders = dbAccessor.Queryer<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable)
+                                            .Where(t => t.Taken =="0")
+                                            .Where(d => Convert.ToDateTime(d.DataConsegna)<= deliveryLimit.Date)
+                                            .Select(n => n.NCommessa).ToList();
+            }
+            else
+            {                
+                allDaneaOrders = dbAccessor.Queryer<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable)
+                                            .Where(t => t.Taken =="0")
+                                            .Where(c => c.Cliente == daneaCustomer)
+                                            .Where(d => Convert.ToDateTime(d.DataConsegna)<= deliveryLimit)
+                                            .Select(n => n.NCommessa).ToList();
+            }
+
+
+            ViewBag.selectedDeliveryDate = deliveryDate;
+            ViewBag.selectedCustomer = daneaCustomer;
             ViewBag.selectableOrders = allDaneaOrders;
+            //=====================================================================
 
             return View();
         }
@@ -130,12 +160,14 @@ namespace mes.Controllers
                     NumeroCommessa = inputModel.WorkNumber,
                     Cliente = inputModel.Customer,
                     RifEsterno = inputModel.ExternalRef,
-                    DataConsegna = Convert.ToDateTime(inputModel.Delivery).ToString("dd/MM/yyyy HH:mm"),
+                    DataConsegna = Convert.ToDateTime(inputModel.deliveryDate).ToString("dd/MM/yyyy HH:mm"),
                     LavorazioniJsonString = jsonLavorazioni,
                     Enabled = "1",
                     CreatedBy = userData.UserName,
                     CreatedOn = DateTime.Now.ToString("dd/MM/yyyy HH:mm")
                 };
+
+                //aggiorna il campo Taken delle commesse da Danea
 
                 DatabaseAccessor dbAccessor = new DatabaseAccessor();
                 var result = dbAccessor.Insertor<PfcModel>(config.ConnString2, config.PfcTable, pcf2insert);
@@ -177,7 +209,7 @@ namespace mes.Controllers
                 WorkNumber = pfc.NumeroCommessa,
                 Customer = pfc.Cliente,
                 ExternalRef = pfc.RifEsterno,
-                Delivery = DateTime.Parse(pfc.DataConsegna),
+                deliveryDate = DateTime.Parse(pfc.DataConsegna),
                 Description = pfc.Descrizione, 
                 // Convert LavorazioniJsonString to WorkPhases collection
                 WorkPhases = JsonConvert.DeserializeObject<List<WorkphaseViewModel>>(pfc.LavorazioniJsonString)
@@ -215,7 +247,7 @@ namespace mes.Controllers
                     Cliente = model.Customer,
                     Descrizione = model.Description,
                     RifEsterno = model.ExternalRef,
-                    DataConsegna = Convert.ToDateTime(model.Delivery).ToString("dd/MM/yyyy HH:mm"),
+                    DataConsegna = Convert.ToDateTime(model.deliveryDate).ToString("dd/MM/yyyy HH:mm"),
                     LavorazioniJsonString = jsonLavorazioni,
                     Enabled = "1",
                     CreatedBy = userData.UserName,
