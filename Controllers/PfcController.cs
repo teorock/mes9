@@ -159,8 +159,9 @@ namespace mes.Controllers
                     id=inputModel.id,
                     NumeroCommessa = inputModel.WorkNumber,
                     Cliente = inputModel.Customer,
+                    Descrizione = "-----",
                     RifEsterno = inputModel.ExternalRef,
-                    DataConsegna = Convert.ToDateTime(inputModel.deliveryDate).ToString("dd/MM/yyyy HH:mm"),
+                    DataConsegna = Convert.ToDateTime(inputModel.deliveryDate).ToString("dd/MM/yyyy"),
                     LavorazioniJsonString = jsonLavorazioni,
                     Enabled = "1",
                     CreatedBy = userData.UserName,
@@ -170,7 +171,7 @@ namespace mes.Controllers
                 //aggiorna il campo Taken delle commesse da Danea
 
                 DatabaseAccessor dbAccessor = new DatabaseAccessor();
-                var result = dbAccessor.Insertor<PfcModel>(config.ConnString2, config.PfcTable, pcf2insert);
+                var result = dbAccessor.Insertor<PfcModel>(config.PfcConnString, config.PfcTable, pcf2insert);
                 if(result == 1) return RedirectToAction("Error");
             }
             return RedirectToAction("Index");
@@ -193,7 +194,7 @@ namespace mes.Controllers
 
             // Get the record to modify
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            var pfc = dbAccessor.Queryer<PfcModel>(config.ConnString2, config.PfcTable)
+            var pfc = dbAccessor.Queryer<PfcModel>(config.PfcConnString, config.PfcTable)
                 .Where(i => i.id == inputId)
                 .FirstOrDefault();
 
