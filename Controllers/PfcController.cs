@@ -96,12 +96,16 @@ namespace mes.Controllers
             ViewBag.Operators = operators;
             
 
-            List<PfcModel> allPfc = dbAccessor.Queryer<PfcModel>(config.ConnString2, config.PfcTable).ToList();
-            int pfcPresenti = allPfc.Count();
-            
+            List<PfcModel> allPfc = dbAccessor.Queryer<PfcModel>(config.PfcConnString, config.PfcTable).ToList();
+            long lastId = 0;
+            if(allPfc.Count !=0)
+            {
+                lastId = allPfc.Select(i => i.id).Max();
+            }
+        
             ViewBag.allPfc = allPfc;
-            ViewBag.nCommessa = pfcPresenti +1;
-            ViewBag.nCommessaTitle = $"{pfcPresenti + 1}/{DateTime.Now.ToString("yyyy")}";
+            ViewBag.nCommessa = lastId +1;
+            ViewBag.nCommessaTitle = $"{lastId + 1}/{DateTime.Now.ToString("yyyy")}";
 
             //preleva tutti i numeri commessa da PfcDatasource.db, CsvDanea table
             //=================== FILTRI DANEA ====================================
@@ -159,7 +163,6 @@ namespace mes.Controllers
                     id=inputModel.id,
                     NumeroCommessa = inputModel.WorkNumber,
                     Cliente = inputModel.Customer,
-                    Descrizione = "-----",
                     RifEsterno = inputModel.ExternalRef,
                     DataConsegna = Convert.ToDateTime(inputModel.deliveryDate).ToString("dd/MM/yyyy"),
                     LavorazioniJsonString = jsonLavorazioni,
@@ -169,12 +172,50 @@ namespace mes.Controllers
                 };
 
                 //aggiorna il campo Taken delle commesse da Danea
+                UpdateTakenCsvOrders(pcf2insert.RifEsterno,pcf2insert.NumeroCommessa, pcf2insert.Cliente);
 
                 DatabaseAccessor dbAccessor = new DatabaseAccessor();
                 var result = dbAccessor.Insertor<PfcModel>(config.PfcConnString, config.PfcTable, pcf2insert);
                 if(result == 1) return RedirectToAction("Error");
             }
             return RedirectToAction("Index");
+        }
+
+        private void UpdateTakenCsvOrders(string takenOrders, string pfcNumber, string daneaCustomer)
+        {
+                //to do: 
+                //update Taken & PfcNumber
+                DatabaseAccessor dbAccessor = new DatabaseAccessor();
+                List<PfcCsvDaneaSourceID> allDaneaOrders = new List<PfcCsvDaneaSourceID>();
+                allDaneaOrders = dbAccessor.Queryer<PfcCsvDaneaSourceID>(config.PfcConnString, config.CsvDaneaTable)
+                                            .Where(t => t.Taken =="0")
+                                            .Where(c => c.Cliente == daneaCustomer).ToList();
+
+                string[] takenCsvOrders = takenOrders.Split(',');
+                foreach(string oneCvs in takenCsvOrders)
+                {                    
+                    PfcCsvDaneaSourceID takenId2update = allDaneaOrders.Where(n => n.NCommessa == oneCvs).FirstOrDefault();
+                    takenId2update.Taken = "1";
+                    takenId2update.PfcNumber = pfcNumber;
+
+                    int res = dbAccessor.Updater<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable, MiniMapper(takenId2update), takenId2update.id);
+                }     
+        }
+
+        private PfcCsvDaneaSource MiniMapper(PfcCsvDaneaSourceID inputObj)
+        {
+            PfcCsvDaneaSource result = new PfcCsvDaneaSource()
+            {
+                Data = inputObj.Data,
+                NCommessa = inputObj.NCommessa,
+                Cliente = inputObj.Cliente,
+                Stato = inputObj.Stato,
+                DataConsegna = inputObj.DataConsegna,
+                Commento = inputObj.Commento,
+                Taken = inputObj.Taken,
+                PfcNumber = inputObj.PfcNumber
+            };
+            return result;
         }
 
         //===================================================================
@@ -190,7 +231,6 @@ namespace mes.Controllers
             Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");            
             //-------------------------);
             ViewBag.userRoles = userData.UserRoles;
-
 
             // Get the record to modify
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
@@ -211,7 +251,6 @@ namespace mes.Controllers
                 Customer = pfc.Cliente,
                 ExternalRef = pfc.RifEsterno,
                 deliveryDate = DateTime.Parse(pfc.DataConsegna),
-                Description = pfc.Descrizione, 
                 // Convert LavorazioniJsonString to WorkPhases collection
                 WorkPhases = JsonConvert.DeserializeObject<List<WorkphaseViewModel>>(pfc.LavorazioniJsonString)
             };
@@ -223,6 +262,16 @@ namespace mes.Controllers
             ViewBag.WorkPhases = GetWorkPhasesList(); 
             ViewBag.Operators = GetOperatorsList(); 
             //ViewBag.Works = GetExistingWorks(); 
+
+            //passare tutti i CsvOrders per questo cliente
+            //List<Csv
+
+            List<string> allDaneaOrders = dbAccessor.Queryer<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable)
+                                                    .Where(c => c.Cliente == viewModel.Customer)
+                                                    .Where(d => Convert.ToDateTime(d.DataConsegna)<= viewModel.deliveryDate)
+                                                    .Select(n => n.NCommessa).ToList();
+            
+            ViewBag.allDaneaOrders = allDaneaOrders;
 
             return View(viewModel);
         }
@@ -246,9 +295,8 @@ namespace mes.Controllers
                     id = model.id,
                     NumeroCommessa = model.WorkNumber,
                     Cliente = model.Customer,
-                    Descrizione = model.Description,
                     RifEsterno = model.ExternalRef,
-                    DataConsegna = Convert.ToDateTime(model.deliveryDate).ToString("dd/MM/yyyy HH:mm"),
+                    DataConsegna = Convert.ToDateTime(model.deliveryDate).ToString("dd/MM/yyyy"),
                     LavorazioniJsonString = jsonLavorazioni,
                     Enabled = "1",
                     CreatedBy = userData.UserName,
