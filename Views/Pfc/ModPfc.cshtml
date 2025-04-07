@@ -1,4 +1,5 @@
 @using mes.Models.ViewModels;
+@using mes.Models.InfrastructureModels;
 
 @{
     ViewBag.Title = "Modifica Pfc";
@@ -9,13 +10,33 @@
 
     bool cannotSign = true;
     if(!userRoles.Contains("PfcQualita")||!userRoles.Contains("PfcCrea")||!userRoles.Contains("root")) cannotSign=false;
-    
+
     bool cannotCreate= true;
     if(userRoles.Contains("PfcCrea")||userRoles.Contains("root")) cannotCreate=false;        
+
+    // Generate unique IDs for the dropdown elements
+    string dropdownButtonId = $"externalRefsDropdownButton_{Guid.NewGuid().ToString("N").Substring(0, 8)}";
+    string dropdownMenuId = $"externalRefsDropdownMenu_{Guid.NewGuid().ToString("N").Substring(0, 8)}";
+    string validationDivId = $"externalRefsValidation_{Guid.NewGuid().ToString("N").Substring(0, 8)}";
+    string hiddenCsvInputId = $"externalRefsCsv_{Guid.NewGuid().ToString("N").Substring(0, 8)}";
+
+    List<PfcCsvDaneaSource> allDaneaOrders = ViewBag.allDaneaOrders;
+}
     
+@model WorkorderViewModel;
+
+@section Styles {
+    <style>
+        /* Styles for checkbox dropdown */
+        .checkbox-dropdown .dropdown-menu { padding: 0.5rem 0; max-height: 250px; overflow-y: auto; width: 100%; }
+        .checkbox-dropdown .dropdown-item-text { padding: 0.25rem 1rem; cursor: default; display: block; white-space: normal; }
+        .checkbox-dropdown .dropdown-item-text:hover { background-color: #f8f9fa; }
+        .checkbox-dropdown .form-check-label { cursor: pointer; width: 100%; }
+        .checkbox-dropdown .btn.is-invalid { border-color: var(--bs-danger); }
+    </style>
 }
 
-@model WorkorderViewModel;
+<div class="container">
 
 <div class="container">
     <h2>Modifica PFC</h2>
@@ -48,23 +69,63 @@
                     }
                 </select>
             </div>
-            <div class="col-md-2">
-                <label for="deliveryDate" class="form-label" style="text-align: right;">Data di consegna</label>
-            </div>
-            <div class="col-md-2">
-                <input type="date" class="form-control" id="deliveryDate" name="Delivery" value="@Model.deliveryDate.ToString("yyyy-MM-dd")" required>
-            </div>
+
+
+                <div class="col-md-2">
+                    <label for="deliveryDate" class="form-label" style="text-align: right;">Data di consegna</label>
+                </div>
+                <div class="col-md-2">
+                    <input type="date" class="form-control" id="deliveryDate" name="deliveryDate" value="@Model.deliveryDate.ToString("yyyy-MM-dd")" required>
+                    <input type="hidden" id="hiddenDeliveryDate" name="deliveryDate" value="@Model.deliveryDate.ToString("yyyy-MM-dd")">
+                </div>
+
+
         </div>
 
+        <!-- Checkbox Dropdown Section -->
         <div class="row mb-3">
             <div class="col-md-2">
-                <label for="externalRef" class="form-label">Riferimento esterno</label>
+                <label class="form-label pt-1">Commesse Correlate</label>
             </div>
             <div class="col-md-10">
-                <input type="text" class="form-control" id="externalRef" name="ExternalRef" value="@Model.ExternalRef" required>
-                <div class="invalid-feedback">Riferimento esterno già esistente</div>
+                <div class="dropdown checkbox-dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button"
+                            id="@dropdownButtonId" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                        Seleziona Commesse
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="@dropdownButtonId" id="@dropdownMenuId">
+                        @if (allDaneaOrders != null && allDaneaOrders.Any())
+                        {
+                            int orderIndex = 0;
+                            foreach (var order in allDaneaOrders)
+                            {
+                                string checkboxId = $"selectableOrderCheck_{orderIndex}";
+                                bool isChecked = order.Taken == "1";
+                                <li>
+                                    <div class="dropdown-item-text">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="SelectedExternalRefs_Source"
+                                                   value="@order.NCommessa" id="@checkboxId" @(isChecked ? "checked" : "")>
+                                            <label class="form-check-label" for="@checkboxId">@order.NCommessa</label>
+                                        </div>
+                                    </div>
+                                </li>
+                                orderIndex++;
+                            }
+                        }
+                        else
+                        {
+                            <li><span class="dropdown-item-text text-muted fst-italic">Nessuna commessa selezionabile disponibile.</span></li>
+                        }
+                    </ul>
+                    <div id="@validationDivId" class="invalid-feedback" style="display: none;">Selezionare almeno una commessa correlata.</div>
+                </div>
+                <!-- Hidden Input for the CSV string -->
+                <input type="hidden" name="ExternalRef" id="@hiddenCsvInputId" value="@Model.ExternalRef" />
             </div>
         </div>
+        <!-- End Checkbox Dropdown Section -->
+
         <br>
         <hr>
         <!-- Row for Work Phases label -->
@@ -122,11 +183,10 @@
                 </div>
             }
         </div>
-        <hr>
-        <!-- Submit button -->
-        <div class="row mt-4">
+
+        <div class="row mb-3">
             <div class="col-md-2">
-                <button type="button" class="btn btn-outline-success btn-block" id="submitBtn">salva modifiche</button>
+                <button type="submit" id="submitBtn" class="btn btn-primary">Salva</button>
             </div>
             <div class="col-md-2">
                 <a class="btn btn-outline-secondary btn-block" asp-controller="Pfc" asp-action="Index">annulla</a>
@@ -180,6 +240,84 @@
         var rowIndex = @Model.WorkPhases.Count; // Corrected rowIndex initialization.
         var rowToRemove = null;
         var firstOperator = '@(ViewBag.Operators != null && ViewBag.Operators.Count > 0 ? ViewBag.Operators[0] : "")'; //Get first operator
+        
+        // --- Checkbox Dropdown Logic (jQuery) ---
+        var $dropdownMenu = $('#@dropdownMenuId');
+        var $dropdownButton = $('#@dropdownButtonId');
+        var $validationMessageDiv = $('#@validationDivId');
+        var $hiddenCsvInput = $('#@hiddenCsvInputId');
+
+        // Checkboxes used for selection
+        var sourceCheckboxSelector = 'input[type="checkbox"][name="SelectedExternalRefs_Source"]';
+
+
+            $(document).on('change', 'input[type="checkbox"][name$=".QualityCheck"]', function() {
+                var isChecked = $(this).prop('checked');
+                var hiddenInput = $(this).prev('input[type="hidden"]'); // Get the hidden input right before this checkbox
+                
+                if (hiddenInput.length) {
+                    hiddenInput.val(isChecked.toString().toLowerCase());
+                }
+            });
+
+            // Initialize all existing QualityCheck checkboxes on page load
+            $('input[type="checkbox"][name$=".QualityCheck"]').each(function() {
+                var isChecked = $(this).prop('checked');
+                var hiddenInput = $(this).prev('input[type="hidden"]');
+                
+                if (hiddenInput.length) {
+                    hiddenInput.val(isChecked.toString().toLowerCase());
+                }
+            });
+
+        function updateButtonText() {
+            var $checkedCheckboxes = $dropdownMenu.find(sourceCheckboxSelector + ':checked');
+            var count = $checkedCheckboxes.length;
+            
+            // Update button text logic
+            if (count === 0) {
+                $dropdownButton.text('Seleziona Commesse');
+            } else {
+                var selectedLabels = $checkedCheckboxes.map(function() {
+                    return $(this).closest('.form-check').find('label').text().trim();
+                }).get();
+                
+                if (count <= 2) {
+                    $dropdownButton.text(selectedLabels.join(', '));
+                } else {
+                    $dropdownButton.text(count + ' commesse selezionate');
+                }
+            }
+            
+            // Clear validation state
+            $dropdownButton.removeClass('is-invalid');
+            $validationMessageDiv.hide();
+            
+            // Update the hidden input with CSV string
+            updateHiddenCsvInput();
+        }
+        
+        function updateHiddenCsvInput() {
+            var $checkedCheckboxes = $dropdownMenu.find(sourceCheckboxSelector + ':checked');
+            var selectedValuesArray = $checkedCheckboxes.map(function() {
+                return $(this).val();
+            }).get();
+            var csvString = selectedValuesArray.join(',');
+            $hiddenCsvInput.val(csvString);
+        }
+
+        $('#deliveryDate').on('change', function() {
+            $('#hiddenDeliveryDate').val($(this).val());
+        });
+
+        // Event handler for checkbox changes
+        $dropdownMenu.on('change', sourceCheckboxSelector, function() {
+            updateButtonText();
+        });
+        
+        // Initialize button text based on initial checkbox states
+        updateButtonText();
+        // --- End Checkbox Dropdown Logic ---
 
         $('#work').on('change', function () {
             var workValue = $(this).val();
@@ -250,26 +388,20 @@
             newRow.find('input[name$=".Id"]').attr('name', 'WorkPhases[' + rowIndex + '].Id').val(0);
 
             // Update other fields
+            // Update other fields
             // Update checkboxes and add hidden fields for "Completed"
             newRow.find('input[id^="completed"]').attr({
                 'name': 'WorkPhases[' + rowIndex + '].Completed',
-                'id': 'completed_' + rowIndex,
-                'value': 'true'
+                'id': 'completed_' + rowIndex
             });
-            // Update or add hidden field for unchecked state
-            var completedHidden = newRow.find('input[type="hidden"][name$=".Completed"]');
-            if (completedHidden.length) {
-                completedHidden.attr('name', 'WorkPhases[' + rowIndex + '].Completed').val('false');
-            } else {
-                newRow.find('#completed_' + rowIndex).after('<input type="hidden" name="WorkPhases[' + rowIndex + '].Completed" value="false">');
-            }
-            newRow.find('label[for^="completed"]').attr('for', 'completed_' + rowIndex);
+
             // Update checkboxes and add hidden fields for "QualityCheck"
             newRow.find('input[id^="qualitycheck"]').attr({
                 'name': 'WorkPhases[' + rowIndex + '].QualityCheck',
                 'id': 'qualitycheck_' + rowIndex,
                 'value': 'true'
             });
+
             // Update or add hidden field for unchecked state
             var qualityCheckHidden = newRow.find('input[type="hidden"][name$=".QualityCheck"]');
             if (qualityCheckHidden.length) {
@@ -279,7 +411,7 @@
             }
             newRow.find('label[for^="qualitycheck"]').attr('for', 'qualitycheck_' + rowIndex);
 
-              //Update QualityOperator select element
+            //Update QualityOperator select element
             var qualityOperatorSelect = newRow.find('select[name$=".QualityOperator"]');
             qualityOperatorSelect.attr('name', 'WorkPhases[' + rowIndex + '].QualityOperator');
 
@@ -305,16 +437,58 @@
             removeButton.prop('disabled', !hasValue);
         });
 
-
-          // Show submit confirmation modal
+        // Show submit confirmation modal
         $('#submitBtn').on('click', function (e) {
             e.preventDefault(); // Prevent the form from submitting immediately
-            $('#confirmSubmitModal').modal('show');
+            
+            // Validate the dropdown selection
+            var $dropdownCheckboxes = $dropdownMenu.find(sourceCheckboxSelector);
+            var $checkedDropdownCheckboxes = $dropdownCheckboxes.filter(':checked');
+            var checkedDropdownCount = $checkedDropdownCheckboxes.length;
+            
+            var isValid = true;
+            
+            if (checkedDropdownCount === 0 && $dropdownCheckboxes.length > 0) {
+                $dropdownButton.addClass('is-invalid');
+                $validationMessageDiv.show();
+                isValid = false;
+            } else {
+                $dropdownButton.removeClass('is-invalid');
+                $validationMessageDiv.hide();
+                
+                // Update hidden input with final CSV value
+                updateHiddenCsvInput();
+            }
+            
+            if (isValid) {
+                // Proceed with showing confirmation modal
+                $('#confirmSubmitModal').modal('show');
+            } else {
+                // Focus on the first invalid element
+                var $firstError = $('.is-invalid').first();
+                if ($firstError.length) {
+                    $('html, body').animate({
+                        scrollTop: $firstError.offset().top - 100
+                    }, 500, function() {
+                        if ($firstError.is(':input, button')) {
+                            $firstError.focus();
+                        }
+                    });
+                }
+            }
         });
 
         // Handle confirmation in submit modal
         $('#confirmSubmitBtn').on('click', function () {
-            $('#worktableForm').submit(); // Submit the form
+
+            var dateVal = $('#deliveryDate').val();
+            $('#hiddenDeliveryDate').val(dateVal);
+
+            // Disable original checkboxes to prevent them from being submitted directly
+            $(sourceCheckboxSelector).prop('disabled', true);
+            
+            // Submit the form
+            $('#worktableForm').submit();
         });
     });
 </script>

@@ -189,7 +189,7 @@ namespace mes.Controllers
                 DatabaseAccessor dbAccessor = new DatabaseAccessor();
                 List<PfcCsvDaneaSourceID> allDaneaOrders = new List<PfcCsvDaneaSourceID>();
                 allDaneaOrders = dbAccessor.Queryer<PfcCsvDaneaSourceID>(config.PfcConnString, config.CsvDaneaTable)
-                                            .Where(t => t.Taken =="0")
+                                            //.Where(t => t.Taken =="0")
                                             .Where(c => c.Cliente == daneaCustomer).ToList();
 
                 string[] takenCsvOrders = takenOrders.Split(',');
@@ -265,13 +265,16 @@ namespace mes.Controllers
             //ViewBag.Works = GetExistingWorks(); 
 
             //passare tutti i CsvOrders per questo cliente
-            //List<Csv
-
-            List<string> allDaneaOrders = dbAccessor.Queryer<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable)
-                                                    .Where(c => c.Cliente == viewModel.Customer)
+            List<PfcCsvDaneaSource> allDaneaOrders = dbAccessor.Queryer<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable)
+                                                    .Where(n => n.PfcNumber == viewModel.WorkNumber)
                                                     .Where(d => Convert.ToDateTime(d.DataConsegna)<= viewModel.deliveryDate)
-                                                    .Select(n => n.NCommessa).ToList();
+                                                    .ToList();
             
+            allDaneaOrders.AddRange(dbAccessor.Queryer<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable)
+                                                    .Where(t => t.Taken =="0")
+                                                    .Where(d => Convert.ToDateTime(d.DataConsegna)<= viewModel.deliveryDate)
+                                                    .ToList());
+
             ViewBag.allDaneaOrders = allDaneaOrders;
 
             return View(viewModel);
@@ -301,11 +304,13 @@ namespace mes.Controllers
                     LavorazioniJsonString = jsonLavorazioni,
                     Enabled = "1",
                     CreatedBy = userData.UserName,
-                    CreatedOn = DateTime.Now.ToString("dd/MM/yyyy-HH:mm") 
+                    CreatedOn = DateTime.Now.ToString("dd/MM/yyyy HH:mm") 
                 };
 
                 DatabaseAccessor dbAccessor = new DatabaseAccessor();
-                var result = dbAccessor.Updater<PfcModel>(config.ConnString2, config.PfcTable, pcf2update, model.id);
+                var result = dbAccessor.Updater<PfcModel>(config.PfcConnString, config.PfcTable, pcf2update, model.id);
+
+                UpdateTakenCsvOrders(pcf2update.RifEsterno,pcf2update.NumeroCommessa, pcf2update.Cliente);
 
                 return RedirectToAction("Index"); 
             }
