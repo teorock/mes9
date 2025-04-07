@@ -97,8 +97,12 @@ namespace mes.Controllers
             
 
             List<PfcModel> allPfc = dbAccessor.Queryer<PfcModel>(config.PfcConnString, config.PfcTable).ToList();
-            long lastId = allPfc.Select(i => i.id).Max();
-            
+            long lastId = 0;
+            if(allPfc.Count !=0)
+            {
+                lastId = allPfc.Select(i => i.id).Max();
+            }
+        
             ViewBag.allPfc = allPfc;
             ViewBag.nCommessa = lastId +1;
             ViewBag.nCommessaTitle = $"{lastId + 1}/{DateTime.Now.ToString("yyyy")}";
@@ -160,7 +164,7 @@ namespace mes.Controllers
                     NumeroCommessa = inputModel.WorkNumber,
                     Cliente = inputModel.Customer,
                     RifEsterno = inputModel.ExternalRef,
-                    DataConsegna = Convert.ToDateTime(inputModel.deliveryDate).ToString("dd/MM/yyyy HH:mm"),
+                    DataConsegna = Convert.ToDateTime(inputModel.deliveryDate).ToString("dd/MM/yyyy"),
                     LavorazioniJsonString = jsonLavorazioni,
                     Enabled = "1",
                     CreatedBy = userData.UserName,
@@ -229,12 +233,11 @@ namespace mes.Controllers
             //-------------------------);
             ViewBag.userRoles = userData.UserRoles;
 
-
             // Get the record to modify
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             var pfc = dbAccessor.Queryer<PfcModel>(config.PfcConnString, config.PfcTable)
-                .Where(i => i.id == inputId)
-                .FirstOrDefault();
+                                .Where(i => i.id == inputId)
+                                .FirstOrDefault();
 
             if (pfc == null)
             {
@@ -261,6 +264,16 @@ namespace mes.Controllers
             ViewBag.Operators = GetOperatorsList(); 
             //ViewBag.Works = GetExistingWorks(); 
 
+            //passare tutti i CsvOrders per questo cliente
+            //List<Csv
+
+            List<string> allDaneaOrders = dbAccessor.Queryer<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable)
+                                                    .Where(c => c.Cliente == viewModel.Customer)
+                                                    .Where(d => Convert.ToDateTime(d.DataConsegna)<= viewModel.deliveryDate)
+                                                    .Select(n => n.NCommessa).ToList();
+            
+            ViewBag.allDaneaOrders = allDaneaOrders;
+
             return View(viewModel);
         }
         //===================================================================
@@ -284,7 +297,7 @@ namespace mes.Controllers
                     NumeroCommessa = model.WorkNumber,
                     Cliente = model.Customer,
                     RifEsterno = model.ExternalRef,
-                    DataConsegna = Convert.ToDateTime(model.deliveryDate).ToString("dd/MM/yyyy HH:mm"),
+                    DataConsegna = Convert.ToDateTime(model.deliveryDate).ToString("dd/MM/yyyy"),
                     LavorazioniJsonString = jsonLavorazioni,
                     Enabled = "1",
                     CreatedBy = userData.UserName,
