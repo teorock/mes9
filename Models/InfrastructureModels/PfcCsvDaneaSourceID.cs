@@ -5,8 +5,9 @@ using System.Threading.Tasks;
 
 namespace mes.Models.InfrastructureModels
 {
-    public class PfcCsvDaneaSource
+    public class PfcCsvDaneaSourceID
     {
+        public long id { get; set; }
         public string Data { get; set; }
         public string NCommessa { get; set; }
         public string Cliente { get; set; }
@@ -16,4 +17,5 @@ namespace mes.Models.InfrastructureModels
         public string Taken { get; set; }      
         public string PfcNumber { get; set; }  
     }
+
 }
