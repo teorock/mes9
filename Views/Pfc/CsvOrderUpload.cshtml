@@ -117,6 +117,8 @@
                     <th>Commessa</th>
                     <th>Data consegna</th>
                     <th>Commento</th>
+                    <th>Già assegnato</th>
+                    <th>Numero Pfc</th>
                 </tr>
             </thead>
             <tbody>
@@ -127,17 +129,19 @@
                         <td>@oneCsv.NCommessa</td>
                         <td>@oneCsv.DataConsegna</td>
                         <td>@oneCsv.Commento</td>
+                        <td>@oneCsv.Taken</td>
+                        <td>@oneCsv.PfcNumber</td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
 }
-else if (ViewBag.filename != null) // Check if a file was processed but resulted in no data
+else if (ViewBag.filename != null)
 {
      <div class="alert alert-warning mt-4">Nessun dato trovato nel file CSV o il file è vuoto.</div>
 }
-@* --- End Refactored Table Section --- *@
+
 
 
 @section Scripts {
@@ -155,42 +159,21 @@ else if (ViewBag.filename != null) // Check if a file was processed but resulted
         $(document).ready(function () {
 
             // --- Initialize DataTables ---
-            // Check if the table exists before trying to initialize DataTables
             if ($('#csvDataTable').length) {
-                 $('#csvDataTable').DataTable({ // Start DataTable options object
+                 $('#csvDataTable').DataTable({
                      language: {
                          url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/it-IT.json'
-                     } // End language object
-                 }); // <<-- ADDED THE CLOSING } HERE before the );
+                     } 
+                 }); 
             }
             // --- End DataTables Initialization ---
 
 
             $('#customFile').on('change', function () {
-                // Get the file name for display purposes if needed (label is commented out)
                 var fileName = $(this).val().split('\\').pop();
-                // Example: Update a separate element if you don't have the label
-                // $('#selectedFileNameDisplay').text(fileName);
-                 console.log('Selected file:', fileName); // Log selected file name from the input
+                 console.log('Selected file:', fileName); 
             });
 
-            //$('#processFile').click(function() {
-            //    console.log('Process button clicked');
-            //    // Use the filename received from the controller (ViewBag)
-            //    console.log('File to process (from controller):', controllerfileName);
-//
-            //    // Check if the controller provided a filename to process
-            //    if(controllerfileName && controllerfileName.length > 0) { // More robust check
-            //        console.log('Filename from controller exists:', controllerfileName);
-            //        var url = "/Pfc/LoadCsvToDatabase?file2load=" + encodeURIComponent(controllerfileName);
-            //        console.log('Redirecting to:', url);
-            //        window.location.href = url; // Redirect
-            //    } else {
-            //        // Give a clearer error message
-            //        alert('Errore: Il nome del file da processare non è disponibile. Assicurarsi che un file sia stato caricato correttamente nella fase precedente.');
-            //        console.error('controllerfileName is missing or empty.');
-            //    }
-            //});
         });
 
     </script>
