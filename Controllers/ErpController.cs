@@ -241,9 +241,9 @@ namespace mes.Controllers
             }
             else
             {
-            allPermissions = dbAccessor.Queryer<PermessoViewModel>(config.ConnectionString, "Permessi")
-                                                                .Where(u => u.Username == userData.UserName)
-                                                                .Where(p => p.Enabled == "1").ToList();                
+                allPermissions = dbAccessor.Queryer<PermessoViewModel>(config.ConnectionString, "Permessi")
+                                                                    .Where(u => u.Username == userData.UserName)
+                                                                    .Where(p => p.Enabled == "1").ToList();                
             }
 
 
@@ -251,12 +251,13 @@ namespace mes.Controllers
             //List<CalendarEvent> events = PermessiExtractor(permessi);
             ViewBag.calendarEvents = events; 
             ViewBag.permessi = permessi;
-            List<string> tipologie = new List<string>();
-            tipologie.Add("permesso");
-            tipologie.Add("ferie");
-            tipologie.Add("malattia");
+            //List<string> tipologie = new List<string>();
+            //tipologie.Add("permesso");
+            //tipologie.Add("ferie");
+            //tipologie.Add("malattia");
+            //tipologie.Add("lavoro fuori sede");
 
-            ViewBag.tipologie = tipologie;                            
+            ViewBag.tipologie = config.Tipologie;                            
 
             return View();
         }
@@ -335,12 +336,7 @@ namespace mes.Controllers
             List<CalendarEvent> events = PermessiExtractor(permessi);
             ViewBag.calendarEvents = events; 
             ViewBag.permessi = permessi;
-            List<string> tipologie = new List<string>();
-            tipologie.Add("permesso");
-            tipologie.Add("ferie");
-            tipologie.Add("malattia");
-
-            ViewBag.tipologie = tipologie;   
+            ViewBag.tipologie = config.Tipologie; 
 
             return View();
         }
@@ -438,12 +434,7 @@ namespace mes.Controllers
             ViewBag.allDipendenti = allDipendenti;
             ViewBag.userName = userData.UserName;
 
-            List<string> tipologie = new List<string>();
-            tipologie.Add("permesso");
-            tipologie.Add("ferie");
-            tipologie.Add("malattia");
-
-            ViewBag.tipologie = tipologie;             
+            ViewBag.tipologie = config.Tipologie;             
 
             return View();
         }
@@ -618,22 +609,6 @@ namespace mes.Controllers
             }            
         }
 
-        //[HttpGet]
-        //[Authorize(Roles = "root, PermessiMaster")]
-        //public IActionResult CancPermesso(long id)
-        //{
-        //    aggiornaPermessi = false;
-        //    DatabaseAccessor dbAccessor = new DatabaseAccessor();            
-        //    //int result = dbAccessor.Delete(connectionString, "Permessi", id);
-//
-        //    PermessoViewModel Permesso2disable = dbAccessor.Queryer<PermessoViewModel>(connectionString, "Permessi").Where(x => x.id == id).FirstOrDefault();
-        //    Permesso2disable.Enabled = "0";
-//
-        //    int result = dbAccessor.Updater<PermessoViewModel>(connectionString,"Permessi", Permesso2disable, id);
-        //    
-        //    Thread.Sleep(1000);
-        //    return RedirectToAction("MainPermessi");
-        //}
 
         public async Task<IActionResult> GeneratePdf(List<PermessoViewModel> objectList, string username)
         {
@@ -663,15 +638,6 @@ namespace mes.Controllers
 
             return dipPermMaster;
         }
-
-        //private List<string> GetPermMasterNorifyAddress(List<UsersRolesNotify> allUsersRolesNotify)
-        //{
-        //    List<string> notifyList = new List<string>();
-//
-        //    //notifyList = allUsersRolesNotify.Where(x => x.UserRoles.ToString().Contains)
-//
-        //    return notifyList;
-        //}
 
         #endregion
 

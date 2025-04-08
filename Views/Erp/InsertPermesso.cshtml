@@ -145,6 +145,7 @@ function conferma() {
             <th style="text-align: center;">datafine</th>            
             <th style="text-align: center;">motivazione</th>
             <th style="text-align: center;">urgente</th>
+            <th style="text-align: center;">note</th>
         </tr>
         <tr>
             <td><input id="Nome" style="width: 170px;" type="text" asp-for=@Model.Nome value="@nome" class="form-control" readonly/></td>
@@ -165,6 +166,7 @@ function conferma() {
             <td><input id="DataFine" style="width: 180px;" type="datetime-local" asp-for=@Model.DataFine class="form-control" required/></td>
             <td><input id="Motivazione" style="width: 180px;" type="text" asp-for=@Model.Motivazione class="form-control" required/></td>                                                       
             <td style="text-align: center;"><input id="Urgente" style="width: 25px; height: 25px; align: center;" class="form-check-input" type="checkbox" asp-for=@Model.Urgente class="form-control" /></td>
+            <td><input id="Note" style="width: 180px;" type="text" asp-for=@Model.Note class="form-control" /></td>  
         </tr> 
     </table>
     <br>

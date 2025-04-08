@@ -11,5 +11,6 @@ namespace mes.Models.ControllersConfigModels
         public string UserDbConnString { get; set; }
         public string IntranetLog { get; set; }
         public string DateFormat { get; set; }
+        public List<string> Tipologie { get; set; }
     }
 }
