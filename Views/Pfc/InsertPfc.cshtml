@@ -17,7 +17,6 @@
 
 @model WorkorderViewModel;
 
-@* Styles section remains the same *@
 @section Styles {
     <style>
         /* Styles from Example 1 - Adjust as needed */
@@ -26,6 +25,32 @@
         .checkbox-dropdown .dropdown-item-text:hover { background-color: #f8f9fa; }
         .checkbox-dropdown .form-check-label { cursor: pointer; width: 100%; }
         .checkbox-dropdown .btn.is-invalid { border-color: var(--bs-danger); }
+        
+        /* Add styles for disabled state with custom pointer and opacity */
+        .customer-required {
+            position: relative;
+            cursor: not-allowed !important;
+        }
+        
+        .customer-required select,
+        .customer-required button,
+        .customer-required input {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        
+        /* Toast notification styling */
+        #customerRequiredToast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            background-color: #dc3545;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            display: none;
+        }
     </style>
 }
 
@@ -33,6 +58,10 @@
     <h2>Compila modulo pfc</h2>
     <br>
     <hr>
+    
+    <!-- Customer required toast notification -->
+    <div id="customerRequiredToast">Seleziona un cliente prima di procedere</div>
+    
     @using (Html.BeginForm("InsertPfc", "Pfc", FormMethod.Post, new { @class = "form", id = "worktableForm", enctype = "multipart/form-data" }))
     {
         <!-- Fields for module number, customer, delivery date (remain the same) -->
@@ -54,7 +83,7 @@
                  </select>
              </div>
              <div class="col-md-2"><label for="deliveryDate" class="form-label" style="text-align: right;">Data di consegna</label></div>
-             <div class="col-md-2"><input type="date" class="form-control" id="deliveryDate" name="deliveryDate" required></div>
+             <div class="col-md-2 customer-dependent-control"><input type="date" class="form-control" id="deliveryDate" name="deliveryDate" required></div>
         </div>
 
 
@@ -63,7 +92,7 @@
             <div class="col-md-2">
                 <label class="form-label pt-1">Commesse Correlate</label>
             </div>
-            <div class="col-md-10">
+            <div class="col-md-10 customer-dependent-control">
                 <div class="dropdown checkbox-dropdown">
                     <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button"
                             id="@dropdownButtonId" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
@@ -112,7 +141,7 @@
             <!-- Initial work phase row -->
             <div class="work-phase-row row mb-3">
                  <!-- Columns for phase select, quality check, operator, buttons -->
-                 <div class="col-md-2">
+                 <div class="col-md-2 customer-dependent-control">
                     <select class="form-select work-phase-select" name="WorkPhases[0].WorkphaseName" required>
                         <option value="" selected disabled>fase di lavorazione</option>
                         @foreach (var phase in ViewBag.WorkPhases) { <option value="@phase">@phase</option> }
@@ -122,14 +151,14 @@
                     <input type="hidden" name="WorkPhases[0].RelatedWorkOrder" value="@nCommessa">
                     <input type="hidden" name="WorkPhases[0].Id" value="0">
                 </div>
-                 <div class="col-md-2">
+                 <div class="col-md-2 customer-dependent-control">
                     <div class="form-check mt-1">
                         <input type="hidden" name="WorkPhases[0].QualityCheck" value="false">
                         <input class="form-check-input" type="checkbox" name="WorkPhases[0].QualityCheck" id="qualitycheck_0" value="true">
                         <label class="form-check-label" for="qualitycheck_0">controllo qualità</label>
                     </div>
                 </div>
-                 <div class="col-md-2">
+                 <div class="col-md-2 customer-dependent-control">
                      <select class="form-select" name="WorkPhases[0].QualityOperator">
                          @{ bool isFirst = true; }
                          @if (ViewBag.Operators != null && ((List<string>)ViewBag.Operators).Count > 0)
@@ -143,8 +172,8 @@
                          else { <option value="" selected disabled>firma operatore</option> }
                      </select>
                  </div>
-                <div class="col-md-2"><button type="button" class="btn btn-outline-success btn-block add-row-btn" disabled>aggiungi fase</button></div>
-                <div class="col-md-1"><button type="button" class="btn btn-outline-warning btn-block remove-row-btn" disabled>rimuovi</button></div>
+                <div class="col-md-2 customer-dependent-control"><button type="button" class="btn btn-outline-success btn-block add-row-btn" disabled>aggiungi fase</button></div>
+                <div class="col-md-1 customer-dependent-control"><button type="button" class="btn btn-outline-warning btn-block remove-row-btn" disabled>rimuovi</button></div>
             </div>
         </div>
         <br>
@@ -172,6 +201,26 @@
 
 <script>
     $(document).ready(function() {
+        // Apply customer-required class initially if no customer is selected
+        function checkCustomerSelection() {
+            var customerSelected = $('#customer').val() !== null && $('#customer').val() !== '';
+            
+            if (customerSelected) {
+                $('.customer-dependent-control').removeClass('customer-required');
+            } else {
+                $('.customer-dependent-control').addClass('customer-required');
+            }
+            
+            return customerSelected;
+        }
+        
+        // Initial check on page load
+        checkCustomerSelection();
+        
+        // Show toast notification when clicking on a disabled control
+        $(document).on('click', '.customer-required', function(e) {
+            $('#customerRequiredToast').fadeIn(300).delay(2000).fadeOut(300);
+        });
 
         // --- Checkbox Dropdown Logic (jQuery) ---
         var $dropdownMenu = $('#@dropdownMenuId');
@@ -215,6 +264,9 @@
         console.log('cliente da controller');
         console.log('@ViewBag.selectedCustomer');
         $('#customer').val('@ViewBag.selectedCustomer');
+        
+        // Update controls state after customer is set from ViewBag
+        checkCustomerSelection();
 
         var rowToRemove = null;
          $(document).on('change', '.work-phase-select', function() { var row = $(this).closest('.work-phase-row'); var addButton = row.find('.add-row-btn'); var removeButton = row.find('.remove-row-btn'); var hasValue = $(this).val() !== ''; addButton.prop('disabled', !hasValue); removeButton.prop('disabled', !hasValue); });
@@ -228,10 +280,19 @@
         $('#customer').on('change', function(){
             console.log(this.value + ' delivery: ' + $('#deliveryDate').val());
             var delivery = $('#deliveryDate').val();
+            
+            // Update customer-required status
+            checkCustomerSelection();
+            
             window.location.href ="/Pfc/insertPfc?daneaCustomer=" + this.value + "&deliveryDate=" + delivery;
         });
 
         $('#deliveryDate').on('change', function(){
+            if(!checkCustomerSelection()) {
+                $('#customerRequiredToast').fadeIn(300).delay(2000).fadeOut(300);
+                return false;
+            }
+            
             console.log(this.value + ' customer: ' + $('#customer').val());
             var customer = $('#customer').val();
             window.location.href ="/Pfc/insertPfc?daneaCustomer=" + customer + "&deliveryDate=" + this.value;
@@ -240,6 +301,12 @@
         // --- Form Validation and CSV Generation ---
          $('#worktableForm').on('submit', function(event) {
              var isValid = true;
+             
+             // Customer validation first
+             if(!checkCustomerSelection()) {
+                 $('#customerRequiredToast').fadeIn(300).delay(2000).fadeOut(300);
+                 isValid = false;
+             }
 
              // Dropdown Validation (remains the same)
              var $dropdownCheckboxes = $dropdownMenu.find(sourceCheckboxSelector);
