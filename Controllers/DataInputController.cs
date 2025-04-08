@@ -361,7 +361,7 @@ namespace intranet.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "root")]
+        [Authorize(Roles = "root, DataInput")]
         public IActionResult InsertLavorazione()
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
@@ -374,7 +374,7 @@ namespace intranet.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "root")]
+        [Authorize(Roles = "root, DataInput")]
         public IActionResult InsertLavorazione(LavorazioneViewModel newLavorazione)
         {
             UserData userData = GetUserData();
@@ -403,7 +403,7 @@ namespace intranet.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "root")]
+        [Authorize(Roles = "root, DataInput")]
         public IActionResult ModLavorazione(long id)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
@@ -416,7 +416,7 @@ namespace intranet.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "root")]
+        [Authorize(Roles = "root, DataInput")]
         public IActionResult ModLavorazione(LavorazioneViewModel oneModel)
         {
             UserData userData = GetUserData();
