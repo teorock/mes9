@@ -60,7 +60,7 @@ namespace mes.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles ="root, PfcAggiorna, PfcCrea")]
+        [Authorize(Roles ="root, PfcCrea")]
         public IActionResult InsertPfc(string daneaCustomer, string deliveryDate)
         {
             // mettere filtro commesse da Danea per data selezionata
@@ -135,14 +135,14 @@ namespace mes.Controllers
 
             ViewBag.selectedDeliveryDate = deliveryDate;
             ViewBag.selectedCustomer = daneaCustomer;
-            ViewBag.selectableOrders = allDaneaOrders;
+            ViewBag.selectableOrders = allDaneaOrders;           
             //=====================================================================
 
             return View();
         }
 
         [HttpPost]
-        [Authorize(Roles ="root, PfcAggiorna, PfcCrea")]
+        [Authorize(Roles ="root, PfcCrea")]
         public IActionResult InsertPfc(WorkorderViewModel inputModel)
         {
             if(ModelState.IsValid)
@@ -256,13 +256,11 @@ namespace mes.Controllers
                 WorkPhases = JsonConvert.DeserializeObject<List<WorkphaseViewModel>>(pfc.LavorazioniJsonString)
             };
 
-            // Populate ViewBag with necessary data
             ViewBag.nCommessa = pfc.id;
             ViewBag.nCommessaTitle = pfc.NumeroCommessa;
             ViewBag.Customers = GetCustomersList(); 
             ViewBag.WorkPhases = GetWorkPhasesList(); 
             ViewBag.Operators = GetOperatorsList(); 
-            //ViewBag.Works = GetExistingWorks(); 
 
             //passare tutti i CsvOrders per questo cliente
             List<PfcCsvDaneaSource> allDaneaOrders = dbAccessor.Queryer<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable)
@@ -276,6 +274,17 @@ namespace mes.Controllers
                                                     .ToList());
 
             ViewBag.allDaneaOrders = allDaneaOrders;
+
+            //TO DO:
+            //abilitazione parziale per PfcAggiorna
+            bool canCreate = true;
+            if(userData.UserRoles.Contains("PfcAggiorna") & !userData.UserRoles.Contains("PfcCrea"))
+            {
+                canCreate = false;
+            }
+            if(userData.UserRoles.Contains("root")) canCreate = true;
+            ViewBag.canCreate = canCreate;
+
 
             return View(viewModel);
         }
@@ -520,6 +529,7 @@ namespace mes.Controllers
             {
                 foreach(var oneObj in newOnes)
                 {
+                    oneObj.PfcNumber = "---";
                     oneObj.Taken="0";
                     int res = dbAccessor.Insertor<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable, oneObj);
                 }                
