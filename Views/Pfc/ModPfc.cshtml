@@ -14,6 +14,13 @@
     bool cannotCreate= true;
     if(userRoles.Contains("PfcCrea")||userRoles.Contains("root")) cannotCreate=false;        
 
+    string cannotUpdate = "enabled";
+    bool cannotUpdateBool = false;
+    if(userRoles.Contains("PfcAggiorna"))
+    { cannotUpdate = "disabled";
+    cannotUpdateBool = true;
+    }
+
     // Generate unique IDs for the dropdown elements
     string dropdownButtonId = $"externalRefsDropdownButton_{Guid.NewGuid().ToString("N").Substring(0, 8)}";
     string dropdownMenuId = $"externalRefsDropdownMenu_{Guid.NewGuid().ToString("N").Substring(0, 8)}";
@@ -60,7 +67,7 @@
                 <label for="customer" class="form-label">Cliente</label>
             </div>
             <div class="col-md-6">
-                <select class="form-select" id="customer" name="Customer" required>
+                <select class="form-select" id="customer" name="Customer" required @cannotUpdate>
                     <option value="" disabled>seleziona un cliente</option>
                     @foreach (var customer in customers)
                     {
@@ -75,7 +82,7 @@
                     <label for="deliveryDate" class="form-label" style="text-align: right;">Data di consegna</label>
                 </div>
                 <div class="col-md-2">
-                    <input type="date" class="form-control" id="deliveryDate" name="deliveryDate" value="@Model.deliveryDate.ToString("yyyy-MM-dd")" required>
+                    <input type="date" class="form-control" id="deliveryDate" name="deliveryDate" value="@Model.deliveryDate.ToString("yyyy-MM-dd")" required disabled="@cannotUpdateBool">
                     <input type="hidden" id="hiddenDeliveryDate" name="deliveryDate" value="@Model.deliveryDate.ToString("yyyy-MM-dd")">
                 </div>
 
@@ -90,7 +97,7 @@
             <div class="col-md-10">
                 <div class="dropdown checkbox-dropdown">
                     <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button"
-                            id="@dropdownButtonId" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                            id="@dropdownButtonId" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" @cannotUpdate>
                         Seleziona Commesse
                     </button>
                     <ul class="dropdown-menu" aria-labelledby="@dropdownButtonId" id="@dropdownMenuId">
@@ -183,10 +190,10 @@
                         </select>
                     </div>                
                     <div class="col-md-2">
-                        <button type="button" class="btn btn-outline-success btn-block add-row-btn" disabled="@cannotCreate">aggiungi fase</button>
+                        <button type="button" class="btn btn-outline-success btn-block add-row-btn" @cannotUpdate>aggiungi fase</button>
                     </div>
                     <div class="col-md-1">
-                        <button type="button" class="btn btn-outline-warning btn-block remove-row-btn" disabled="@cannotCreate">rimuovi</button>
+                        <button type="button" class="btn btn-outline-warning btn-block remove-row-btn" @cannotUpdateBool>rimuovi</button>
                     </div>
                 </div>
             }

@@ -1,0 +1,99 @@
+@using mes.Models.ViewModels
+@using System.Collections.Generic
+@model TotemCalendarEventViewModel
+@{ List<TotemCalendarEventViewModel> TotemCalendarEventsList = ViewBag.TotemCalendarEventsList; }
+
+
+<script>
+
+function conferma() {
+
+        if(!$("#EventName").val()) {
+            alert("campo 'EventName' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#EventDate").val()) {
+            alert("campo 'EventDate' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        if(!$("#EventLink").val()) {
+            alert("campo 'EventLink' vuoto");
+            $("#confirmationModal").modal('toggle');
+            return;
+        }
+        $("#frmInsTotemCalendarEvent").submit();
+    }
+
+</script>
+
+<!-- Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Creazione nuovo totemcalendarevent</h5>
+      </div>
+      <div class="modal-body">
+        <p>confermi creazione nuovo totemcalendarevent?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">annulla</button>
+        <button type="button" class="btn btn-outline-success" onclick="conferma()">salva</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal end -->
+
+
+<h2>crea nuovo TotemCalendarEvent</h2>
+<br>
+@using(Html.BeginForm("InsertCalendarEvent", "TotemCalendarEvents", FormMethod.Post, new { name = "frmInsTotemCalendarEvent", id = "frmInsTotemCalendarEvent" }))
+{
+    <table>
+        <tr>
+            <th style="text-align: center;">eventname</th>
+            <th style="text-align: center;">eventdate</th>
+            <th style="text-align: center;">eventlink</th>
+        </tr>
+        <tr>
+            <td><input id="EventName" style="width: 130px;" type="text" asp-for=@Model.EventName class="form-control" required/></td>
+            <td><input id="EventDate" style="width: 130px;" type="text" asp-for=@Model.EventDate class="form-control" required/></td>
+            <td><input id="EventLink" style="width: 130px;" type="text" asp-for=@Model.EventLink class="form-control" required/></td>
+        </tr> 
+    </table>
+    <br>
+    <br>
+
+    <div class="row">
+        <div class="col-md-3 d-grid">
+            <button type="button" class="btn btn-outline-primary btn-block" data-bs-toggle="modal" data-bs-target="#confirmationModal">salva</button>            
+        </div>
+        <div class="col-md-3 d-grid">
+            <a class="btn btn-outline-secondary  btn-block" asp-controller="TotemController" asp-action="MainTotemCalendarEvents">annulla</a>
+        </div>             
+    </div>  
+}
+
+<hr>
+<h4>lista totemcalendarevents presenti</h4>
+<br>
+<table>
+        <tr>
+            <th style="text-align: center;">EventName</th> 
+            <th style="text-align: center;">EventDate</th> 
+            <th style="text-align: center;">EventLink</th> 
+        </tr>
+        @foreach (TotemCalendarEventViewModel oneModel in TotemCalendarEventsList)
+        {
+            <tr>
+                <td><input style="width: 130px;" type="text" asp-for=@oneModel.EventName class="form-control" value=@oneModel.EventName readonly /></td> 
+                <td><input style="width: 130px;" type="text" asp-for=@oneModel.EventDate class="form-control" value=@oneModel.EventDate readonly /></td> 
+                <td><input style="width: 130px;" type="text" asp-for=@oneModel.EventLink class="form-control" value=@oneModel.EventLink readonly /></td> 
+            </tr>  
+        }        
+
+    
+</table>
