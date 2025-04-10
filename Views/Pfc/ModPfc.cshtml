@@ -14,11 +14,11 @@
     bool cannotCreate= true;
     if(userRoles.Contains("PfcCrea")||userRoles.Contains("root")) cannotCreate=false;        
 
-    string cannotUpdate = "enabled";
     bool cannotUpdateBool = false;
-    if(userRoles.Contains("PfcAggiorna"))
-    { cannotUpdate = "disabled";
-    cannotUpdateBool = true;
+    string cannotUpdate = "enabled";
+    if(userRoles.Contains("PfcAggiorna")) {
+        cannotUpdateBool = true;
+        cannotUpdate = "disabled";
     }
 
     // Generate unique IDs for the dropdown elements
@@ -67,15 +67,15 @@
                 <label for="customer" class="form-label">Cliente</label>
             </div>
             <div class="col-md-6">
-                <select class="form-select" id="customer" name="Customer" required @cannotUpdate>
-                <select class="form-select" id="customer" name="Customer" required @cannotUpdate>
-                    <option value="" disabled>seleziona un cliente</option>
+                <select class="form-select" id="customer" name="customer-visible" required @cannotUpdate>
+                    <option value="">seleziona un cliente</option>
                     @foreach (var customer in customers)
                     {
                         string selected = (Model.Customer == customer) ? "selected" : "";
                         <option value="@customer" selected="@(Model.Customer == customer ? "selected" : null)">@customer</option>
                     }
                 </select>
+                <input type="hidden" name="Customer" id="hidden-customer" value="@Model.Customer">
             </div>
 
 
@@ -83,7 +83,6 @@
                     <label for="deliveryDate" class="form-label" style="text-align: right;">Data di consegna</label>
                 </div>
                 <div class="col-md-2">
-                    <input type="date" class="form-control" id="deliveryDate" name="deliveryDate" value="@Model.deliveryDate.ToString("yyyy-MM-dd")" required disabled="@cannotUpdateBool">
                     <input type="date" class="form-control" id="deliveryDate" name="deliveryDate" value="@Model.deliveryDate.ToString("yyyy-MM-dd")" required disabled="@cannotUpdateBool">
                     <input type="hidden" id="hiddenDeliveryDate" name="deliveryDate" value="@Model.deliveryDate.ToString("yyyy-MM-dd")">
                 </div>
@@ -164,15 +163,7 @@
                         <input type="hidden" name="WorkPhases[@i].RelatedWorkOrder" value="@nCommessa">
                         <input type="hidden" name="WorkPhases[@i].Id" value="@phase.id">
                     </div>
-                    <div class="col-md-2">
 
-                        <!-- div class="form-check mt-1">
-                            <input type="hidden" name="WorkPhases[@i].Completed" value="false">
-                            <input class="form-check-input" type="checkbox" name="WorkPhases[@i].Completed" id="completed_@i" value="true" @(phase.Completed == "true" ? "checked" : "")>
-                            <label class="form-check-label" for="completed_@i">completata</label>
-                        </div -->
-
-                    </div>
                     <div class="col-md-2">
                         <div class="form-check mt-1">
                             <input type="hidden" name="WorkPhases[@i].QualityCheck" value="false">
@@ -192,10 +183,10 @@
                         </select>
                     </div>                
                     <div class="col-md-2">
-                        <button type="button" class="btn btn-outline-success btn-block add-row-btn">aggiungi fase</button>
+                        <button type="button" class="btn btn-outline-success btn-block add-row-btn" disabled="@cannotCreate">aggiungi fase</button>
                     </div>
                     <div class="col-md-1">
-                        <button type="button" class="btn btn-outline-warning btn-block remove-row-btn">rimuovi</button>
+                        <button type="button" class="btn btn-outline-warning btn-block remove-row-btn" disabled="@cannotCreate">rimuovi</button>
                     </div>
                 </div>
             }
@@ -252,294 +243,454 @@
 
 
 <script>
-$(document).ready(function () {
-    var existingWorks = JSON.parse('@Html.Raw(Json.Serialize(@ViewBag.Works))');
-    var rowIndex = @Model.WorkPhases.Count; // Corrected rowIndex initialization.
-    var rowToRemove = null;
-    var firstOperator = '@(ViewBag.Operators != null && ViewBag.Operators.Count > 0 ? ViewBag.Operators[0] : "")'; //Get first operator
-    var lastAddedRow = null; // Track the last added row
-    var canAddNewRow = true; // Flag to control row addition
-    var cannotUpdateBool = @(cannotUpdateBool.ToString().ToLower()); // Get server-side variable
-    
-    // --- Checkbox Dropdown Logic (jQuery) ---
-    var $dropdownMenu = $('#@dropdownMenuId');
-    var $dropdownButton = $('#@dropdownButtonId');
-    var $validationMessageDiv = $('#@validationDivId');
-    var $hiddenCsvInput = $('#@hiddenCsvInputId');
+    $(document).ready(function () {
 
-    // Checkboxes used for selection
-    var sourceCheckboxSelector = 'input[type="checkbox"][name="SelectedExternalRefs_Source"]';
 
-    $(document).on('change', 'input[type="checkbox"][name$=".QualityCheck"]', function() {
-        var isChecked = $(this).prop('checked');
-        var hiddenInput = $(this).prev('input[type="hidden"]'); // Get the hidden input right before this checkbox
+        // Keep hidden customer field in sync with visible dropdown
+        $('#customer').on('change', function() {
+            $('#hidden-customer').val($(this).val());
+        });
         
-        if (hiddenInput.length) {
-            hiddenInput.val(isChecked.toString().toLowerCase());
-        }
-    });
+        // Initialize with current value
+        $('#hidden-customer').val($('#customer').val());
 
-    // Initialize all existing QualityCheck checkboxes on page load
-    $('input[type="checkbox"][name$=".QualityCheck"]').each(function() {
-        var isChecked = $(this).prop('checked');
-        var hiddenInput = $(this).prev('input[type="hidden"]');
-        
-        if (hiddenInput.length) {
-            hiddenInput.val(isChecked.toString().toLowerCase());
-        }
-    });
 
-    function updateButtonText() {
-        var $checkedCheckboxes = $dropdownMenu.find(sourceCheckboxSelector + ':checked');
-        var count = $checkedCheckboxes.length;
+
+        var existingWorks = JSON.parse('@Html.Raw(Json.Serialize(@ViewBag.Works))');
+        var rowIndex = @Model.WorkPhases.Count; // Corrected rowIndex initialization.
+        var rowToRemove = null;
+        var firstOperator = '@(ViewBag.Operators != null && ViewBag.Operators.Count > 0 ? ViewBag.Operators[0] : "")'; //Get first operator
+        var lastAddedRow = null; // Track the last added row
+        var canAddNewRow = true; // Flag to control row addition
+        var cannotUpdateBool = @(cannotUpdateBool.ToString().ToLower()); // Get server-side variable
         
-        // Update button text logic
-        if (count === 0) {
-            $dropdownButton.text('Seleziona Commesse');
-        } else {
-            var selectedLabels = $checkedCheckboxes.map(function() {
-                return $(this).closest('.form-check').find('label').text().trim();
-            }).get();
+        // --- Checkbox Dropdown Logic (jQuery) ---
+        var $dropdownMenu = $('#@dropdownMenuId');
+        var $dropdownButton = $('#@dropdownButtonId');
+        var $validationMessageDiv = $('#@validationDivId');
+        var $hiddenCsvInput = $('#@hiddenCsvInputId');
+
+        // Checkboxes used for selection
+        var sourceCheckboxSelector = 'input[type="checkbox"][name="SelectedExternalRefs_Source"]';
+
+
+            $(document).on('change', 'input[type="checkbox"][name$=".QualityCheck"]', function() {
+                var isChecked = $(this).prop('checked');
+                var hiddenInput = $(this).prev('input[type="hidden"]'); // Get the hidden input right before this checkbox
+                
+                if (hiddenInput.length) {
+                    hiddenInput.val(isChecked.toString().toLowerCase());
+                }
+            });
+
+            // Initialize all existing QualityCheck checkboxes on page load
+            $('input[type="checkbox"][name$=".QualityCheck"]').each(function() {
+                var isChecked = $(this).prop('checked');
+                var hiddenInput = $(this).prev('input[type="hidden"]');
+                
+                if (hiddenInput.length) {
+                    hiddenInput.val(isChecked.toString().toLowerCase());
+                }
+            });
+
+
+
+        function updateButtonText() {
+            var $checkedCheckboxes = $dropdownMenu.find(sourceCheckboxSelector + ':checked');
+            var count = $checkedCheckboxes.length;
             
-            if (count <= 2) {
-                $dropdownButton.text(selectedLabels.join(', '));
+            // Update button text logic
+            if (count === 0) {
+                $dropdownButton.text('Seleziona Commesse');
             } else {
-                $dropdownButton.text(count + ' commesse selezionate');
+                var selectedLabels = $checkedCheckboxes.map(function() {
+                    return $(this).closest('.form-check').find('label').text().trim();
+                }).get();
+                
+                if (count <= 2) {
+                    $dropdownButton.text(selectedLabels.join(', '));
+                } else {
+                    $dropdownButton.text(count + ' commesse selezionate');
+                }
             }
-        }
-        
-        // Clear validation state
-        $dropdownButton.removeClass('is-invalid');
-        $validationMessageDiv.hide();
-        
-        // Update the hidden input with CSV string
-        updateHiddenCsvInput();
-    }
-    
-    function updateHiddenCsvInput() {
-        var $checkedCheckboxes = $dropdownMenu.find(sourceCheckboxSelector + ':checked');
-        var selectedValuesArray = $checkedCheckboxes.map(function() {
-            return $(this).val();
-        }).get();
-        var csvString = selectedValuesArray.join(',');
-        $hiddenCsvInput.val(csvString);
-    }
-
-    $('#deliveryDate').on('change', function() {
-        $('#hiddenDeliveryDate').val($(this).val());
-    });
-
-    // Event handler for checkbox changes
-    $dropdownMenu.on('change', sourceCheckboxSelector, function() {
-        updateButtonText();
-    });
-    
-    // Initialize button text based on initial checkbox states
-    updateButtonText();
-    // --- End Checkbox Dropdown Logic ---
-
-    $('#work').on('change', function () {
-        var workValue = $(this).val();
-        if (existingWorks.includes(workValue) && workValue !== '@Model.Description') {
-            $(this).addClass('is-invalid');
-        } else {
-            $(this).removeClass('is-invalid');
-        }
-    });
-
-    // Function to update hidden input based on checkbox state
-    function updateHiddenInput($checkbox) {
-        var isChecked = $checkbox.prop('checked');
-        var hiddenInput = $checkbox.closest('.form-check').find('input[type="hidden"]');
-        hiddenInput.val(isChecked.toString().toLowerCase());
-    }
-
-    // Handle existing and dynamically added checkboxes
-    $(document).on('change', 'input[type="checkbox"][name$=".Completed"]', function() {
-        updateHiddenInput($(this));
-    });
-
-    // Initialize all existing checkboxes on page load
-    $('input[type="checkbox"][name$=".Completed"]').each(function() {
-        updateHiddenInput($(this));
-    });
-
-    // Monitor phase selection changes
-    $(document).on('change', '.work-phase-select', function () {
-        var row = $(this).closest('.work-phase-row');
-        var addButton = row.find('.add-row-btn');
-        var removeButton = row.find('.remove-row-btn');
-        var hasValue = $(this).val() !== '' && $(this).val() !== 'fase di lavorazione';
-
-        // Enable/disable the buttons in the current row based on selection
-        if (!cannotUpdateBool) {
-            addButton.prop('disabled', !hasValue);
-            removeButton.prop('disabled', !hasValue);
-        }
-
-        // If this is the last added row and it now has a valid value, enable adding new rows
-        if (lastAddedRow && row[0] === lastAddedRow[0] && hasValue) {
-            canAddNewRow = true;
-            lastAddedRow = null; // Reset the tracking
-        }
-    });
-
-    // Handle remove button click to show modal
-    $(document).on('click', '.remove-row-btn', function () {
-        rowToRemove = $(this).closest('.work-phase-row');
-        $('#confirmRemoveModal').modal('show');
-    });
-
-    // Handle confirmation in modal
-    $('#confirmRemoveBtn').on('click', function () {
-        if (rowToRemove) {
-            rowToRemove.remove();
-            rowToRemove = null;
-        }
-        $('#confirmRemoveModal').modal('hide');
-    });
-
-    // Add new row when "Add" button is clicked
-    $(document).on('click', '.add-row-btn', function () {
-        // Check if we can add a new row
-        if (!canAddNewRow) {
-            return; // Exit if adding is not allowed
-        }
-
-        // Clone the *first* row.
-        var newRow = $($('.work-phase-row')[0]).clone();
-
-        // Update IDs and names
-        newRow.find('select, input').val('');
-        // Ensure checkboxes are unchecked
-        newRow.find('input[type="checkbox"]').prop('checked', false);
-        newRow.find('select[name^="WorkPhases"]').first().attr('name', 'WorkPhases[' + rowIndex + '].WorkphaseName');
-
-        // Apply cannotUpdate restrictions to the work-phase-select
-        if (cannotUpdateBool) {
-            newRow.find('.work-phase-select').prop('disabled', true);
-        }
-
-        // Update hidden fields
-        newRow.find('input[name$=".RelatedWorkOrder"]').attr('name', 'WorkPhases[' + rowIndex + '].RelatedWorkOrder').val('@Model.id');
-        newRow.find('input[name$=".Id"]').attr('name', 'WorkPhases[' + rowIndex + '].Id').val(0);
-
-        // Update other fields
-        // Update checkboxes and add hidden fields for "Completed"
-        newRow.find('input[id^="completed"]').attr({
-            'name': 'WorkPhases[' + rowIndex + '].Completed',
-            'id': 'completed_' + rowIndex
-        });
-
-        // Update checkboxes and add hidden fields for "QualityCheck"
-        newRow.find('input[id^="qualitycheck"]').attr({
-            'name': 'WorkPhases[' + rowIndex + '].QualityCheck',
-            'id': 'qualitycheck_' + rowIndex,
-            'value': 'true'
-        });
-
-        // Update or add hidden field for unchecked state
-        var qualityCheckHidden = newRow.find('input[type="hidden"][name$=".QualityCheck"]');
-        if (qualityCheckHidden.length) {
-            qualityCheckHidden.attr('name', 'WorkPhases[' + rowIndex + '].QualityCheck').val('false');
-        } else {
-            newRow.find('#qualitycheck_' + rowIndex).after('<input type="hidden" name="WorkPhases[' + rowIndex + '].QualityCheck" value="false">');
-        }
-        newRow.find('label[for^="qualitycheck"]').attr('for', 'qualitycheck_' + rowIndex);
-
-        //Update QualityOperator select element
-        var qualityOperatorSelect = newRow.find('select[name$=".QualityOperator"]');
-        qualityOperatorSelect.attr('name', 'WorkPhases[' + rowIndex + '].QualityOperator');
-
-        // Set the selected option to the first operator
-        qualityOperatorSelect.val(firstOperator);
-
-        // Disable the Add button on the new row until a phase is selected
-        newRow.find('.add-row-btn').prop('disabled', true);
-        newRow.find('.remove-row-btn').prop('disabled', true);
-        
-        // Apply cannotUpdate restrictions
-        if (cannotUpdateBool) {
-            newRow.find('.add-row-btn, .remove-row-btn').prop('disabled', true);
-        }
-
-        $('#workPhasesContainer').append(newRow);
-        rowIndex++; // Increment rowIndex *after* appending.
-        
-        // Set this as the last added row and prevent adding more rows until this one is filled
-        lastAddedRow = newRow;
-        canAddNewRow = false;
-    });
-
-    // Initialize buttons state on page load
-    $('.work-phase-select').each(function () {
-        var row = $(this).closest('.work-phase-row');
-        var addButton = row.find('.add-row-btn');
-        var removeButton = row.find('.remove-row-btn');
-        var hasValue = $(this).val() !== '' && $(this).val() !== 'fase di lavorazione';
-
-        // Apply both conditions: the selection status and the cannotUpdateBool flag
-        if (cannotUpdateBool) {
-            addButton.prop('disabled', true);
-            removeButton.prop('disabled', true);
-            $(this).prop('disabled', true); // Disable the work-phase-select dropdown
-        } else {
-            addButton.prop('disabled', !hasValue);
-            removeButton.prop('disabled', !hasValue);
-        }
-    });
-
-    // Show submit confirmation modal
-    $('#submitBtn').on('click', function (e) {
-        e.preventDefault(); // Prevent the form from submitting immediately
-        
-        // Validate the dropdown selection
-        var $dropdownCheckboxes = $dropdownMenu.find(sourceCheckboxSelector);
-        var $checkedDropdownCheckboxes = $dropdownCheckboxes.filter(':checked');
-        var checkedDropdownCount = $checkedDropdownCheckboxes.length;
-        
-        var isValid = true;
-        
-        if (checkedDropdownCount === 0 && $dropdownCheckboxes.length > 0) {
-            $dropdownButton.addClass('is-invalid');
-            $validationMessageDiv.show();
-            isValid = false;
-        } else {
+            
+            // Clear validation state
             $dropdownButton.removeClass('is-invalid');
             $validationMessageDiv.hide();
             
-            // Update hidden input with final CSV value
+            // Update the hidden input with CSV string
             updateHiddenCsvInput();
         }
         
-        if (isValid) {
-            // Proceed with showing confirmation modal
-            $('#confirmSubmitModal').modal('show');
-        } else {
-            // Focus on the first invalid element
-            var $firstError = $('.is-invalid').first();
-            if ($firstError.length) {
-                $('html, body').animate({
-                    scrollTop: $firstError.offset().top - 100
-                }, 500, function() {
-                    if ($firstError.is(':input, button')) {
-                        $firstError.focus();
-                    }
-                });
-            }
+        function updateHiddenCsvInput() {
+            var $checkedCheckboxes = $dropdownMenu.find(sourceCheckboxSelector + ':checked');
+            var selectedValuesArray = $checkedCheckboxes.map(function() {
+                return $(this).val();
+            }).get();
+            var csvString = selectedValuesArray.join(',');
+            $hiddenCsvInput.val(csvString);
         }
-    });
 
-    // Handle confirmation in submit modal
-    $('#confirmSubmitBtn').on('click', function () {
-        var dateVal = $('#deliveryDate').val();
-        $('#hiddenDeliveryDate').val(dateVal);
+        $('#deliveryDate').on('change', function() {
+            $('#hiddenDeliveryDate').val($(this).val());
+        });
 
-        // Disable original checkboxes to prevent them from being submitted directly
-        $(sourceCheckboxSelector).prop('disabled', true);
+        // Event handler for checkbox changes
+        $dropdownMenu.on('change', sourceCheckboxSelector, function() {
+            updateButtonText();
+        });
         
-        // Submit the form
-        $('#worktableForm').submit();
+        // Initialize button text based on initial checkbox states
+        updateButtonText();
+        // --- End Checkbox Dropdown Logic ---
+
+        $('#work').on('change', function () {
+            var workValue = $(this).val();
+            if (existingWorks.includes(workValue) && workValue !== '@Model.Description') {
+                $(this).addClass('is-invalid');
+            } else {
+                $(this).removeClass('is-invalid');
+            }
+        });
+
+         // Function to update hidden input based on checkbox state
+        function updateHiddenInput($checkbox) {
+            var isChecked = $checkbox.prop('checked');
+            var hiddenInput = $checkbox.closest('.form-check').find('input[type="hidden"]');
+            hiddenInput.val(isChecked.toString().toLowerCase());
+        }
+
+        // Handle existing and dynamically added checkboxes
+        $(document).on('change', 'input[type="checkbox"][name$=".Completed"]', function() {
+            updateHiddenInput($(this));
+        });
+
+        // Initialize all existing checkboxes on page load
+        $('input[type="checkbox"][name$=".Completed"]').each(function() {
+            updateHiddenInput($(this));
+        });
+
+
+        // Monitor phase selection changes
+        $(document).on('change', '.work-phase-select', function () {
+            var row = $(this).closest('.work-phase-row');
+            var addButton = row.find('.add-row-btn');
+            var removeButton = row.find('.remove-row-btn');
+            var hasValue = $(this).val() !== '' && $(this).val() !== 'fase di lavorazione';
+
+            // Enable/disable the buttons in the current row based on selection
+            if (!cannotUpdateBool) {
+                addButton.prop('disabled', !hasValue);
+                removeButton.prop('disabled', !hasValue);
+            }
+
+            // If this is the last added row and it now has a valid value, enable adding new rows
+            if (lastAddedRow && row[0] === lastAddedRow[0] && hasValue) {
+                canAddNewRow = true;
+                lastAddedRow = null; // Reset the tracking
+            }
+        });
+
+        // Handle remove button click to show modal
+        $(document).on('click', '.remove-row-btn', function () {
+            rowToRemove = $(this).closest('.work-phase-row');
+            $('#confirmRemoveModal').modal('show');
+        });
+
+        // Handle confirmation in modal
+        $('#confirmRemoveBtn').on('click', function () {
+            if (rowToRemove) {
+                rowToRemove.remove();
+                rowToRemove = null;
+            }
+            $('#confirmRemoveModal').modal('hide');
+        });
+
+        // Add new row when "Add" button is clicked
+        $(document).on('click', '.add-row-btn', function () {
+            // Check if we can add a new row
+            if (!canAddNewRow) {
+                return; // Exit if adding is not allowed
+            }
+
+
+                                // Add validation error div to new row
+                                var operatorSelect = newRow.find('select[name$=".QualityOperator"]');
+                                if (operatorSelect.next('.invalid-feedback.quality-operator-error').length === 0) {
+                                    operatorSelect.after('<div class="invalid-feedback quality-operator-error">Selezionare un operatore</div>');
+                                }
+
+
+
+            // Clone the *first* row.
+            var newRow = $($('.work-phase-row')[0]).clone();
+
+            // Update IDs and names
+            newRow.find('select, input').val('');
+            // Ensure checkboxes are unchecked
+            newRow.find('input[type="checkbox"]').prop('checked', false);
+            newRow.find('select[name^="WorkPhases"]').first().attr('name', 'WorkPhases[' + rowIndex + '].WorkphaseName');
+
+            // Apply cannotUpdate restrictions to the work-phase-select
+            if (cannotUpdateBool) {
+                newRow.find('.work-phase-select').prop('disabled', true);
+            }
+
+            // Update hidden fields
+            newRow.find('input[name$=".RelatedWorkOrder"]').attr('name', 'WorkPhases[' + rowIndex + '].RelatedWorkOrder').val('@Model.id');
+            newRow.find('input[name$=".Id"]').attr('name', 'WorkPhases[' + rowIndex + '].Id').val(0);
+
+            // Update other fields
+            // Update checkboxes and add hidden fields for "Completed"
+            newRow.find('input[id^="completed"]').attr({
+                'name': 'WorkPhases[' + rowIndex + '].Completed',
+                'id': 'completed_' + rowIndex
+            });
+
+            // Update checkboxes and add hidden fields for "QualityCheck"
+            newRow.find('input[id^="qualitycheck"]').attr({
+                'name': 'WorkPhases[' + rowIndex + '].QualityCheck',
+                'id': 'qualitycheck_' + rowIndex,
+                'value': 'true'
+            });
+
+            // Update or add hidden field for unchecked state
+            var qualityCheckHidden = newRow.find('input[type="hidden"][name$=".QualityCheck"]');
+            if (qualityCheckHidden.length) {
+                qualityCheckHidden.attr('name', 'WorkPhases[' + rowIndex + '].QualityCheck').val('false');
+            } else {
+                newRow.find('#qualitycheck_' + rowIndex).after('<input type="hidden" name="WorkPhases[' + rowIndex + '].QualityCheck" value="false">');
+            }
+            newRow.find('label[for^="qualitycheck"]').attr('for', 'qualitycheck_' + rowIndex);
+
+            //Update QualityOperator select element
+            var qualityOperatorSelect = newRow.find('select[name$=".QualityOperator"]');
+            qualityOperatorSelect.attr('name', 'WorkPhases[' + rowIndex + '].QualityOperator');
+
+            // Set the selected option to the first operator
+            qualityOperatorSelect.val(firstOperator);
+
+            // Disable the Add button on the new row until a phase is selected
+            newRow.find('.add-row-btn').prop('disabled', true);
+            newRow.find('.remove-row-btn').prop('disabled', true);
+            
+            // Apply cannotUpdate restrictions
+            if (cannotUpdateBool) {
+                newRow.find('.add-row-btn, .remove-row-btn').prop('disabled', true);
+            }
+
+            $('#workPhasesContainer').append(newRow);
+            rowIndex++; // Increment rowIndex *after* appending.
+            
+            // Set this as the last added row and prevent adding more rows until this one is filled
+            lastAddedRow = newRow;
+            canAddNewRow = false;
+        });
+
+        // Initialize buttons state on page load
+        $('.work-phase-select').each(function () {
+            var row = $(this).closest('.work-phase-row');
+            var addButton = row.find('.add-row-btn');
+            var removeButton = row.find('.remove-row-btn');
+            var hasValue = $(this).val() !== '' && $(this).val() !== 'fase di lavorazione';
+
+            // Apply both conditions: the selection status and the cannotUpdateBool flag
+            if (cannotUpdateBool) {
+                addButton.prop('disabled', true);
+                removeButton.prop('disabled', true);
+                $(this).prop('disabled', true); // Disable the work-phase-select dropdown
+            } else {
+                addButton.prop('disabled', !hasValue);
+                removeButton.prop('disabled', !hasValue);
+            }
+        });
+
+        // Show submit confirmation modal
+        $('#submitBtn').on('click', function (e) {
+            e.preventDefault(); // Prevent the form from submitting immediately
+            
+            // Validate the dropdown selection
+            var $dropdownCheckboxes = $dropdownMenu.find(sourceCheckboxSelector);
+            var $checkedDropdownCheckboxes = $dropdownCheckboxes.filter(':checked');
+            var checkedDropdownCount = $checkedDropdownCheckboxes.length;
+            
+            var isValid = true;
+            
+            if (checkedDropdownCount === 0 && $dropdownCheckboxes.length > 0) {
+                $dropdownButton.addClass('is-invalid');
+                $validationMessageDiv.show();
+                isValid = false;
+            } else {
+                $dropdownButton.removeClass('is-invalid');
+                $validationMessageDiv.hide();
+                
+                // Update hidden input with final CSV value
+                updateHiddenCsvInput();
+            }
+            
+            if (isValid) {
+                // Proceed with showing confirmation modal
+                $('#confirmSubmitModal').modal('show');
+            } else {
+                // Focus on the first invalid element
+                var $firstError = $('.is-invalid').first();
+                if ($firstError.length) {
+                    $('html, body').animate({
+                        scrollTop: $firstError.offset().top - 100
+                    }, 500, function() {
+                        if ($firstError.is(':input, button')) {
+                            $firstError.focus();
+                        }
+                    });
+                }
+            }
+        });
+
+        // Handle confirmation in submit modal
+        $('#confirmSubmitBtn').on('click', function () {
+
+            var dateVal = $('#deliveryDate').val();
+            $('#hiddenDeliveryDate').val(dateVal);
+
+            // Disable original checkboxes to prevent them from being submitted directly
+            $(sourceCheckboxSelector).prop('disabled', true);
+            
+            // Submit the form
+            $('#worktableForm').submit();
+        });
+
+
+
+                            
+                            // Validate operator selection when quality check is checked
+                            function validateOperatorSelection() {
+                                var isValid = true;
+                                $('.work-phase-row').each(function() {
+                                    var row = $(this);
+                                    var qualityCheckbox = row.find('input[type="checkbox"][name$=".QualityCheck"]');
+                                    var operatorSelect = row.find('select[name$=".QualityOperator"]');
+                                    
+                                    // Only validate if the checkbox is checked
+                                    if (qualityCheckbox.prop('checked')) {
+                                        var operatorValue = operatorSelect.val();
+                                        
+                                        // Check if operator is selected (not empty or default)
+                                        if (!operatorValue || operatorValue === "" || operatorValue === firstOperator) {
+                                            operatorSelect.addClass('is-invalid');
+                                            row.find('.quality-operator-error').show();
+                                            isValid = false;
+                                        } else {
+                                            operatorSelect.removeClass('is-invalid');
+                                            row.find('.quality-operator-error').hide();
+                                        }
+                                    } else {
+                                        // If checkbox is not checked, clear validation state
+                                        operatorSelect.removeClass('is-invalid');
+                                        row.find('.quality-operator-error').hide();
+                                    }
+                                });
+                                
+                                return isValid;
+                            }
+
+                            // Add validation when quality check changes
+                            $(document).on('change', 'input[type="checkbox"][name$=".QualityCheck"]', function() {
+                                var row = $(this).closest('.work-phase-row');
+                                var operatorSelect = row.find('select[name$=".QualityOperator"]');
+                                
+                                // If checking the box, validate the operator selection
+                                if ($(this).prop('checked')) {
+                                    if (!operatorSelect.val() || operatorSelect.val() === "" || operatorSelect.val() === firstOperator) {
+                                        operatorSelect.addClass('is-invalid');
+                                        row.find('.quality-operator-error').show();
+                                    } else {
+                                        operatorSelect.removeClass('is-invalid');
+                                        row.find('.quality-operator-error').hide();
+                                    }
+                                } else {
+                                    // If unchecking, clear validation
+                                    operatorSelect.removeClass('is-invalid');
+                                    row.find('.quality-operator-error').hide();
+                                }
+                            });
+
+                            // Run validation when operator dropdown changes
+                            $(document).on('change', 'select[name$=".QualityOperator"]', function() {
+                                var row = $(this).closest('.work-phase-row');
+                                var qualityCheckbox = row.find('input[type="checkbox"][name$=".QualityCheck"]');
+                                
+                                // Only validate if quality check is checked
+                                if (qualityCheckbox.prop('checked')) {
+                                    if (!$(this).val() || $(this).val() === "") {
+                                        $(this).addClass('is-invalid');
+                                        row.find('.quality-operator-error').show();
+                                    } else {
+                                        $(this).removeClass('is-invalid');
+                                        row.find('.quality-operator-error').hide();
+                                    }
+                                }
+                            });
+
+                            // Modify the submit button handler to include quality operator validation
+                            $('#submitBtn').on('click', function (e) {
+                                e.preventDefault(); // Prevent the form from submitting immediately
+                                
+                                // Validate the dropdown selection
+                                var $dropdownCheckboxes = $dropdownMenu.find(sourceCheckboxSelector);
+                                var $checkedDropdownCheckboxes = $dropdownCheckboxes.filter(':checked');
+                                var checkedDropdownCount = $checkedDropdownCheckboxes.length;
+                                
+                                var isValid = true;
+                                
+                                if (checkedDropdownCount === 0 && $dropdownCheckboxes.length > 0) {
+                                    $dropdownButton.addClass('is-invalid');
+                                    $validationMessageDiv.show();
+                                    isValid = false;
+                                } else {
+                                    $dropdownButton.removeClass('is-invalid');
+                                    $validationMessageDiv.hide();
+                                    
+                                    // Update hidden input with final CSV value
+                                    updateHiddenCsvInput();
+                                }
+                                
+                                // Add quality operator validation
+                                var operatorSelectionValid = validateOperatorSelection();
+                                isValid = isValid && operatorSelectionValid;
+                                
+                                if (isValid) {
+                                    // Proceed with showing confirmation modal
+                                    $('#confirmSubmitModal').modal('show');
+                                } else {
+                                    // Focus on the first invalid element
+                                    var $firstError = $('.is-invalid').first();
+                                    if ($firstError.length) {
+                                        $('html, body').animate({
+                                            scrollTop: $firstError.offset().top - 100
+                                        }, 500, function() {
+                                            if ($firstError.is(':input, button')) {
+                                                $firstError.focus();
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+
+
+
+
+
     });
-});
+
+
+
+
+
+
+
+
+
+
+
+
 </script>
