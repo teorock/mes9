@@ -197,27 +197,26 @@ namespace mes.Controllers
             return result;
         }        
 
-        //public string GetEventsTotem(string eventFilter)
-        //{
-        //    string[] filters = eventFilter.Split(',');
-//
-        //    DatabaseAccessor dbAccessor = new DatabaseAccessor();
-        //    List<ProductionCalendarDbModel> allEvents = new List<ProductionCalendarDbModel>();
-//
-        //    for(int i=0; i< filters.Length; i++)
-        //    {
-        //        allEvents.AddRange(dbAccessor.Queryer<ProductionCalendarDbModel>(config.ConnString, config.Table)
-        //                                                        .Where(n => n.assignedTo == filters[i])
-        //                                                        .Where(x => x.enabled =="1").ToList());
-        //    }
-        //    
-        //    List<ProductionCalendarDbModel> rectangular = Rectangulizer(allEvents);
-//
-        //    //var result = JsonConvert.SerializeObject(allEvents);
-        //    var result = JsonConvert.SerializeObject(rectangular);
-//
-        //    return result;
-        //}     
+        public string GetEventsTotem(string eventFilter)
+        {
+            string[] filters = eventFilter.Split(',');
+
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            List<ProductionCalendarDbModel> allEvents = new List<ProductionCalendarDbModel>();
+
+            for(int i=0; i< filters.Length; i++)
+            {
+                allEvents.AddRange(dbAccessor.Queryer<ProductionCalendarDbModel>(config.ConnString, config.Table)
+                                                                .Where(n => n.assignedTo == filters[i])
+                                                                .Where(x => x.enabled =="1").ToList());
+            }
+
+            List<ProductionCalendarDbModel> rectangular = Rectangulizer(allEvents);
+
+            var result = JsonConvert.SerializeObject(rectangular);
+
+            return result;
+        }     
 
         private List<ProductionCalendarDbModel> Rectangulizer(List<ProductionCalendarDbModel> inputList)
         {
