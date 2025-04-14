@@ -10,7 +10,7 @@
   string eventSourceUrl = ViewBag.eventSourceUrl;
   string defaultView = ViewBag.defaultView;
   string baseAddress = ViewBag.baseAddress;
-  TestControllerConfig config = ViewBag.config;
+  TotemEventControllerConfig config = ViewBag.config;
   string eventFilter = ViewBag.eventFilter;
 
   List<string> assignments = ViewBag.userAssignments;
@@ -423,21 +423,9 @@
 
   </style>
 
-  <div class="row">
-    <div class="col-md-2">
-      <div class="btn-group-vertical" style="padding-top:100px;">
-        <a type="button" class="btn btn-primary btn-lg" style="background-color: bleu; border-color:bleu;" asp-controller="Test" asp-action="Index" asp-route-eventFilter="">tutti</a>
-        @foreach (CalendarAssignment oneConf in config.CalendarAssignments)
-        {
-          <a type="button" class="btn btn-primary btn-lg" style="background-color: @oneConf.BackgroundColor; border-color:@oneConf.BorderColor; color: #3d3d29;" asp-controller="Test" asp-action="Index" asp-route-eventFilter="@oneConf.AssignmentName">@oneConf.AssignmentName</a>
-        }
-      </div>    
-    </div>
-    <div class="col-md-10">     
-      <br>      
-      <div id="calendarPlast" class="fc fc-media-screen fc-direction-ltr fc-theme-bootstrap5"></div>              
-    </div>
-  </div>
+  <!-- div class="row">
+
+  </div -->
     
   <!-- Modal -->
   <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">

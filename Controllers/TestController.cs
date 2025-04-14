@@ -62,11 +62,13 @@ namespace mes.Controllers
             
             ViewBag.authorize = ((userData.UserRoles.Contains("root")
                                     |userData.UserRoles.Contains("CalendarOperator")
-                                    |userData.UserRoles.Contains("CalendarOutdoor"))?true:false).ToString().ToLower();
+                                    |userData.UserRoles.Contains("CalendarOutdoor")
+                                    |userData.UserRoles.Contains("CalendarEventsManager"))?true:false).ToString().ToLower();
 
             ViewBag.defaultView = (userData.UserRoles.Contains("root")
                                     |userData.UserRoles.Contains("CalendarOperator")
-                                    |userData.UserRoles.Contains("CalendarOutdoor"))?"dayGridMonth":"dayGridWeek";
+                                    |userData.UserRoles.Contains("CalendarOutdoor")
+                                    |userData.UserRoles.Contains("CalendarEventsManager"))?"dayGridMonth":"dayGridWeek";
 
             ViewBag.dbContactListener = config.DbContactListener;                
             ViewBag.baseAddress = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
@@ -197,26 +199,26 @@ namespace mes.Controllers
             return result;
         }        
 
-        public string GetEventsTotem(string eventFilter)
-        {
-            string[] filters = eventFilter.Split(',');
-
-            DatabaseAccessor dbAccessor = new DatabaseAccessor();
-            List<ProductionCalendarDbModel> allEvents = new List<ProductionCalendarDbModel>();
-
-            for(int i=0; i< filters.Length; i++)
-            {
-                allEvents.AddRange(dbAccessor.Queryer<ProductionCalendarDbModel>(config.ConnString, config.Table)
-                                                                .Where(n => n.assignedTo == filters[i])
-                                                                .Where(x => x.enabled =="1").ToList());
-            }
-
-            List<ProductionCalendarDbModel> rectangular = Rectangulizer(allEvents);
-
-            var result = JsonConvert.SerializeObject(rectangular);
-
-            return result;
-        }     
+        //public string GetEventsTotem(string eventFilter)
+        //{
+        //    string[] filters = eventFilter.Split(',');
+//
+        //    DatabaseAccessor dbAccessor = new DatabaseAccessor();
+        //    List<ProductionCalendarDbModel> allEvents = new List<ProductionCalendarDbModel>();
+//
+        //    for(int i=0; i< filters.Length; i++)
+        //    {
+        //        allEvents.AddRange(dbAccessor.Queryer<ProductionCalendarDbModel>(config.ConnString, config.Table)
+        //                                                        .Where(n => n.assignedTo == filters[i])
+        //                                                        .Where(x => x.enabled =="1").ToList());
+        //    }
+//
+        //    List<ProductionCalendarDbModel> rectangular = Rectangulizer(allEvents);
+//
+        //    var result = JsonConvert.SerializeObject(rectangular);
+//
+        //    return result;
+        //}     
 
         private List<ProductionCalendarDbModel> Rectangulizer(List<ProductionCalendarDbModel> inputList)
         {
@@ -240,8 +242,7 @@ namespace mes.Controllers
         }
 
         public IActionResult OpenSmbFolder(string path2open)
-        {            
-           
+        {                       
             //string escapedPath = Uri.EscapeDataString($"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}/Test/OpenSmbFolder?path2open={path2open}");
             string escaped = EscapeBackslashes(path2open);
             string script = $"window.open('{escaped}');";
