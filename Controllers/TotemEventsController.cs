@@ -130,7 +130,7 @@ namespace mes.Controllers
         {
             var result = new List<CalendarEventDto>();
             
-            foreach (var evt in events)
+            foreach (EventCalendarModel evt in events)
             {
                 try
                 {
@@ -140,6 +140,7 @@ namespace mes.Controllers
                     // Create a FullCalendar-compatible event object
                     var calendarEvent = new CalendarEventDto ()
                     {   
+                        Id = evt.Id,
                         Start = startDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
                         End = endDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
                         Title = evt.Title,
@@ -190,7 +191,7 @@ namespace mes.Controllers
     /// </summary>
     public class CalendarEventDto
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
         public string Title { get; set; }
         public string Start { get; set; }
         public string End { get; set; }
