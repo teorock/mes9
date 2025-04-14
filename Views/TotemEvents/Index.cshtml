@@ -1,0 +1,444 @@
+@using mes.Models.ViewModels
+@model List<EventCalendarModel>
+@{
+    var authorize = ViewBag.authorize;
+    string dbContactListener = ViewBag.dbContactListener;
+    string eventSourceUrl = ViewBag.eventSourceUrl;
+    string defaultView = ViewBag.defaultView;
+    string baseAddress = ViewBag.baseAddress;
+}
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css' rel='stylesheet'>
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css' rel='stylesheet'>  
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>  
+    
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.6/index.global.min.js'></script>    
+    
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js'></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tippy.js/2.5.4/tippy.all.js" integrity="sha512-jIIh0z4fzfV4cFju6uTH2QY9Q/UrRd09aa35FKbh759/sl4VyIlA9JMbjM3nSFLNESeiih6pzDlsB4GLd0JZlw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/2.0.2/luxon.min.js"></script>
+
+    <style>
+        html, body {
+          margin: 0;
+          padding: 0;
+          font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
+          font-size: 14px;
+        }
+
+        button {
+          border-radius: 5px;
+        }
+
+        #calendar {
+          max-width: 900px;
+          margin: 40px auto;
+        }
+    </style>
+
+    <script>
+    var dbContactListener = '@dbContactListener';
+    var eventSourceUrl = '@eventSourceUrl';
+    console.log("eventSource:" + eventSourceUrl);
+    console.log("dbContactListener:" + dbContactListener);
+    var version = "TotemEvents Calendar v1.0 - 2025"; 
+    
+    console.log(version);
+    
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('Calendar initialization started');
+        console.log('Event source URL:', eventSourceUrl);
+        
+        var calendarEl = document.getElementById('calendar');
+
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            timeZone: 'UTC',
+            themeSystem: 'bootstrap5',
+            locale: 'it',  
+            initialView: '@defaultView',
+            buttonText: {
+                prev: "prec",
+                next: "pross",
+                prevYear: "prev year",
+                nextYear: "next year",
+                year: "anno",
+                today: "oggi",
+                month: "mese",
+                week: "sett",
+                day: "giorno",
+                list: "lista"
+            },                   
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            hiddenDays: [0],
+            nowIndicator: true,
+            weekNumbers: false,
+            events: function(fetchInfo, successCallback, failureCallback) {
+                console.log('FullCalendar requesting events for period:', fetchInfo.startStr, 'to', fetchInfo.endStr);
+                
+                $.ajax({
+                    url: eventSourceUrl,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(data) {
+                        console.log('Events fetched successfully:', data);
+                        
+                        // Transform events if needed to match FullCalendar format
+                        var events = data.map(function(event) {
+                            // Log each event for debugging
+                            console.log('Processing event:', event);
+                            
+                            // Ensure required properties exist
+                            return {
+                                id: event.id,
+                                title: event.title || 'Untitled',
+                                start: moment(event.start).format('YYYY-MM-DDTHH:mm:ss'),
+                                end: moment(event.end).format('YYYY-MM-DDTHH:mm:ss'),
+                                backgroundColor: event.backgroundColor || '#3788d8',
+                                borderColor: event.borderColor || '#2C6EB5',
+                                allDay: event.allDay === true,
+                                extendedProps: {
+                                    description: event.description || ''
+                                }
+                            };
+                        });
+                        
+                        console.log('Processed events for calendar:', events);
+                        successCallback(events);
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        console.error('Failed to fetch events:', textStatus, errorThrown);
+                        console.error('Response:', jqXHR.responseText);
+                        failureCallback({ message: 'Failed to load events: ' + textStatus });
+                    }
+                });
+            },
+            editable: @authorize,
+            selectable: @authorize,
+            eventResizableFromStart: @authorize,
+            businessHours: {
+                daysOfWeek: [ 1, 2, 3, 4, 5 ], // Monday - Friday
+                startTime: '07:30',
+                endTime: '18:00',
+            },
+            eventClick: function(calEvent) {              
+                console.log('Event clicked:', calEvent.event);
+                showModal(calEvent, "edit");
+            },
+            select: function(calEvent) {
+                console.log('Date range selected:', calEvent);
+                showModal(calEvent, "create");
+            },
+            eventChange: function(calEvent){
+                console.log('Event changed:', calEvent);
+                confirmMove(calEvent, "move");
+            },
+            eventDidMount: function(info) {
+                console.log('Event mounted:', info.event);
+                
+                try {
+                    var fuse = luxon.Duration.fromObject({hours: 2});
+                    var tooltipContent = "";
+                    
+                    // Event title
+                    tooltipContent += info.event.title || 'Untitled';
+                    
+                    // Start date/time
+                    if (info.event.start) {
+                        var startDate = info.event.start;
+                        var parsedStartDate = luxon.DateTime.fromJSDate(new Date(startDate));
+                        var startHour = parsedStartDate.minus(fuse).hour;              
+                        var formattedStartDate = parsedStartDate.setLocale('it').toFormat('cccc d');
+                        tooltipContent += '<br>dalle ' + startHour + ' di ' + formattedStartDate;
+                    }
+                    
+                    // End date/time
+                    if (info.event.end) {
+                        var endDate = info.event.end;
+                        var parsedEndDate = luxon.DateTime.fromJSDate(new Date(endDate));
+                        var endHour = parsedEndDate.minus(fuse).hour;
+                        var formattedEndDate = parsedEndDate.setLocale('it').toFormat('cccc d');
+                        tooltipContent += ' alle ' + endHour + ' di ' + formattedEndDate;
+                    }
+                    
+                    // Description
+                    if (info.event.extendedProps && info.event.extendedProps.description) {
+                        tooltipContent += '<br>' + info.event.extendedProps.description;
+                    }
+                    
+                    // Add the tooltip
+                    tippy(info.el, {
+                        content: tooltipContent,
+                        allowHTML: true,
+                        theme: 'translucent'           
+                    });
+                } catch (error) {
+                    console.error('Error creating tooltip for event:', error);
+                }
+            },
+            // Monitor any loading errors
+            loading: function(isLoading) {
+                console.log('Calendar loading state:', isLoading);
+            },
+            // Add event rendering customization
+            eventContent: function(arg) {
+                console.log('Rendering event:', arg.event);
+                return {
+                    html: '<div class="fc-event-title">' + arg.event.title + '</div>'
+                };
+            }
+        });
+
+        // Function to handle event movement (drag and drop)
+        function confirmMove(calEvent, mode) {
+            if(confirm('Confermi le modifiche?')) {
+                var event = calEvent.event;
+                var oldEvent = calEvent.oldEvent;
+                var data = {
+                    Id: parseInt(event.id),
+                    Title: event.title,                          
+                    Description: event.extendedProps.description,
+                    Start: event.start.toISOString(),
+                    End: event.end.toISOString(),
+                    OperationType: mode
+                };
+                  
+                console.log('Saving moved event:', data);
+                
+                $.ajax({
+                    type: 'POST',
+                    url: dbContactListener,
+                    data: { jsonString: JSON.stringify(data) },
+                    success: function(response) {
+                        location.reload(true);
+                    },
+                    error: function(error) {
+                        alert('Errore durante il salvataggio: ' + JSON.stringify(error));
+                    }
+                });
+            }
+        }
+
+        // Function to show modal for event creation/editing
+        function showModal(event, mode) {
+            if(mode == "edit") {
+                var event2 = event.event;
+                console.log('Editing event:', event2);
+                
+                // Set title
+                $('#eventTitle').val(event2.title || '');
+                
+                // Set description - safely handle missing extendedProps
+                var description = '';
+                if (event2.extendedProps && event2.extendedProps.description) {
+                    description = event2.extendedProps.description;
+                }
+                $('#eventDescription').val(description);
+                
+                // Format start date/time
+                if (event2.start) {
+                    $('#startDate').val(moment(event2.start).format('YYYY-MM-DD') + "T" + moment(event2.start).subtract(2, 'hours').format('HH:mm'));
+                }
+                
+                // Format end date/time - handle null end date
+                if (event2.end) {
+                    $('#endDate').val(moment(event2.end).format('YYYY-MM-DD') + "T" + moment(event2.end).subtract(2, 'hours').format('HH:mm'));
+                } else {
+                    // If no end date, set end date same as start date but 1 hour later
+                    $('#endDate').val(moment(event2.start).add(1, 'hours').format('YYYY-MM-DD') + "T" + moment(event2.start).subtract(1, 'hours').format('HH:mm'));
+                }
+                
+                $('#recordId').val(event2.id);
+                
+                // Show delete button for edit mode
+                $('#deleteBtn').show();
+            }
+            else if(mode == "create") {
+                // Clear the form
+                $('#eventTitle').val('');
+                $('#eventDescription').val('');
+                
+                // Set default times (8AM to 9AM on selected day)
+                var startDiff = moment(event.start);
+                var endDiff = moment(event.end);
+                
+                $('#startDate').val(moment(event.start).format('YYYY-MM-DD') + "T08:00");
+                $('#endDate').val(moment(event.start).format('YYYY-MM-DD') + "T09:00");
+                $('#recordId').val(0);
+                
+                // Hide delete button for create mode
+                $('#deleteBtn').hide();
+            }
+            
+            // Set the operation type
+            $('#operationType').val(mode);
+            
+            // Show the modal
+            $('#eventModal').modal('show');
+        }
+        
+        // Direct AJAX call to debug event retrieval
+        $.ajax({
+            url: eventSourceUrl,
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                console.log('Manual AJAX call succeeded. Events:', data);
+                
+                // Display event details for debugging
+                if (data && data.length > 0) {
+                    console.log('First event details:');
+                    console.log('- ID:', data[0].id);
+                    console.log('- Title:', data[0].title);
+                    console.log('- Start:', data[0].start);
+                    console.log('- End:', data[0].end);
+                    console.log('- Description:', data[0].description);
+                    console.log('- BackgroundColor:', data[0].backgroundColor);
+                    console.log('- BorderColor:', data[0].borderColor);
+                    
+                    // Validate event date formats
+                    try {
+                        var testDate = new Date(data[0].start);
+                        console.log('Start date is valid:', testDate.toISOString());
+                    } catch (e) {
+                        console.error('Start date format issue:', e);
+                    }
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('Manual AJAX call failed:', textStatus, errorThrown);
+                console.error('Response:', jqXHR.responseText);
+            }
+        });
+        
+        // Render the calendar
+        console.log('Rendering calendar...');
+        calendar.render();
+        console.log('Calendar rendered');
+    });
+    
+    // Document ready handlers for modal buttons
+    $(document).ready(function() {
+        // Handle save button click
+        $('#saveEventBtn').click(function() {
+            if ($('#startDate').val() === "" || $('#endDate').val() === "") {
+                alert("Date di inizio e fine obbligatorie");
+                return;
+            }
+            
+            if ($('#eventTitle').val() === "") {
+                alert("Titolo obbligatorio");
+                return;
+            }
+            
+            var data = {
+                Id: parseInt($('#recordId').val()),
+                Title: $('#eventTitle').val(),
+                Description: $('#eventDescription').val(),
+                Start: $('#startDate').val(),
+                End: $('#endDate').val(),
+                OperationType: $('#operationType').val()
+            };
+            
+            console.log('Saving event data:', data);
+            
+            $.ajax({
+                type: 'POST',
+                url: dbContactListener,
+                data: { jsonString: JSON.stringify(data) },
+                success: function(response) {
+                    $('#eventModal').modal('hide');
+                    location.reload(true);
+                },
+                error: function(error) {
+                    alert('Errore durante il salvataggio: ' + JSON.stringify(error));
+                }
+            });
+        });
+        
+        // Handle delete button click
+        $('#deleteBtn').click(function() {
+            if(confirm('Sei sicuro di voler cancellare questo evento?')) {
+                var data = {
+                    Id: parseInt($('#recordId').val()),
+                    Title: $('#eventTitle').val(),
+                    Description: $('#eventDescription').val(),
+                    Start: $('#startDate').val(),
+                    End: $('#endDate').val(),
+                    OperationType: 'delete'
+                };
+                
+                console.log('Deleting event:', data);
+                
+                $.ajax({
+                    type: 'POST',
+                    url: dbContactListener,
+                    data: { jsonString: JSON.stringify(data) },
+                    success: function(response) {
+                        $('#eventModal').modal('hide');
+                        location.reload(true);
+                    },
+                    error: function(error) {
+                        alert('Errore durante la cancellazione: ' + JSON.stringify(error));
+                    }
+                });
+            }
+        });
+    });
+    </script>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h2 class="text-center mt-3 mb-4">Gestione Eventi</h2>
+            <div id="calendar"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Event Creation/Editing -->
+<div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventModalLabel">Gestione Evento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="eventForm">
+                    <input type="hidden" id="recordId" value="0">
+                    <input type="hidden" id="operationType" value="create">
+                    
+                    <div class="mb-3">
+                        <label for="eventTitle" class="form-label">Titolo *</label>
+                        <input type="text" class="form-control" id="eventTitle" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="eventDescription" class="form-label">Descrizione</label>
+                        <textarea class="form-control" id="eventDescription" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="startDate" class="form-label">Data e ora inizio *</label>
+                        <input type="datetime-local" class="form-control" id="startDate" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="endDate" class="form-label">Data e ora fine *</label>
+                        <input type="datetime-local" class="form-control" id="endDate" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-danger me-auto" id="deleteBtn">Elimina</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <button type="button" class="btn btn-primary" id="saveEventBtn">Salva</button>
+            </div>
+        </div>
+    </div>
+</div>
