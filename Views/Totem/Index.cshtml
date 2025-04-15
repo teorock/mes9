@@ -20,10 +20,9 @@
 }
 
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
 <style>
-
-
     /* Default card font color (black) */
     .card .card-body,
     .card .card-title,
@@ -44,7 +43,7 @@
         transition: 0.3s;
         min-height: 150px;
         font-weight: bolder;
-		cursor: pointer; /* Add a pointer cursor for better UX */
+        cursor: pointer; /* Add a pointer cursor for better UX */
     }
 
     .card:hover {
@@ -66,7 +65,6 @@
         padding-left: 15px;
         padding-right: 15px;
     }
-
 
     .incoming-row {
         background-color: #a9baec;
@@ -98,6 +96,7 @@
 
     .incoming-row .card {
         background-color: #e0f7fa;
+        font-size: large;
         font-weight: 700;
     }
 
@@ -115,7 +114,6 @@
         box-shadow: none !important;
         border: 1px solid rgb(0, 123, 255) !important;
         border-radius: 5px !important;
-
         height: 70px !important; 
         max-height: 70px !important; 
         min-height: 70px !important; 
@@ -128,7 +126,6 @@
 
     #navigator-card.hover{
         box-shadow: none !important;
-
     }
 
     #btnCompletate {
@@ -171,11 +168,71 @@
         margin-right: 5px;          
     }
 
+    /* News strip styles */
+    .news-strip-container {
+        position: fixed;
+        top: 30%;
+        /* bottom: 0; */
+        left: 0;
+        width: 100%;
+        height: 360px;
+        z-index: 1000;
+        /* background-color: rgba(248, 249, 250, 0.9);
+        border-top: 2px solid #dee2e6; */
+        padding: 10px 0;
+        pointer-events: none;
+    }
+
+    .scroll-area {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+
+    .news-card {
+        position: absolute;
+        /* top: 10px; */
+        width: 600px;
+        height: 320px;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transition: transform 2s ease-in-out;
+        pointer-events: : auto;
+    }
+
+    .news-card .card-header h5 {
+        font-size: 1.8rem; /* Increased from default */
+        font-weight: bold;
+        padding: 0.8rem 1.5rem;
+    }
+
+    .news-card .card-body {
+        padding: 1rem 1.5rem;
+    }
+
+    .news-card .card-text {
+        font-size: 1.5rem; /* Increased from default */
+        line-height: 1.4;
+    }
+
+    /* Card starting position (off-screen left) */
+    .news-card.start {
+        transform: translateX(-650px) translateY(-50%);
+    }
+
+    /* Card active position (center screen) */
+    .news-card.active {
+        transform: translateX(calc(50vw - 300px)) translateY(-50%);
+    }
+
+    /* Card exit position (off-screen right) */
+    .news-card.exit {
+        transform: translateX(100vw) translateY(-50%);
+    }
 </style>
 
-
 <div class="row">
-    <!-- div class="col-md-2"></div -->
     <div class="col-md-9">
         <div class="card" id="navigator-card">
             <div class="card-body">
@@ -197,6 +254,7 @@
         <a class="btn btn-outline-primary btn-block" asp-controller="Totem" asp-action="Index" asp-route-startDate="@displayedWeek" asp-route-showActive="@showActiveButton" id="btnCompletate">@btnCaption</a>
     </div>
 </div>
+
 <div class="row">
     <div class="col-md-10">
         <h3>Arrivi</h3>
@@ -242,12 +300,10 @@
             {
                 @:</div>
             }
-
         }
     }
 </div>
 
-<!-- div class="container" -->
 <h3>Consegne</h3>
 <div class="row outgoing-row @greyedOutClass">
     @{
@@ -287,8 +343,7 @@
         }
     }
 </div>
-<!-- /div -->
-<!-- div class="container" -->
+
 <h3>Manutenzioni e interventi</em></h3>
 <div class="row intervention-row @greyedOutClass">
     @{
@@ -328,7 +383,13 @@
         }
     }
 </div>
-<!-- /div -->
+
+<!-- News Strip Container -->
+<div class="news-strip-container">
+    <div class="scroll-area" id="scrollArea">
+        <!-- Cards will be inserted here by JavaScript -->
+    </div>
+</div>
 
 <!-- Modal -->
 <div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel" aria-hidden="true">
@@ -336,9 +397,6 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="confirmationModalLabel">Nascondi task</h5>
-                <!-- button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">×</span>
-                </button -->
             </div>
             <div class="modal-body" id="confirmationModalBody">
                 Are you sure?
@@ -351,11 +409,9 @@
     </div>
 </div>
 
-
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <!-- Bootstrap JS Bundle with Popper -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
@@ -468,10 +524,6 @@
         const startDateStr = formatDate(boundaries.start);
         const endDateStr = formatDate(boundaries.end);
         
-        // Redirect to the URL with the parameters
-        //window.location.href = `/Totem/index?totemnumber=1&startDate=${startDateStr}&endDate=${endDateStr}`;
-        //const showActiveValue = '@showActiveButton';
-
         window.location.href = `/Totem/index?totemnumber=1&startDate=${startDateStr}&showActive=1`;
     }
     
@@ -493,13 +545,80 @@
     // Initialize display when page loads
     updateWeekDisplay();
     
+    // News strip functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const scrollArea = document.getElementById('scrollArea');        
+        
+        //news da controller
+        const newsItems = @Html.Raw(ViewBag.news2go);
+
+        let currentIndex = 0;
+        let animationInProgress = false;
+        
+        // Function to show a news card
+        function showNewsCard() {
+            animationInProgress = true;
+            
+            // Get current news item
+            const item = newsItems[currentIndex];
+            currentIndex = (currentIndex + 1) % newsItems.length;
+            
+            // Create a new card
+            const card = document.createElement('div');
+            card.className = 'news-card start card';
+            card.style.top = '50%';
+            card.innerHTML = `
+                <div class="card-header" style="background-color: ${item.color}; color: white;">
+                    <h5 class="mb-0">${item.title}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">${item.content}</p>
+                </div>
+            `;
+            
+            // Add the card to the scroll area
+            scrollArea.appendChild(card);
+            
+            // Force reflow
+            void card.offsetWidth;
+            
+            // Slide in after a short delay
+            setTimeout(() => {
+                card.classList.remove('start');
+                card.classList.add('active');
+            }, 100);
+            
+            // Keep visible for a few seconds
+            setTimeout(() => {
+                card.classList.remove('active');
+                card.classList.add('exit');
+                
+                // Remove the card after animation completes
+                setTimeout(() => {
+                    card.remove();
+                    animationInProgress = false;
+                }, 30000);
+            }, @ViewBag.standSlideTime); //
+        }
+        
+        // Automatically show first card after page loads
+        setTimeout(showNewsCard, @ViewBag.fisrtSlideTime); //tempo prima della prima slide
+        
+        // Set up interval for automatic card rotation
+        setInterval(() => {
+            if (!animationInProgress) {
+                showNewsCard();
+            }
+        }, @ViewBag.betweenSlideTime);//tempo tra le slide
+    });
+    
     // Auto-scrolling functionality
     window.onload = function() {
         let scrollCount = 0;
         const maxScrolls = 5;
         const displayTime = 20000;
-        const pauseTime = 10000;
-        const scrollingSpeed = 10000;
+        const pauseTime = 60000;
+        const scrollingSpeed = 50000;
         let scrollingDown = @autoScroll;
 
         function scrollToBottom() {
@@ -507,7 +626,7 @@
                 window.scrollTo({
                     top: document.body.scrollHeight,
                     behavior: 'smooth',
-                    scrollDuration: 10000
+                    scrollDuration: 20000
                 });
                 setTimeout(pauseAtBottom, pauseTime);
             }

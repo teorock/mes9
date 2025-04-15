@@ -88,6 +88,24 @@ namespace mes.Controllers
             if(showActiveButton == "0") btnCaption = "mostra attività completate";
             ViewBag.btnCaption = btnCaption;
 
+            //----- news: scoasse e altro
+
+            //preleva eventi da calendario
+            List<TotemNewsViewModel> newsDaPassare = GetTodaysNews();
+
+            //List<TotemNewsViewModel> news = new List<TotemNewsViewModel>() {
+            //    new TotemNewsViewModel() { title = "Notizia importante", content = "Nuovi aggiornamenti disponibili", color = "#0d6efd"},
+            //    new TotemNewsViewModel() { title = "Promozione", content = "Offerta speciale questa settimana!", color = "#dc3545"},
+            //    new TotemNewsViewModel() { title = "Avviso", content = "Manutenzione programmata per domani", color = "#198754" },
+            //    new TotemNewsViewModel() { title = "Ricordiamo", content = "Completare tutte le attività in sospeso", color= "#fd7e14" }
+            //};
+
+            string news2go = JsonConvert.SerializeObject(newsDaPassare);
+            ViewBag.news2go = news2go;
+            ViewBag.firstSlideStart = config.FirstSlideStart;
+            ViewBag.standSlideTime = config.StandSlideTime;
+            ViewBag.betweenSlideTime = config.BetweenSlideTime;
+
             return View();
         }
 
@@ -109,6 +127,32 @@ namespace mes.Controllers
                 Console.Write(ex.Message);
             }
             return RedirectToAction("Index");
+        }
+
+        private List<TotemNewsViewModel> GetTodaysNews()
+        {
+            List<TotemNewsViewModel> notifiche = new List<TotemNewsViewModel>();
+
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            
+            string today = DateTime.Now.ToString("yyyy-MM-dd");            
+            List<EventCalendarModel> allEvents = dbAccessor.Queryer<EventCalendarModel>(config.TotemEventsConnString, config.TotemEventsDbTable)
+                                                .Where(t => t.Start.Contains(today))
+                                                .Where(x => x.Enabled == "1").ToList();
+            //mapper so altro model
+            foreach(var oneEvent in allEvents)
+            {
+                TotemNewsViewModel oneNews = new TotemNewsViewModel() {
+                    title = oneEvent.Title,
+                    content = oneEvent.Description,
+                    //color = oneEvent.BackgroundColor
+                    color = "#198754"
+                };
+
+                notifiche.Add(oneNews);
+            }
+
+            return notifiche;
         }
 
         private string GetWeekTitle()

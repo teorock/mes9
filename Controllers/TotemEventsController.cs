@@ -9,49 +9,56 @@ using mes.Models.ViewModels;
 using mes.Models.Services.Infrastructures;
 using System.IO;
 using Newtonsoft.Json.Serialization;
+using mes.Models.ControllersConfigModels;
+using Microsoft.Extensions.Logging;
 
 namespace mes.Controllers
 {
     public class TotemEventsController : Controller
     {
-        // Use forward slashes for SQLite connection string
-        const string connString = "Data Source=C:\\core\\mesdata\\erpdata.db";
-        const string eventTable = "EventCalendar";
-        const string defaultBackgroundColor = "#3788d8";
-        const string defaultBorderColor = "#2C6EB5";
+        private readonly ILogger<TotemEventsController> _logger;
+        TotemEventsControllerConfig config = new TotemEventsControllerConfig();
+        const string totemEventsControllerConfigPath = @"c:\core\mes\ControllerConfig\TotemEventsControllerConfig.json";
+        const string intranetLog = @"c:\temp\intranet.log";         
 
-        /// <summary>
-        /// Displays the main calendar view
-        /// </summary>
+        public TotemEventsController(ILogger<TotemEventsController> logger)
+        {
+            _logger = logger;
+            string rawConf = "";
+
+            using (StreamReader sr = new StreamReader(totemEventsControllerConfigPath))
+            {
+                rawConf = sr.ReadToEnd();
+            }
+            config = JsonConvert.DeserializeObject<TotemEventsControllerConfig>(rawConf);            
+        }
+
         [HttpGet]
         public IActionResult Index()
         {
-            // Set base properties for the calendar view
+            //controlla presenza eventi per oggi
+            //setta una viewbag message
+            List<string> messages = GetTodayMessage();
+            ViewBag.messages = messages;
+
             ViewBag.dbContactListener = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}/TotemEvents/InsertEvent";
             ViewBag.eventSourceUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}/TotemEvents/GetEvents";
             ViewBag.baseAddress = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
             
-            // Allow editing for all users (simplified approach)
             ViewBag.authorize = "true";
             ViewBag.defaultView = "dayGridMonth";
             
             return View();
         }
 
-        /// <summary>
-        /// Handles the creation, update, and deletion of events
-        /// </summary>
         [HttpPost]
         public IActionResult InsertEvent(string jsonString)
         {
-            // Deserialize the event data
             EventCalendarViewModel eventData = JsonConvert.DeserializeObject<EventCalendarViewModel>(jsonString);
-            
-            // Access the database
+
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             int result = 0;
             
-            // Create the event model for database operations
             EventCalendarModel calendarEvent = new EventCalendarModel
             {
                 Id = eventData.Id,
@@ -59,53 +66,47 @@ namespace mes.Controllers
                 Start = eventData.Start,
                 End = eventData.End,
                 Description = eventData.Description,
-                BackgroundColor = defaultBackgroundColor,
-                BorderColor = defaultBorderColor,
+                BackgroundColor = config.DefaultBackgroundColor,
+                BorderColor = config.DefaultBorderColor,
                 Enabled = "1",
                 CreatedBy = GetUserEmail(),
                 CreatedOn = DateTime.Now.ToString("dd/MM/yyyy HH:mm")
             };
             
-            // Perform the appropriate database operation based on the operation type
             switch (eventData.OperationType)
             {
                 case "create":
-                    // Get all events to find the next available ID
-                    List<EventCalendarModel> allEvents = dbAccessor.Queryer<EventCalendarModel>(connString, eventTable);
+                    List<EventCalendarModel> allEvents = dbAccessor.Queryer<EventCalendarModel>(config.ConnString, config.EventTable);
                     calendarEvent.Id = allEvents.Count > 0 ? allEvents.Max(e => e.Id) + 1 : 1;
-                    result = dbAccessor.Insertor<EventCalendarModel>(connString, eventTable, calendarEvent);
+                    result = dbAccessor.Insertor<EventCalendarModel>(config.ConnString, config.EventTable, calendarEvent);
                     break;
                 
                 case "edit":
                 case "move":
-                    result = dbAccessor.Updater<EventCalendarModel>(connString, eventTable, calendarEvent, eventData.Id);
+                    result = dbAccessor.Updater<EventCalendarModel>(config.ConnString, config.EventTable, calendarEvent, eventData.Id);
                     break;
                 
                 case "delete":
                     calendarEvent.Enabled = "0";
-                    result = dbAccessor.Updater<EventCalendarModel>(connString, eventTable, calendarEvent, eventData.Id);
+                    result = dbAccessor.Updater<EventCalendarModel>(config.ConnString, config.EventTable, calendarEvent, eventData.Id);
                     break;
             }
             
             return RedirectToAction("Index");
         }
 
-        /// <summary>
-        /// Returns all events from the database as JSON
-        /// </summary>
+
         [HttpGet]
         public IActionResult GetEvents()
         {
             try
             {               
                 DatabaseAccessor dbAccessor = new DatabaseAccessor();
-                List<EventCalendarModel> allEvents = dbAccessor.Queryer<EventCalendarModel>(connString, eventTable)
+                List<EventCalendarModel> allEvents = dbAccessor.Queryer<EventCalendarModel>(config.ConnString, config.EventTable)
                                                     .Where(x => x.Enabled == "1").ToList();
                 
-                // Convert to FullCalendar format
                 var calendarEvents = ConvertToFullCalendarFormat(allEvents);
                 
-                // Use camelCase for JSON property names (FullCalendar expects this)
                 var serializerSettings = new JsonSerializerSettings
                 {
                     ContractResolver = new CamelCasePropertyNamesContractResolver()
@@ -123,9 +124,23 @@ namespace mes.Controllers
             }
         }
         
-        /// <summary>
-        /// Converts database model to FullCalendar-compatible format
-        /// </summary>
+        public List<string> GetTodayMessage()
+        {
+            //start 2025-04-15T08:00
+            //end 2025-04-15T09:00
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            List<string> message = new List<string>();
+            string today = DateTime.Now.ToString("yyyy-MM-dd");
+            
+            List<EventCalendarModel> allEvents = dbAccessor.Queryer<EventCalendarModel>(config.ConnString, config.EventTable)
+                                                .Where(t => t.Start.Contains(today))
+                                                .Where(x => x.Enabled == "1").ToList();
+
+            if(allEvents.Count!=0) message = allEvents.Select(m => m.Description).ToList();
+            
+            return message;
+        }
+
         private List<CalendarEventDto> ConvertToFullCalendarFormat(List<EventCalendarModel> events)
         {
             var result = new List<CalendarEventDto>();
@@ -137,7 +152,6 @@ namespace mes.Controllers
                     DateTime startDate = DateTime.Parse(evt.Start);
                     DateTime endDate = DateTime.Parse(evt.End);
                     
-                    // Create a FullCalendar-compatible event object
                     var calendarEvent = new CalendarEventDto ()
                     {   
                         Id = evt.Id,
@@ -145,8 +159,8 @@ namespace mes.Controllers
                         End = endDate.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
                         Title = evt.Title,
                         Description = evt.Description ?? "",
-                        BackgroundColor = !string.IsNullOrEmpty(evt.BackgroundColor) ? evt.BackgroundColor : defaultBackgroundColor,
-                        BorderColor = !string.IsNullOrEmpty(evt.BorderColor) ? evt.BorderColor : defaultBorderColor,
+                        BackgroundColor = !string.IsNullOrEmpty(evt.BackgroundColor) ? evt.BackgroundColor : config.DefaultBackgroundColor,
+                        BorderColor = !string.IsNullOrEmpty(evt.BorderColor) ? evt.BorderColor : config.DefaultBorderColor,
                         AllDay = false
                     };
                     
@@ -163,19 +177,13 @@ namespace mes.Controllers
             return result;
         }
         
-        /// <summary>
-        /// Gets the current user's email address
-        /// </summary>
         private string GetUserEmail()
         {
             return User.FindFirstValue(ClaimTypes.Email) ?? "anonymous";
         }
     }
     
-    /// <summary>
-    /// <summary>
-    /// View model for event data coming from the client
-    /// </summary>
+
     public class EventCalendarViewModel
     {
         public int Id { get; set; }
@@ -186,9 +194,6 @@ namespace mes.Controllers
         public string OperationType { get; set; } // create, edit, move, delete
     }
     
-    /// <summary>
-    /// Data transfer object for FullCalendar events
-    /// </summary>
     public class CalendarEventDto
     {
         public long Id { get; set; }

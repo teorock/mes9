@@ -11,5 +11,10 @@ namespace mes.Models.ControllersConfigModels
         public string Table { get; set; }
         public List<string> TotemEvents { get; set; }  
         public bool AutoScroll { get; set; }
+        public int FirstSlideStart { get; set; }
+        public int StandSlideTime { get; set; }
+        public int BetweenSlideTime { get; set; }
+        public string TotemEventsConnString { get; set; }
+        public string TotemEventsDbTable { get; set; }
     }
 }
