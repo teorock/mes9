@@ -93,13 +93,6 @@ namespace mes.Controllers
             //preleva eventi da calendario
             List<TotemNewsViewModel> newsDaPassare = GetTodaysNews();
 
-            //List<TotemNewsViewModel> news = new List<TotemNewsViewModel>() {
-            //    new TotemNewsViewModel() { title = "Notizia importante", content = "Nuovi aggiornamenti disponibili", color = "#0d6efd"},
-            //    new TotemNewsViewModel() { title = "Promozione", content = "Offerta speciale questa settimana!", color = "#dc3545"},
-            //    new TotemNewsViewModel() { title = "Avviso", content = "Manutenzione programmata per domani", color = "#198754" },
-            //    new TotemNewsViewModel() { title = "Ricordiamo", content = "Completare tutte le attività in sospeso", color= "#fd7e14" }
-            //};
-
             string news2go = JsonConvert.SerializeObject(newsDaPassare);
             ViewBag.news2go = news2go;
             ViewBag.firstSlideStart = config.FirstSlideStart;
