@@ -11,6 +11,7 @@ using System.IO;
 using Newtonsoft.Json.Serialization;
 using mes.Models.ControllersConfigModels;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Authorization;
 
 namespace mes.Controllers
 {
@@ -34,6 +35,7 @@ namespace mes.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "root, TotemEventOperator, User")]
         public IActionResult Index()
         {
             //controlla presenza eventi per oggi
@@ -52,6 +54,7 @@ namespace mes.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "root, TotemEventOperator, User")]
         public IActionResult InsertEvent(string jsonString)
         {
             EventCalendarViewModel eventData = JsonConvert.DeserializeObject<EventCalendarViewModel>(jsonString);
@@ -97,6 +100,7 @@ namespace mes.Controllers
 
 
         [HttpGet]
+        [Authorize(Roles = "root, TotemEventOperator, User")]
         public IActionResult GetEvents()
         {
             try
