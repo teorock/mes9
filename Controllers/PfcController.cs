@@ -54,6 +54,11 @@ namespace mes.Controllers
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<PfcModel> allPfc = dbAccessor.Queryer<PfcModel>(config.PfcConnString, config.PfcTable);
 
+            if(!userData.UserRoles.Contains("PfcCrea") & !userData.UserRoles.Contains("root"))
+            {
+                allPfc = allPfc.Where(c => c.Completed == "0").ToList();                
+            }
+
             ViewBag.userRoles = userData.UserRoles;
 
             return View(allPfc);
@@ -157,6 +162,8 @@ namespace mes.Controllers
                 string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
                 Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
 
+                int workPhases = inputModel.WorkPhases.Count;
+
                 string jsonLavorazioni = JsonConvert.SerializeObject(inputModel.WorkPhases);
 
                 PfcModel pcf2insert = new PfcModel() {
@@ -166,6 +173,8 @@ namespace mes.Controllers
                     RifEsterno = inputModel.ExternalRef,
                     DataConsegna = Convert.ToDateTime(inputModel.deliveryDate).ToString("dd/MM/yyyy"),
                     LavorazioniJsonString = jsonLavorazioni,
+                    Progress = $"0/{workPhases}",
+                    Completed = "0",
                     Enabled = "1",
                     CreatedBy = userData.UserName,
                     CreatedOn = DateTime.Now.ToString("dd/MM/yyyy HH:mm")
@@ -301,6 +310,11 @@ namespace mes.Controllers
                 string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
                 Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
 
+                int completed = model.WorkPhases.Where(q => q.QualityCheck == "true").Count();
+                int toDo = model.WorkPhases.Count;
+                string allDone = "0";
+                if(completed == toDo) allDone = "1" ;
+
                 string jsonLavorazioni = JsonConvert.SerializeObject(model.WorkPhases);
 
                 PfcModel pcf2update = new PfcModel() {
@@ -310,6 +324,8 @@ namespace mes.Controllers
                     RifEsterno = model.ExternalRef,
                     DataConsegna = Convert.ToDateTime(model.deliveryDate).ToString("dd/MM/yyyy"),
                     LavorazioniJsonString = jsonLavorazioni,
+                    Progress = $"{completed}/{toDo}",
+                    Completed = allDone,
                     Enabled = "1",
                     CreatedBy = userData.UserName,
                     CreatedOn = DateTime.Now.ToString("dd/MM/yyyy HH:mm") 

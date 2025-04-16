@@ -69,7 +69,9 @@
             <th >rif. esterno</th> 
             <th >data consegna</th> 
             <!-- th >lavorazioni</th --> 
-            <th >enabled</th> 
+            <th>avanzamento</th>
+            <th >completato</th> 
+            <th>abilitato</th>
             <th> </th>
             <th> </th>
         </tr>
@@ -82,8 +84,8 @@
                         <td><input readonly  type="text" asp-for=@Model[x].Cliente class="form-control" value=@Model[x].Cliente  /></td>
                         <td><input readonly  type="text" asp-for=@Model[x].RifEsterno class="form-control" value=@Model[x].RifEsterno  /></td>
                         <td><input readonly  type="text" asp-for=@Model[x].DataConsegna class="form-control" value=@Model[x].DataConsegna  /></td>
-                        <td><input readonly  type="text" asp-for=@Model[x].LavorazioniJsonString class="form-control" value=@Model[x].LavorazioniJsonString  /></td>
-                        <!-- td><input readonly  type="text" asp-for=@Model[x].Enabled class="form-control" value=@Model[x].Enabled  /></td -->
+                        <td><input readonly  type="text" asp-for=@Model[x].Progress class="form-control" value=@Model[x].Progress  /></td>
+                        <td><input readonly  type="text" asp-for=@Model[x].Completed class="form-control" value=@Model[x].Completed  /></td>
                         <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].id class="form-control" value=@Model[x].id readonly /></td>
                         <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].Enabled class="form-control" value=@Model[x].Enabled readonly/></td>
                     }
@@ -93,7 +95,8 @@
                         <td><input type="text" asp-for=@Model[x].Cliente class="form-control" value=@Model[x].Cliente readonly /></td>
                         <td><input type="text" asp-for=@Model[x].RifEsterno class="form-control" value=@Model[x].RifEsterno readonly /></td>
                         <td><input type="text" asp-for=@Model[x].DataConsegna class="form-control" value=@Model[x].DataConsegna readonly /></td>
-                        <!-- td><input type="text" asp-for=@Model[x].LavorazioniJsonString class="form-control" value=@Model[x].LavorazioniJsonString readonly /></td -->
+                        <td><input readonly  type="text" asp-for=@Model[x].Progress class="form-control" value=@Model[x].Progress  /></td>
+                        <td><input readonly  type="text" asp-for=@Model[x].Completed class="form-control" value=@Model[x].Completed  /></td>                        
                         <td><input type="text" asp-for=@Model[x].Enabled class="form-control" value=@Model[x].Enabled readonly /></td>
                         <td style="padding-left: 25px;"><a asp-controller="Pfc" asp-action="ModPfc" asp-route-inputId="@Model[x].id"><i class="material-icons text-warning">&#xE254;</i></a></td>
                         <td style="width: 10px;"><input type="hidden" asp-for=@Model[x].id class="form-control" value=@Model[x].id /></td>                         
