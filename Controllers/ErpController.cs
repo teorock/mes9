@@ -251,11 +251,6 @@ namespace mes.Controllers
             //List<CalendarEvent> events = PermessiExtractor(permessi);
             ViewBag.calendarEvents = events; 
             ViewBag.permessi = permessi;
-            //List<string> tipologie = new List<string>();
-            //tipologie.Add("permesso");
-            //tipologie.Add("ferie");
-            //tipologie.Add("malattia");
-            //tipologie.Add("lavoro fuori sede");
 
             ViewBag.tipologie = config.Tipologie;                            
 

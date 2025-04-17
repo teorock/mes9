@@ -49,15 +49,16 @@
             events: [
             @foreach (var item in events)
             {
-              <text>
-                {
-                  title: '@Html.Raw(item.Title)',
-                  start: '@item.StartDate.ToString("yyyy-MM-ddTHH:mm:ss")',
-                  end: '@item.EndDate.ToString("yyyy-MM-ddTHH:mm:ss")',
-                  color: '@item.Color',
-                  url: '@item.Url'
-                },
-              </text>          
+  <text>
+    {
+      title: '@Html.Raw(item.Title)',
+      start: '@item.StartDate.ToString("yyyy-MM-ddTHH:mm:ss")',
+      end: '@item.EndDate.AddDays(1).ToString("yyyy-MM-ddTHH:mm:ss")',
+      color: '@item.Color',
+      url: '@item.Url',
+      allDay: true
+    },
+  </text>            
             }
             ]
           });
@@ -137,6 +138,7 @@
   <button id="stampa" class="btn btn-outline-secondary flex-grow-1 align-self-end">stampa</button>
 <hr>
 }
+
 
 @if(permessi.Count !=0)
 {
