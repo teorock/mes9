@@ -16,5 +16,10 @@ namespace mes.Models.ControllersConfigModels
         public int BetweenSlideTime { get; set; }
         public string TotemEventsConnString { get; set; }
         public string TotemEventsDbTable { get; set; }
+        public string DisplayTime { get; set; }        
+        public string PauseTime { get; set; }
+        public string ScrollingSpeed { get; set; }
+        public string ScrollDuration { get; set; }
+        public string CardRemove { get; set; }
     }
 }

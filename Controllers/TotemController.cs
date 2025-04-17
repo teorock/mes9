@@ -99,6 +99,12 @@ namespace mes.Controllers
             ViewBag.standSlideTime = config.StandSlideTime;
             ViewBag.betweenSlideTime = config.BetweenSlideTime;
 
+            ViewBag.displayTime = config.DisplayTime;
+            ViewBag.pauseTime = config.PauseTime;
+            ViewBag.ScrollingSpeed = config.ScrollingSpeed;
+            ViewBag.scrollDuration = config.ScrollDuration;
+            ViewBag.cardRemove = config.CardRemove;
+
             return View();
         }
 

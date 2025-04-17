@@ -597,7 +597,7 @@
                 setTimeout(() => {
                     card.remove();
                     animationInProgress = false;
-                }, 30000);
+                }, @ViewBag.cardRemove);
             }, @ViewBag.standSlideTime); //
         }
         
@@ -616,9 +616,9 @@
     window.onload = function() {
         let scrollCount = 0;
         const maxScrolls = 5;
-        const displayTime = 20000;
-        const pauseTime = 60000;
-        const scrollingSpeed = 50000;
+        const displayTime = @ViewBag.displayTIme;
+        const pauseTime = @ViewBag.pauseTime;
+        const scrollingSpeed = @ViewBag.scrollingSpeed;
         let scrollingDown = @autoScroll;
 
         function scrollToBottom() {
@@ -626,7 +626,7 @@
                 window.scrollTo({
                     top: document.body.scrollHeight,
                     behavior: 'smooth',
-                    scrollDuration: 20000
+                    scrollDuration: @ViewBag.scrollDuration
                 });
                 setTimeout(pauseAtBottom, pauseTime);
             }
