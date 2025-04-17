@@ -108,6 +108,7 @@ namespace mes.Controllers
             return View();
         }
 
+        [Authorize(Roles = "root, LogisticOperator")]
         public IActionResult HideTask(long id)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();

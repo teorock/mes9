@@ -21,10 +21,6 @@ namespace mes.Controllers
     {
         private readonly ILogger<ErpController> _logger;
         private string erpControllerConfigPath = @"C:\core\mes\ControllerConfig\erpcontrollerconfig.json";
-        //private readonly string connectionString ="Data Source=../mesData/erpdata.db";
-
-        //private readonly string usersDbConnString ="Data Source=../data/app.db";
-        //const string intranetLog=@"c:\temp\intranet.log";
 
         bool aggiornaDipendenti = false;
         bool aggiornaPermessi = false;
