@@ -12,6 +12,9 @@ namespace mes.Models.ControllersConfigModels
         public string DefaultBackgroundColor { get; set; }
         public string DefaultBorderColor { get; set; }
         public int RefreshInterval { get; set; }
+        public int AutoInsertToLogisticDb { get; set; }
+        public string AssignedToString { get; set; }
+        public string ProductionTable { get; set; }
     
     }
 }

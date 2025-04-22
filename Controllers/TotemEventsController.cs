@@ -11,6 +11,7 @@ using System.IO;
 using Newtonsoft.Json.Serialization;
 using mes.Models.ControllersConfigModels;
 using Microsoft.Extensions.Logging;
+using mes.Models.InfrastructureModels;
 using Microsoft.AspNetCore.Authorization;
 
 namespace mes.Controllers
@@ -82,11 +83,21 @@ namespace mes.Controllers
                     List<EventCalendarModel> allEvents = dbAccessor.Queryer<EventCalendarModel>(config.ConnString, config.EventTable);
                     calendarEvent.Id = allEvents.Count > 0 ? allEvents.Max(e => e.Id) + 1 : 1;
                     result = dbAccessor.Insertor<EventCalendarModel>(config.ConnString, config.EventTable, calendarEvent);
+                    if(config.AutoInsertToLogisticDb == 1) //modifica per inserimento nella "riga sotto" del totem logistica
+                    {
+                        //bisogna mappare EventCalendarModel to ProductionCalendarViewModel
+                        SyncCalendars(calendarEvent);
+                    }
                     break;
                 
                 case "edit":
                 case "move":
                     result = dbAccessor.Updater<EventCalendarModel>(config.ConnString, config.EventTable, calendarEvent, eventData.Id);
+                    if(config.AutoInsertToLogisticDb == 1) //modifica per inserimento nella "riga sotto" del totem logistica
+                    {
+                        //bisogna mappare EventCalendarModel to ProductionCalendarViewModel
+                        SyncCalendars(calendarEvent);
+                    }                    
                     break;
                 
                 case "delete":
@@ -96,6 +107,31 @@ namespace mes.Controllers
             }
             
             return RedirectToAction("Index");
+        }
+
+        private void SyncCalendars(EventCalendarModel inputModel)
+        {
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+
+            long lastId = dbAccessor.Queryer<ProductionCalendarDbModel>(config.ConnString,config.ProductionTable)
+                                    .Select(i => i.id).Max();
+
+            ProductionCalendarDbModel mapped = new ProductionCalendarDbModel(){
+                id = lastId + 1,
+                title = inputModel.Title,
+                start = inputModel.Start,
+                end = inputModel.End,
+                description = inputModel.Description,
+                assignedTo = config.AssignedToString,
+                backgroundColor = inputModel.BackgroundColor,
+                borderColor = inputModel.BorderColor,
+                fileLocation = "---",
+                displayTotem = "1",
+                enabled = inputModel.Enabled,
+                CreatedBy = inputModel.CreatedBy,
+                CreatedOn = inputModel.CreatedOn
+            };
+            int result = dbAccessor.Insertor<ProductionCalendarDbModel>(config.ConnString,config.ProductionTable,mapped);
         }
 
 
