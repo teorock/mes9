@@ -16,5 +16,6 @@ namespace mes.Models.ControllersConfigModels
         public int BetweenSlideTime { get; set; }
         public string TotemEventsConnString { get; set; }
         public string TotemEventsDbTable { get; set; }
+        public int EnableEventStrip { get; set; }
     }
 }

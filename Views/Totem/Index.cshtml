@@ -43,6 +43,7 @@
         transition: 0.3s;
         min-height: 150px;
         font-weight: bolder;
+    using Microsoft.EntityFrameworkCore.Metadata.Internal;
         cursor: pointer; /* Add a pointer cursor for better UX */
     }
 
@@ -577,7 +578,10 @@
             `;
             
             // Add the card to the scroll area
-            scrollArea.appendChild(card);
+            if(@ViewBag.enableStripNews == 1)
+            {
+                scrollArea.appendChild(card);
+            }
             
             // Force reflow
             void card.offsetWidth;
@@ -614,6 +618,7 @@
     
     // Auto-scrolling functionality
     window.onload = function() {
+        
         let scrollCount = 0;
         const maxScrolls = 5;
         const displayTime = 20000;
@@ -633,7 +638,7 @@
         }
 
         function scrollToTop() {
-            if (scrollingDown) {
+            if (scrollingDown ) {
                 window.scrollTo({
                     top: 0,
                     behavior: 'smooth',

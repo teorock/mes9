@@ -91,6 +91,9 @@ namespace mes.Controllers
             //----- news: scoasse e altro
 
             //preleva eventi da calendario
+            ViewBag.enableStripNews = config.EnableEventStrip;            
+
+
             List<TotemNewsViewModel> newsDaPassare = GetTodaysNews();
 
             string news2go = JsonConvert.SerializeObject(newsDaPassare);
@@ -99,6 +102,7 @@ namespace mes.Controllers
             ViewBag.standSlideTime = config.StandSlideTime;
             ViewBag.betweenSlideTime = config.BetweenSlideTime;
 
+        
             return View();
         }
 
