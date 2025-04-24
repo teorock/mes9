@@ -92,7 +92,7 @@
             <div class="col-md-2">
                 <label class="form-label pt-1">Commesse Correlate</label>
             </div>
-            <div class="col-md-10 customer-dependent-control">
+            <div class="col-md-8 customer-dependent-control">
                 <div class="dropdown checkbox-dropdown">
                     <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button"
                             id="@dropdownButtonId" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
@@ -127,8 +127,15 @@
                 <!-- === Hidden Input with updated name === -->
                 <input type="hidden" name="ExternalRef" id="@hiddenCsvInputId" />
                  <!-- === Backend Model property name is now "ExternalRef" === -->
-            </div>
-        </div>
+            </div> <!-- End dropdown --->
+                <!-- Add checkbox for EnableFutureSelection here -->
+                <div class="col-md-2">
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" id="enableFutureSelection" name="EnableFutureSelection" value="1">
+                        <label class="form-check-label" for="enableFutureSelection">Abilita selezione futura</label>
+                    </div>
+                </div>            
+        </div> <!-- End row --->
         <!-- End Checkbox Dropdown Section -->
 
         <br>
@@ -297,6 +304,22 @@
             var customer = $('#customer').val();
             window.location.href ="/Pfc/insertPfc?daneaCustomer=" + customer + "&deliveryDate=" + this.value;
         });        
+
+// Add event handler for the enableFutureSelection checkbox
+$('#enableFutureSelection').on('change', function(){
+    if(!checkCustomerSelection()) {
+        $('#customerRequiredToast').fadeIn(300).delay(2000).fadeOut(300);
+        return false;
+    }
+    
+    console.log('Enable future selection: ' + (this.checked ? '1' : '0'));
+    var customer = $('#customer').val();
+    var delivery = $('#deliveryDate').val();
+    
+    window.location.href = "/Pfc/insertPfc?daneaCustomer=" + customer + 
+                           "&deliveryDate=" + delivery + 
+                           "&EnableFutureSelection=" + (this.checked ? "1" : "0");
+});
 
         // --- Form Validation and CSV Generation ---
          $('#worktableForm').on('submit', function(event) {

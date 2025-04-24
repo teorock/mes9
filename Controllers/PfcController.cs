@@ -66,7 +66,7 @@ namespace mes.Controllers
 
         [HttpGet]
         [Authorize(Roles ="root, PfcCrea")]
-        public IActionResult InsertPfc(string daneaCustomer, string deliveryDate)
+        public IActionResult InsertPfc(string daneaCustomer, string deliveryDate, string EnableFutureSelection)
         {
             // mettere filtro commesse da Danea per data selezionata
 
@@ -121,19 +121,32 @@ namespace mes.Controllers
             List<string> allDaneaOrders = new List<string>();
             DateTime deliveryLimit = Convert.ToDateTime(deliveryDate);
 
-            if(daneaCustomer =="" | daneaCustomer is null | daneaCustomer =="null")
+            bool noCustomer = (daneaCustomer =="" | daneaCustomer is null | daneaCustomer =="null") ? true : false;
+            if(EnableFutureSelection is null) EnableFutureSelection ="0";
+
+            if(noCustomer)
             {
                 allDaneaOrders = dbAccessor.Queryer<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable)
                                             .Where(t => t.Taken =="0")
                                             .Where(d => Convert.ToDateTime(d.DataConsegna)<= deliveryLimit.Date)
                                             .Select(n => n.NCommessa).ToList();
             }
-            else
+            
+            if(!noCustomer & EnableFutureSelection == "0")
             {                
                 allDaneaOrders = dbAccessor.Queryer<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable)
                                             .Where(t => t.Taken =="0")
                                             .Where(c => c.Cliente == daneaCustomer)
                                             .Where(d => Convert.ToDateTime(d.DataConsegna)<= deliveryLimit)
+                                            .Select(n => n.NCommessa).ToList();
+            }
+
+            if(!noCustomer & EnableFutureSelection == "1")
+            {                
+                allDaneaOrders = dbAccessor.Queryer<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable)
+                                            .Where(t => t.Taken =="0")
+                                            .Where(c => c.Cliente == daneaCustomer)
+                                            //.Where(d => Convert.ToDateTime(d.DataConsegna)<= deliveryLimit)
                                             .Select(n => n.NCommessa).ToList();
             }
 
