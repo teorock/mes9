@@ -98,7 +98,7 @@
             <div class="col-md-2">
                 <label class="form-label pt-1">Commesse Correlate</label>
             </div>
-            <div class="col-md-10">
+            <div class="col-md-8">
                 <div class="dropdown checkbox-dropdown">
                     <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button"
                             id="@dropdownButtonId" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" @cannotUpdate>
@@ -132,8 +132,15 @@
                     <div id="@validationDivId" class="invalid-feedback" style="display: none;">Selezionare almeno una commessa correlata.</div>
                 </div>
                 <input type="hidden" name="ExternalRef" id="@hiddenCsvInputId" value="@Model.ExternalRef" />
-            </div>
-        </div>
+            </div> <!--- End dropdown --->
+                <!-- Add checkbox for EnableFutureSelection here -->
+                <div class="col-md-2">
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" id="enableFutureSelection" name="EnableFutureSelection" value="1">
+                        <label class="form-check-label" for="enableFutureSelection">Abilita selezione futura</label>
+                    </div>
+                </div>               
+        </div> <!-- End row --->
         
         <br>
         <hr>
@@ -300,6 +307,15 @@
                 }
             }
             
+var enableFutureSelection = '@ViewBag.enableFutureSelection';
+
+// Check the checkbox if the value is "1"
+if (enableFutureSelection === "1") {
+    $('#enableFutureSelection').prop('checked', true);
+} else {
+    $('#enableFutureSelection').prop('checked', false);
+}            
+
             $dropdownButton.removeClass('is-invalid');
             $validationMessageDiv.hide();
             updateHiddenCsvInput();
@@ -351,6 +367,19 @@ $(document).on('change', '.quality-checkbox', function() {
         validateOperatorSelection($(this).closest('.work-phase-row'));
     }
 });
+
+//the fucking function
+// Add event handler for the enableFutureSelection checkbox
+$('#enableFutureSelection').on('change', function(){
+    console.log('Enable future selection: ' + (this.checked ? '1' : '0'));
+    var customer = $('#customer').val() || $('#hidden-customer').val();
+    var delivery = $('#deliveryDate').val() || $('#hiddenDeliveryDate').val();
+    var id = $('input[name="id"]').val(); // Get the ID value from the hidden input
+    
+    window.location.href = "/Pfc/ModPfc?inputId=" + '@Model.id' + 
+                            "&EnableFutureSelection=" + (this.checked ? "1" : "0");
+});
+
 
         // Handle operator selection changes
         $(document).on('change', '.quality-operator', function() {

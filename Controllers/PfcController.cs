@@ -244,7 +244,7 @@ namespace mes.Controllers
 
         [HttpGet]
         [Authorize(Roles ="root, PfcAggiorna, PfcCrea")]
-        public IActionResult ModPfc(long inputId)
+        public IActionResult ModPfc(long inputId, string EnableFutureSelection)
         {
             UserData userData = GetUserData();
             //--------------------------
@@ -283,18 +283,31 @@ namespace mes.Controllers
             ViewBag.WorkPhases = GetWorkPhasesList(); 
             ViewBag.Operators = GetOperatorsList(); 
 
-            //passare tutti i CsvOrders per questo cliente
+            if(EnableFutureSelection is null) EnableFutureSelection = "0";
+            //passare tutti i CsvOrders contenuti in questo Pfc
             List<PfcCsvDaneaSource> allDaneaOrders = dbAccessor.Queryer<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable)
                                                     .Where(n => n.PfcNumber == viewModel.WorkNumber)
-                                                    .Where(d => Convert.ToDateTime(d.DataConsegna)<= viewModel.deliveryDate)
+                                                    //.Where(d => Convert.ToDateTime(d.DataConsegna)<= viewModel.deliveryDate) //questo era un errore
                                                     .ToList();
             
+            //passare tutti i CsvOrders selezionabili per questo cliente
+            if(EnableFutureSelection == "0")
+            {
             allDaneaOrders.AddRange(dbAccessor.Queryer<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable)
                                                     .Where(t => t.Taken =="0")
                                                     .Where(d => Convert.ToDateTime(d.DataConsegna)<= viewModel.deliveryDate)
+                                                    .Where(c => c.Cliente == pfc.Cliente)
                                                     .ToList());
+            } else{
+            allDaneaOrders.AddRange(dbAccessor.Queryer<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable)
+                                                    .Where(t => t.Taken =="0")                                                    
+                                                    //.Where(d => Convert.ToDateTime(d.DataConsegna)<= viewModel.deliveryDate)
+                                                    .Where(c => c.Cliente == pfc.Cliente)
+                                                    .ToList());                
+            }
 
             ViewBag.allDaneaOrders = allDaneaOrders;
+            ViewBag.enableFutureSelection = EnableFutureSelection;
 
             //TO DO:
             //abilitazione parziale per PfcAggiorna
