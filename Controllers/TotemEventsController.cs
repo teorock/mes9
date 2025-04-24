@@ -109,6 +109,18 @@ namespace mes.Controllers
             return RedirectToAction("Index");
         }
 
+        [HttpGet]
+        public IActionResult TotalSyncCalendar()
+        {
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            List<EventCalendarModel> allCalendarEvent = dbAccessor.Queryer<EventCalendarModel>(config.ConnString, config.EventTable);
+            foreach(EventCalendarModel oneEvent in allCalendarEvent)
+            {
+                SyncCalendars(oneEvent);
+            }
+
+            return RedirectToAction("Index");
+        }
         private void SyncCalendars(EventCalendarModel inputModel)
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
