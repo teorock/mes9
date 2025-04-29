@@ -381,7 +381,7 @@ namespace mes.Controllers
 
         [HttpGet]
         [Authorize(Roles ="root, PfcAggiorna, PfcCrea")]
-        public IActionResult CsvOrderUpload(string message)
+        public IActionResult CsvOrderUpload(string message, string showTaken)
         {
             // Configure view model specifically for CSV files
             var viewModel = new FileUploadViewModel
@@ -408,9 +408,20 @@ namespace mes.Controllers
             string actionName = this.ControllerContext.RouteData.Values["action"].ToString();
             Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
             
+
+            
+            if(showTaken is null | showTaken =="0") {
+                showTaken = "0";
+                ViewBag.btnMessage = "mostra già assegnati";
+                ViewBag.btnValue ="1";
+            } else if(showTaken =="1") {
+                ViewBag.btnMessage = "mostra da assegnare";
+                ViewBag.btnValue ="0";
+            }
+            
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<PfcCsvDaneaSource> actuals = dbAccessor.Queryer<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable)
-                                                        .Where(t => t.Taken =="0").ToList();
+                                                        .Where(t => t.Taken == showTaken).ToList();
             ViewBag.actualCsvDanea = actuals;            
             ViewBag.message = message;
 
