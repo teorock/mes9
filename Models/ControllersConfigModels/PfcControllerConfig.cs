@@ -17,5 +17,6 @@ namespace mes.Models.ControllersConfigModels
         public string CsvDaneaTable { get; set; }
         public string CsvFilter1 { get; set; }
         public string CsvFilter2 { get; set; }
+        public string BaseUploadFolder { get; set; }
     }
 }

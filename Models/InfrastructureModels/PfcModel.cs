@@ -15,6 +15,7 @@ namespace mes.Models.InfrastructureModels
         public string LavorazioniJsonString { get; set; }
         public string Completed { get; set; }
         public string Progress { get; set; }
+        public string PfcFiles { get; set; }
         public string Enabled { get; set; }
         public string CreatedOn { get; set; }
         public string CreatedBy { get; set; }

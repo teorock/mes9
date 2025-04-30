@@ -11,8 +11,10 @@ using mes.Models.Services;
 using mes.Models.Services.Infrastructures;
 using mes.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ServiceStack.Text;
@@ -150,7 +152,6 @@ namespace mes.Controllers
                                             .Select(n => n.NCommessa).ToList();
             }
 
-
             ViewBag.selectedDeliveryDate = deliveryDate;
             ViewBag.selectedCustomer = daneaCustomer;
             ViewBag.selectableOrders = allDaneaOrders;           
@@ -161,7 +162,7 @@ namespace mes.Controllers
 
         [HttpPost]
         [Authorize(Roles ="root, PfcCrea")]
-        public IActionResult InsertPfc(WorkorderViewModel inputModel)
+        public async Task<IActionResult> InsertPfc(WorkorderViewModel inputModel)
         {
             if(ModelState.IsValid)
             {
@@ -179,6 +180,9 @@ namespace mes.Controllers
 
                 string jsonLavorazioni = JsonConvert.SerializeObject(inputModel.WorkPhases);
 
+                await UploadFiles(inputModel.UploadedFiles, $"{inputModel.WorkNumber.Replace('/','_')}");
+                string allFiles = String.Join(",", inputModel.UploadedFiles.Select(n => n.FileName));
+
                 PfcModel pcf2insert = new PfcModel() {
                     id=inputModel.id,
                     NumeroCommessa = inputModel.WorkNumber,
@@ -187,6 +191,7 @@ namespace mes.Controllers
                     DataConsegna = Convert.ToDateTime(inputModel.deliveryDate).ToString("dd/MM/yyyy"),
                     LavorazioniJsonString = jsonLavorazioni,
                     Progress = $"0/{workPhases}",
+                    PfcFiles = allFiles,
                     Completed = "0",
                     Enabled = "1",
                     CreatedBy = userData.UserName,
@@ -203,25 +208,50 @@ namespace mes.Controllers
             return RedirectToAction("Index");
         }
 
+        public async System.Threading.Tasks.Task UploadFiles(ICollection<IFormFile> files, string pfcFolder)
+        {        
+            if (files != null && files.Count > 0)
+            {
+                string uploadFolder = config.BaseUploadFolder;
+
+                // Create directory if it doesn't exist
+                if (!Directory.Exists(uploadFolder))
+                    Directory.CreateDirectory(uploadFolder);
+
+                foreach (var file in files)
+                {
+                    if (file.Length > 0)
+                    {
+                        string filePath = Path.Combine(uploadFolder,pfcFolder, file.FileName);
+                        if(!Directory.Exists(Path.GetDirectoryName(filePath))) Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
+                    }
+                }
+            }
+        }
+
         private void UpdateTakenCsvOrders(string takenOrders, string pfcNumber, string daneaCustomer)
         {
-                //to do: 
-                //update Taken & PfcNumber
-                DatabaseAccessor dbAccessor = new DatabaseAccessor();
-                List<PfcCsvDaneaSourceID> allDaneaOrders = new List<PfcCsvDaneaSourceID>();
-                allDaneaOrders = dbAccessor.Queryer<PfcCsvDaneaSourceID>(config.PfcConnString, config.CsvDaneaTable)
-                                            //.Where(t => t.Taken =="0")
-                                            .Where(c => c.Cliente == daneaCustomer).ToList();
+            //to do: 
+            //update Taken & PfcNumber
+            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+            List<PfcCsvDaneaSourceID> allDaneaOrders = new List<PfcCsvDaneaSourceID>();
+            allDaneaOrders = dbAccessor.Queryer<PfcCsvDaneaSourceID>(config.PfcConnString, config.CsvDaneaTable)
+                                        //.Where(t => t.Taken =="0")
+                                        .Where(c => c.Cliente == daneaCustomer).ToList();
 
-                string[] takenCsvOrders = takenOrders.Split(',');
-                foreach(string oneCvs in takenCsvOrders)
-                {                    
-                    PfcCsvDaneaSourceID takenId2update = allDaneaOrders.Where(n => n.NCommessa == oneCvs).FirstOrDefault();
-                    takenId2update.Taken = "1";
-                    takenId2update.PfcNumber = pfcNumber;
+            string[] takenCsvOrders = takenOrders.Split(',');
+            foreach(string oneCvs in takenCsvOrders)
+            {                    
+                PfcCsvDaneaSourceID takenId2update = allDaneaOrders.Where(n => n.NCommessa == oneCvs).FirstOrDefault();
+                takenId2update.Taken = "1";
+                takenId2update.PfcNumber = pfcNumber;
 
-                    int res = dbAccessor.Updater<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable, MiniMapper(takenId2update), takenId2update.id);
-                }     
+                int res = dbAccessor.Updater<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable, MiniMapper(takenId2update), takenId2update.id);
+            }     
         }
 
         private PfcCsvDaneaSource MiniMapper(PfcCsvDaneaSourceID inputObj)
@@ -309,8 +339,7 @@ namespace mes.Controllers
             ViewBag.allDaneaOrders = allDaneaOrders;
             ViewBag.enableFutureSelection = EnableFutureSelection;
 
-            //TO DO:
-            //abilitazione parziale per PfcAggiorna
+
             bool canCreate = true;
             if(userData.UserRoles.Contains("PfcAggiorna") & !userData.UserRoles.Contains("PfcCrea"))
             {
@@ -319,13 +348,22 @@ namespace mes.Controllers
             if(userData.UserRoles.Contains("root")) canCreate = true;
             ViewBag.canCreate = canCreate;
 
+            ////=========== ottengo eventuali file allegati
+            List<string> files = pfc.PfcFiles.Split(',').ToList();
+            if(files[0]!= " ")
+            { 
+                ViewBag.pfcFiles = files;
+            } else {
+                ViewBag.pfcFiles = null ;
+            }
+            
 
             return View(viewModel);
         }
         //===================================================================
         [HttpPost]
         [Authorize(Roles ="root, PfcAggiorna, PfcCrea")]
-        public IActionResult ModPfc(WorkorderViewModel model)
+        public async Task<IActionResult> ModPfc(WorkorderViewModel model, string ExistingFiles)
         {
             if (ModelState.IsValid)
             {
@@ -351,6 +389,7 @@ namespace mes.Controllers
                     DataConsegna = Convert.ToDateTime(model.deliveryDate).ToString("dd/MM/yyyy"),
                     LavorazioniJsonString = jsonLavorazioni,
                     Progress = $"{completed}/{toDo}",
+                    PfcFiles = ExistingFiles,
                     Completed = allDone,
                     Enabled = "1",
                     CreatedBy = userData.UserName,
@@ -361,6 +400,36 @@ namespace mes.Controllers
                 var result = dbAccessor.Updater<PfcModel>(config.PfcConnString, config.PfcTable, pcf2update, model.id);
 
                 UpdateTakenCsvOrders(pcf2update.RifEsterno,pcf2update.NumeroCommessa, pcf2update.Cliente);
+
+                //rimuovo eventuali files
+                //prendo quelli che c'erano prima nel database
+                List<string> previousDbFiles = dbAccessor.Queryer<PfcModel>(config.PfcConnString, config.PfcTable)
+                                                        .Where(i => i.id == model.id)
+                                                        .Select(f => f.PfcFiles).ToList();
+                
+                string pfcPath = Path.Combine(config.BaseUploadFolder,model.WorkNumber.Replace('/','_'));
+                List<string> filesInFolder = Directory.GetFiles(pfcPath).ToList();
+                List<string> actualFiles = ExistingFiles.Split(',').ToList();
+
+                foreach(string oneFile in filesInFolder)
+                {
+                    if(!actualFiles.Contains(Path.GetFileName(oneFile)))
+                    {
+                        string filepath = Path.Combine(pfcPath, oneFile);
+                        KillFile(filepath);                    
+                    }
+                }
+                //copio gli eventuali nuovi
+                foreach(string oneFile in actualFiles)
+                {
+                    if(!filesInFolder.Contains(oneFile))
+                    {
+                        string filepath = Path.Combine(pfcPath, oneFile);
+                        List<IFormFile> file2upload = new List<IFormFile>(){};
+                        //var one32go = new FormFile(filePath)
+                        //UploadFiles()      
+                    }                    
+                }
 
                 return RedirectToAction("Index"); 
             }
@@ -378,6 +447,11 @@ namespace mes.Controllers
             }
         }
         //===================================================================
+
+        private void KillFile(string fileskill)
+        {
+            if(System.IO.File.Exists(fileskill)) System.IO.File.Delete(fileskill);
+        }
 
         [HttpGet]
         [Authorize(Roles ="root, PfcAggiorna, PfcCrea")]

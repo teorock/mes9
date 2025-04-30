@@ -13,6 +13,8 @@
     // ID for the hidden input holding the CSV string
     string hiddenCsvInputId = $"externalRefsCsv_{Guid.NewGuid().ToString("N").Substring(0, 8)}"; // ID can remain descriptive
     string dataDaController = ViewBag.selectedDeliveryDate;
+    // File upload folder
+    string baseFolder = ViewBag.baseFolder ?? "uploads";
 }
 
 @model WorkorderViewModel;
@@ -50,6 +52,47 @@
             padding: 10px 20px;
             border-radius: 4px;
             display: none;
+        }
+
+        /* File upload styles */
+        .file-upload-container {
+            border: 2px dashed #ced4da;
+            border-radius: 5px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .file-upload-container:hover {
+            border-color: #6c757d;
+        }
+        
+        .file-upload-container.dragover {
+            background-color: #f8f9fa;
+            border-color: #28a745;
+        }
+        
+        .uploaded-files-list {
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .uploaded-file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        .remove-file-btn {
+            color: #dc3545;
+            cursor: pointer;
+            padding: 0 5px;
         }
     </style>
 }
@@ -141,6 +184,31 @@
         <br>
         <hr>
 
+        <!-- NEW FILE UPLOAD SECTION -->
+        <div class="row mb-3">
+            <div class="col-12"><strong>Allegati</strong></div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-12 customer-dependent-control">
+                <div class="file-upload-container" id="fileDropZone">
+                    <div class="text-center">
+                        <i class="bi bi-upload fs-3"></i>
+                        <p class="mb-2">Trascina i file qui o</p>
+                        <label for="fileUploadInput" class="btn btn-outline-primary">Seleziona file</label>
+                        <input type="file" id="fileUploadInput" name="UploadedFiles" multiple style="display: none;" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+                        <input type="hidden" id="folderPath" name="FolderPath" value="@baseFolder">
+                        <p class="text-muted mt-2 small">Formati supportati: PDF, DOC, DOCX, XLS, XLSX, JPG, JPEG, PNG</p>
+                    </div>
+                </div>
+                <div class="uploaded-files-list" id="uploadedFilesList">
+                    <!-- File items will be added here dynamically -->
+                </div>
+            </div>
+        </div>
+        <!-- END FILE UPLOAD SECTION -->
+
+        <hr>
+
         <!-- Work Phases Section (remains the same) -->
         <div class="row mb-3"><div class="col-12"><strong>fasi di lavorazione</strong></div></div>
         <br>
@@ -201,6 +269,26 @@
 <div class="modal fade" id="confirmRemoveModal" tabindex="-1" aria-labelledby="confirmRemoveModalLabel" aria-hidden="true">
     <!-- Modal content -->
      <div class="modal-dialog"> <div class="modal-content"> <div class="modal-header"> <h5 class="modal-title" id="confirmRemoveModalLabel">Conferma Eliminazione</h5> <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> </div> <div class="modal-body"> Sei sicuro di voler eliminare questa fase di lavorazione? </div> <div class="modal-footer"> <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button> <button type="button" class="btn btn-danger" id="confirmRemoveBtn">Conferma</button> </div> </div> </div>
+</div>
+
+<!-- NEW File Remove Confirmation Modal -->
+<div class="modal fade" id="confirmFileRemoveModal" tabindex="-1" aria-labelledby="confirmFileRemoveModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmFileRemoveModalLabel">Conferma Rimozione File</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Sei sicuro di voler rimuovere questo file?
+                <p class="fw-bold mt-2" id="fileToRemoveName"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <button type="button" class="btn btn-danger" id="confirmFileRemoveBtn">Conferma</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
@@ -305,21 +393,21 @@
             window.location.href ="/Pfc/insertPfc?daneaCustomer=" + customer + "&deliveryDate=" + this.value;
         });        
 
-// Add event handler for the enableFutureSelection checkbox
-$('#enableFutureSelection').on('change', function(){
-    if(!checkCustomerSelection()) {
-        $('#customerRequiredToast').fadeIn(300).delay(2000).fadeOut(300);
-        return false;
-    }
-    
-    console.log('Enable future selection: ' + (this.checked ? '1' : '0'));
-    var customer = $('#customer').val();
-    var delivery = $('#deliveryDate').val();
-    
-    window.location.href = "/Pfc/insertPfc?daneaCustomer=" + customer + 
-                           "&deliveryDate=" + delivery + 
-                           "&EnableFutureSelection=" + (this.checked ? "1" : "0");
-});
+        // Add event handler for the enableFutureSelection checkbox
+        $('#enableFutureSelection').on('change', function(){
+            if(!checkCustomerSelection()) {
+                $('#customerRequiredToast').fadeIn(300).delay(2000).fadeOut(300);
+                return false;
+            }
+            
+            console.log('Enable future selection: ' + (this.checked ? '1' : '0'));
+            var customer = $('#customer').val();
+            var delivery = $('#deliveryDate').val();
+            
+            window.location.href = "/Pfc/insertPfc?daneaCustomer=" + customer + 
+                                   "&deliveryDate=" + delivery + 
+                                   "&EnableFutureSelection=" + (this.checked ? "1" : "0");
+        });
 
         // --- Form Validation and CSV Generation ---
          $('#worktableForm').on('submit', function(event) {
@@ -359,6 +447,158 @@ $('#enableFutureSelection').on('change', function(){
                  $(this).find('button[type="submit"]').prop('disabled', true);
              }
          }); // End form submit
+
+        // --- NEW FILE UPLOAD LOGIC ---
+        // Variables to store selected files
+        var selectedFiles = [];
+        var fileToRemoveIndex = -1;
+        
+        // Event listeners for drag and drop functionality
+        var $dropZone = $('#fileDropZone');
+        
+        $dropZone.on('dragover', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $(this).addClass('dragover');
+        });
+        
+        $dropZone.on('dragleave', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $(this).removeClass('dragover');
+        });
+        
+        $dropZone.on('drop', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $(this).removeClass('dragover');
+            
+            if(!checkCustomerSelection()) {
+                $('#customerRequiredToast').fadeIn(300).delay(2000).fadeOut(300);
+                return false;
+            }
+            
+            var files = e.originalEvent.dataTransfer.files;
+            handleFiles(files);
+        });
+        
+        // Click to select files
+        $('#fileUploadInput').on('change', function(e) {
+            if(!checkCustomerSelection()) {
+                $('#customerRequiredToast').fadeIn(300).delay(2000).fadeOut(300);
+                $(this).val('');
+                return false;
+            }
+            
+            var files = e.target.files;
+            handleFiles(files);
+            // Reset file input to allow selecting the same file again
+            $(this).val('');
+        });
+        
+        // Handle the selected files
+        function handleFiles(files) {
+            if (files.length === 0) return;
+            
+            // Add files to the selectedFiles array
+            for (var i = 0; i < files.length; i++) {
+                var file = files[i];
+                
+                // Check file type (optional)
+                var acceptedTypes = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.jpg', '.jpeg', '.png'];
+                var fileExt = '.' + file.name.split('.').pop().toLowerCase();
+                
+                if (!acceptedTypes.includes(fileExt)) {
+                    alert('Tipo di file non supportato: ' + file.name + '\nTipi supportati: PDF, DOC, DOCX, XLS, XLSX, JPG, JPEG, PNG');
+                    continue;
+                }
+                
+                // Add file to array
+                selectedFiles.push(file);
+                
+                // Add file to display list
+                addFileToList(file, selectedFiles.length - 1);
+            }
+            
+            // Update hidden input for form submission
+            updateFileInput();
+        }
+        
+        // Add a file to the display list
+        function addFileToList(file, index) {
+            var fileSize = formatFileSize(file.size);
+            var fileItem = $('<div class="uploaded-file-item">' +
+                            '<div class="file-info">' +
+                            '<span class="file-name">' + file.name + '</span> ' +
+                            '<span class="file-size text-muted">(' + fileSize + ')</span>' +
+                            '</div>' +
+                            '<span class="remove-file-btn" data-index="' + index + '">×</span>' +
+                            '</div>');
+            
+            $('#uploadedFilesList').append(fileItem);
+        }
+        
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            else return (bytes / 1048576).toFixed(1) + ' MB';
+        }
+        
+        // Update file input for form submission
+        function updateFileInput() {
+            // Clear previous input
+            $('#worktableForm').find('input[type="file"][name="UploadedFiles"]').not('#fileUploadInput').remove();
+            
+            // Create a data transfer object
+            var dataTransfer = new DataTransfer();
+            
+            // Add all selected files to it
+            selectedFiles.forEach(function(file) {
+                dataTransfer.items.add(file);
+            });
+            
+            // Create new file input
+            var newFileInput = $('<input type="file" name="UploadedFiles" multiple style="display:none">');
+            newFileInput.get(0).files = dataTransfer.files;
+            
+            // Add to form
+            $('#worktableForm').append(newFileInput);
+        }
+        
+        // Handle file removal
+        $(document).on('click', '.remove-file-btn', function() {
+            fileToRemoveIndex = $(this).data('index');
+            $('#fileToRemoveName').text(selectedFiles[fileToRemoveIndex].name);
+            $('#confirmFileRemoveModal').modal('show');
+        });
+        
+        $('#confirmFileRemoveBtn').on('click', function() {
+            if (fileToRemoveIndex > -1) {
+                // Remove file from array
+                selectedFiles.splice(fileToRemoveIndex, 1);
+                
+                // Refresh the display list
+                $('#uploadedFilesList').empty();
+                selectedFiles.forEach(function(file, index) {
+                    addFileToList(file, index);
+                });
+                
+                // Update hidden input
+                updateFileInput();
+                
+                fileToRemoveIndex = -1;
+            }
+            $('#confirmFileRemoveModal').modal('hide');
+        });
+        
+        // Click on dropzone to trigger file select
+        $dropZone.on('click', function(e) {
+            if ($(e.target).closest('label, input').length === 0) {
+                $('#fileUploadInput').click();
+            }
+        });
+        // --- END FILE UPLOAD LOGIC ---
 
     }); // End document ready
 </script>
