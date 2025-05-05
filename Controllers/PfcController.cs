@@ -700,10 +700,9 @@ public IActionResult DownloadFile(string nCommessa, string fileName)
 
     // Construct the full path
     var fullPath = Path.Combine(
-        config.BaseUploadFolder,  // Your base upload folder from config
-        //"pfcUploadedFile",       // Fixed part of the path
-        $"{nCommessa}_{DateTime.Now.Year}",               // The commessa number
-        sanitizedFileName        // The actual file name
+        config.BaseUploadFolder,
+        $"{nCommessa}_{DateTime.Now.Year}",
+        sanitizedFileName
     );
 
     // Verify the file exists
@@ -739,7 +738,6 @@ public IActionResult ViewFile(string nCommessa, string fileName)
     var sanitizedFileName = Path.GetFileName(fileName);
     var fullPath = Path.Combine(
         config.BaseUploadFolder,
-        //"pfcUploadedFile",
         $"{nCommessa}_{DateTime.Now.Year}",
         sanitizedFileName
     );
@@ -765,58 +763,6 @@ public IActionResult ViewFile(string nCommessa, string fileName)
     // For unsupported types, fall back to download
     return DownloadFile(nCommessa, fileName);
 }
-
-//public IActionResult ViewFile(string nCommessa, string fileName)
-//{
-//    if (string.IsNullOrEmpty(nCommessa) || string.IsNullOrEmpty(fileName))
-//    {
-//        return NotFound();
-//    }
-//
-//    // Sanitize and construct path (same as DownloadFile)
-//    var sanitizedFileName = Path.GetFileName(fileName);
-//    var fullPath = Path.Combine(
-//        config.BaseUploadFolder,
-//        "pfcUploadedFile",
-//        nCommessa,
-//        sanitizedFileName
-//    );
-//
-//    if (!System.IO.File.Exists(fullPath))
-//    {
-//        return NotFound();
-//    }
-//
-//    // Determine if we should display inline or force download
-//    var ext = Path.GetExtension(fullPath).ToLowerInvariant();
-//    var contentType = GetContentType(ext);
-//    
-//    // For viewable types, display inline
-//    if (new[] { ".pdf", ".jpg", ".jpeg", ".png", ".gif" }.Contains(ext))
-//    {
-//        return PhysicalFile(fullPath, contentType);
-//    }
-//    
-//    // For non-viewable types, fall back to download
-//    return PhysicalFile(fullPath, contentType, fileName);
-//}
-
-//private string GetContentType(string ext)
-//{
-//    return ext switch
-//    {
-//        ".pdf" => "application/pdf",
-//        ".jpg" or ".jpeg" => "image/jpeg",
-//        ".png" => "image/png",
-//        ".gif" => "image/gif",
-//        ".doc" => "application/msword",
-//        ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-//        ".xls" => "application/vnd.ms-excel",
-//        ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-//        _ => "application/octet-stream"
-//    };
-//}
-
 
         public IActionResult LoadCsvToDatabase(string file2load, out string internalMessage)
         {
