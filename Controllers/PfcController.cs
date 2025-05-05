@@ -382,6 +382,22 @@ namespace mes.Controllers
 
         string jsonLavorazioni = JsonConvert.SerializeObject(model.WorkPhases);
 
+        //devo fare il Join dei files esistenti e di quelli nuovi eventuali
+        //string filesCsv = String.Join(",", UploadedFiles.Select(f => f.FileName));
+        //string allFiles = ExistingFiles + filesCsv;
+
+        //if(ExistingFiles is null) ExistingFiles = "";
+        //var allFiles = String.Join(",",ExistingFiles.Split(',')
+        //          .Concat(UploadedFiles.Select(f => f.FileName))
+        //          .ToList());
+
+var allFilesCsv = string.Join(",",
+    (ExistingFiles?.Split(',', StringSplitOptions.RemoveEmptyEntries) ?? Enumerable.Empty<string>())
+    .Concat(UploadedFiles?.Select(f => f.FileName) ?? Enumerable.Empty<string>())
+    .Where(x => !string.IsNullOrWhiteSpace(x))
+);
+
+
         PfcModel pcf2update = new PfcModel() {
             id = model.id,
             NumeroCommessa = model.WorkNumber,
@@ -390,7 +406,7 @@ namespace mes.Controllers
             DataConsegna = Convert.ToDateTime(model.deliveryDate).ToString("dd/MM/yyyy"),
             LavorazioniJsonString = jsonLavorazioni,
             Progress = $"{completed}/{toDo}",
-            PfcFiles = ExistingFiles,
+            PfcFiles = allFilesCsv,
             Completed = allDone,
             Enabled = "1",
             CreatedBy = userData.UserName,
