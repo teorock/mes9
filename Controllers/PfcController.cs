@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using NuGet.Common;
 using ServiceStack.Text;
 using ServiceStack.Text.Common;
 
@@ -726,6 +727,95 @@ public IActionResult DownloadFile(string nCommessa, string fileName)
     var fileStream = System.IO.File.OpenRead(fullPath);
     return File(fileStream, contentType, fileName);
 }
+
+public IActionResult ViewFile(string nCommessa, string fileName)
+{
+    if (string.IsNullOrEmpty(nCommessa) || string.IsNullOrEmpty(fileName))
+    {
+        return NotFound();
+    }
+
+    // Sanitize and construct path
+    var sanitizedFileName = Path.GetFileName(fileName);
+    var fullPath = Path.Combine(
+        config.BaseUploadFolder,
+        //"pfcUploadedFile",
+        $"{nCommessa}_{DateTime.Now.Year}",
+        sanitizedFileName
+    );
+
+    if (!System.IO.File.Exists(fullPath))
+    {
+        return NotFound();
+    }
+
+    var ext = Path.GetExtension(fullPath).ToLowerInvariant();
+    
+    // For PDFs, serve with inline disposition
+    if (ext == ".pdf")
+    {
+        return PhysicalFile(fullPath, "application/pdf", null); // null filename forces inline display
+    }
+    // For images
+    else if (new[] { ".jpg", ".jpeg", ".png", ".gif" }.Contains(ext))
+    {
+        return PhysicalFile(fullPath, GetContentType(ext), null);
+    }
+    
+    // For unsupported types, fall back to download
+    return DownloadFile(nCommessa, fileName);
+}
+
+//public IActionResult ViewFile(string nCommessa, string fileName)
+//{
+//    if (string.IsNullOrEmpty(nCommessa) || string.IsNullOrEmpty(fileName))
+//    {
+//        return NotFound();
+//    }
+//
+//    // Sanitize and construct path (same as DownloadFile)
+//    var sanitizedFileName = Path.GetFileName(fileName);
+//    var fullPath = Path.Combine(
+//        config.BaseUploadFolder,
+//        "pfcUploadedFile",
+//        nCommessa,
+//        sanitizedFileName
+//    );
+//
+//    if (!System.IO.File.Exists(fullPath))
+//    {
+//        return NotFound();
+//    }
+//
+//    // Determine if we should display inline or force download
+//    var ext = Path.GetExtension(fullPath).ToLowerInvariant();
+//    var contentType = GetContentType(ext);
+//    
+//    // For viewable types, display inline
+//    if (new[] { ".pdf", ".jpg", ".jpeg", ".png", ".gif" }.Contains(ext))
+//    {
+//        return PhysicalFile(fullPath, contentType);
+//    }
+//    
+//    // For non-viewable types, fall back to download
+//    return PhysicalFile(fullPath, contentType, fileName);
+//}
+
+//private string GetContentType(string ext)
+//{
+//    return ext switch
+//    {
+//        ".pdf" => "application/pdf",
+//        ".jpg" or ".jpeg" => "image/jpeg",
+//        ".png" => "image/png",
+//        ".gif" => "image/gif",
+//        ".doc" => "application/msword",
+//        ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+//        ".xls" => "application/vnd.ms-excel",
+//        ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+//        _ => "application/octet-stream"
+//    };
+//}
 
 
         public IActionResult LoadCsvToDatabase(string file2load, out string internalMessage)

@@ -98,16 +98,17 @@
             border-radius: 4px;
         }
 
-        .existing-file-name {
-            font-weight: 500;
-        }
-
         .existing-file-name a {
             color: #0d6efd;
             text-decoration: none;
+            margin-right: 5px;
         }
         .existing-file-name a:hover {
             text-decoration: underline;
+        }
+        .existing-file-name a.download-link {
+            color: #6c757d;
+            font-size: 0.9em;
         }
     </style>
 }
@@ -290,18 +291,18 @@
                         <input type="hidden" name="WorkPhases[@i].Id" value="@phase.id">
                     </div>
                     
-<div class="col-md-2">
-    <div class="form-check mt-1">
-        <input class="form-check-input quality-checkbox" type="checkbox"
-               id="qualitycheck_@i"
-               name="WorkPhases[@i].QualityCheck"
-               value="true"
-               @(phase.QualityCheck == "true" ? "checked" : "")
-               disabled="@cannotSign">
-        <input type="hidden" name="WorkPhases[@i].QualityCheck" value="false">
-        <label class="form-check-label" for="qualitycheck_@i">controllo qualità</label>                        
-    </div>
-</div>
+                    <div class="col-md-2">
+                        <div class="form-check mt-1">
+                            <input class="form-check-input quality-checkbox" type="checkbox"
+                                id="qualitycheck_@i"
+                                name="WorkPhases[@i].QualityCheck"
+                                value="true"
+                                @(phase.QualityCheck == "true" ? "checked" : "")
+                                disabled="@cannotSign">
+                            <input type="hidden" name="WorkPhases[@i].QualityCheck" value="false">
+                            <label class="form-check-label" for="qualitycheck_@i">controllo qualità</label>                        
+                        </div>
+                    </div>
                     
                     <div class="col-md-2">
                         <select class="form-select quality-operator" name="WorkPhases[@i].QualityOperator" disabled="@cannotSign">
@@ -727,19 +728,26 @@ function loadExistingFiles() {
 // Display existing files in the list
 function displayExistingFiles() {
     var filesListElement = $('#uploadedFilesList');
-    
-    // Clear the list first
     filesListElement.empty();
     
-    // Add existing files
+    // Define browser-viewable file types
+    var viewableTypes = ['.pdf', '.jpg', '.jpeg', '.png', '.gif'];
+    
     existingFiles.forEach(function(fileName) {
-        // Create download URL with nCommessa as part of the path
-        var downloadUrl = '/Pfc/DownloadFile?nCommessa=@ViewBag.nCommessa&fileName=' + encodeURIComponent(fileName);
+        var ext = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
+        var isViewable = viewableTypes.includes(ext);
         
+
+        
+var viewUrl = '/Pfc/ViewFile?nCommessa=@ViewBag.nCommessa&fileName=' + encodeURIComponent(fileName);
+var downloadUrl = '/Pfc/DownloadFile?nCommessa=@ViewBag.nCommessa&fileName=' + encodeURIComponent(fileName);
+
+var fileLink = isViewable 
+    ? '<a href="' + viewUrl + '" target="_blank">' + fileName + '</a> (<a href="' + downloadUrl + '">Download</a>)'
+    : '<a href="' + downloadUrl + '">' + fileName + '</a>';
+
         var fileItem = $('<div class="existing-file-item">' +
-                      '<div class="existing-file-name">' +
-                      '<a href="' + downloadUrl + '" download="' + fileName + '">' + fileName + '</a>' +
-                      '</div>' +
+                      '<div class="existing-file-name">' + fileLink + '</div>' +
                       '<div>' +
                       '<span class="remove-file-btn" data-filename="' + fileName + '">×</span>' +
                       '</div>' +
@@ -748,7 +756,6 @@ function displayExistingFiles() {
         filesListElement.append(fileItem);
     });
     
-    // Add new files being uploaded
     selectedFiles.forEach(function(file, index) {
         addFileToList(file, index);
     });
