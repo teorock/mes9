@@ -227,31 +227,37 @@
                 </div>               
 
 <!-- File Upload Section (Updated HTML) -->
-<div class="row mb-3">
-    <div class="col-12"><strong>Allegati</strong></div>
-</div>
-<div class="row mb-3">
-    <div class="col-md-12">
-        <div class="file-upload-container" id="fileDropZone">
-            <div class="text-center">
-                <i class="bi bi-upload fs-3"></i>
-                <p class="mb-2">Trascina i file qui o</p>
-                <label for="fileUploadInput" class="btn btn-outline-primary">Seleziona file</label>
-                <input type="file" id="fileUploadInput" multiple style="display: none;" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
-                <input type="hidden" id="folderPath" name="FolderPath" value="@ViewBag.baseFolder">
-                <p class="text-muted mt-2 small">Formati supportati: PDF, DOC, DOCX, XLS, XLSX, JPG, JPEG, PNG</p>
+<br>
+    <div class="row mb-3">
+        <div class="col-12"><strong>Allegati</strong></div>
+    </div>
+
+    <div class="row mb-2">
+        <div class="col-md-12">
+@if(!cannotCreate)
+{                
+            <div class="file-upload-container" id="fileDropZone">
+                <div class="text-center">
+                    <i class="bi bi-upload fs-3"></i>
+                    <p class="mb-2">Trascina i file qui o</p>
+                    <label for="fileUploadInput" class="btn btn-outline-primary">Seleziona file</label>
+                    <input type="file" id="fileUploadInput" multiple style="display: none;" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+                    <input type="hidden" id="folderPath" name="FolderPath" value="@ViewBag.baseFolder">
+                    <p class="text-muted mt-2 small">Formati supportati: PDF, DOC, DOCX, XLS, XLSX, JPG, JPEG, PNG</p>
+                </div>
+            </div>
+}
+            <div class="uploaded-files-list" id="uploadedFilesList">
+                <!-- Existing files from ViewBag.pfcFiles will be added here via JavaScript -->
+            </div>
+            <!-- Hidden container for file inputs and existing files input -->
+            <div id="fileInputsContainer" style="display: none;">
+                <input type="hidden" id="existingFilesInput" name="ExistingFiles" value="">
             </div>
         </div>
-        <div class="uploaded-files-list" id="uploadedFilesList">
-            <!-- Existing files from ViewBag.pfcFiles will be added here via JavaScript -->
-        </div>
-        <!-- Hidden container for file inputs and existing files input -->
-        <div id="fileInputsContainer" style="display: none;">
-            <input type="hidden" id="existingFilesInput" name="ExistingFiles" value="">
-        </div>
     </div>
-</div>
-<!-- END File Upload Section -->
+    <!-- END File Upload Section -->
+
 
 
         </div> <!-- End row --->
