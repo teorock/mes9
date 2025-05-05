@@ -16,5 +16,6 @@ namespace mes.Models.ViewModels
         public string ExternalRef { get; set; }
         public List<WorkphaseViewModel> WorkPhases { get; set; }
         public List<IFormFile> UploadedFiles { get; set; }
+        public string ExistingFiles { get; set; }
     }
 }

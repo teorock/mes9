@@ -363,73 +363,127 @@ namespace mes.Controllers
         //===================================================================
         [HttpPost]
         [Authorize(Roles ="root, PfcAggiorna, PfcCrea")]
-        public async Task<IActionResult> ModPfc(WorkorderViewModel model, string ExistingFiles)
+        public async Task<IActionResult> ModPfc(WorkorderViewModel model, string ExistingFiles, IFormFileCollection UploadedFiles)
         {
-            if (ModelState.IsValid)
+    if (ModelState.IsValid)
+    {
+        //Ottengo l'utente connesso
+        UserData userData = GetUserData();
+        //--------------------------
+        string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+        string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+        Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+
+        int completed = model.WorkPhases.Where(q => q.QualityCheck == "true").Count();
+        int toDo = model.WorkPhases.Count;
+        string allDone = "0";
+        if(completed == toDo) allDone = "1" ;
+
+        string jsonLavorazioni = JsonConvert.SerializeObject(model.WorkPhases);
+
+        PfcModel pcf2update = new PfcModel() {
+            id = model.id,
+            NumeroCommessa = model.WorkNumber,
+            Cliente = model.Customer,
+            RifEsterno = model.ExternalRef,
+            DataConsegna = Convert.ToDateTime(model.deliveryDate).ToString("dd/MM/yyyy"),
+            LavorazioniJsonString = jsonLavorazioni,
+            Progress = $"{completed}/{toDo}",
+            PfcFiles = ExistingFiles,
+            Completed = allDone,
+            Enabled = "1",
+            CreatedBy = userData.UserName,
+            CreatedOn = DateTime.Now.ToString("dd/MM/yyyy HH:mm") 
+        };
+
+        DatabaseAccessor dbAccessor = new DatabaseAccessor();
+        // Update the database record
+        var result = dbAccessor.Updater<PfcModel>(config.PfcConnString, config.PfcTable, pcf2update, model.id);
+
+        UpdateTakenCsvOrders(pcf2update.RifEsterno, pcf2update.NumeroCommessa, pcf2update.Cliente);
+
+        //---- Handle file management ----
+        string pfcPath = Path.Combine(config.BaseUploadFolder, model.WorkNumber.Replace('/','_'));
+        
+        // Ensure directory exists
+        if (!Directory.Exists(pfcPath))
+        {
+            Directory.CreateDirectory(pfcPath);
+        }
+        
+        // Parse existing files from the form submission
+        List<string> requestedExistingFiles = !string.IsNullOrEmpty(ExistingFiles) 
+            ? ExistingFiles.Split(',').Select(f => f.Trim()).ToList() 
+            : new List<string>();
+            
+        // Get files currently in the folder
+        List<string> filesInFolder = Directory.Exists(pfcPath) ? 
+            Directory.GetFiles(pfcPath).Select(f => Path.GetFileName(f)).ToList() : 
+            new List<string>();
+            
+        // Delete files that are no longer needed
+        foreach (string fileInFolder in filesInFolder)
+        {
+            if (!requestedExistingFiles.Contains(fileInFolder))
             {
-                //Ottengo l'utente connesso
-                UserData userData = GetUserData();
-                //--------------------------
-                string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
-                string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
-                Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
-
-                int completed = model.WorkPhases.Where(q => q.QualityCheck == "true").Count();
-                int toDo = model.WorkPhases.Count;
-                string allDone = "0";
-                if(completed == toDo) allDone = "1" ;
-
-                string jsonLavorazioni = JsonConvert.SerializeObject(model.WorkPhases);
-
-                PfcModel pcf2update = new PfcModel() {
-                    id = model.id,
-                    NumeroCommessa = model.WorkNumber,
-                    Cliente = model.Customer,
-                    RifEsterno = model.ExternalRef,
-                    DataConsegna = Convert.ToDateTime(model.deliveryDate).ToString("dd/MM/yyyy"),
-                    LavorazioniJsonString = jsonLavorazioni,
-                    Progress = $"{completed}/{toDo}",
-                    PfcFiles = ExistingFiles,
-                    Completed = allDone,
-                    Enabled = "1",
-                    CreatedBy = userData.UserName,
-                    CreatedOn = DateTime.Now.ToString("dd/MM/yyyy HH:mm") 
-                };
-
-                DatabaseAccessor dbAccessor = new DatabaseAccessor();
-                var result = dbAccessor.Updater<PfcModel>(config.PfcConnString, config.PfcTable, pcf2update, model.id);
-
-                UpdateTakenCsvOrders(pcf2update.RifEsterno,pcf2update.NumeroCommessa, pcf2update.Cliente);
-
-                //rimuovo eventuali files
-                //prendo quelli che c'erano prima nel database
-                List<string> previousDbFiles = dbAccessor.Queryer<PfcModel>(config.PfcConnString, config.PfcTable)
-                                                        .Where(i => i.id == model.id)
-                                                        .Select(f => f.PfcFiles).ToList();
-                
-                string pfcPath = Path.Combine(config.BaseUploadFolder,model.WorkNumber.Replace('/','_'));
-                List<string> filesInFolder = Directory.GetFiles(pfcPath).ToList();
-                List<string> actualFiles = ExistingFiles.Split(',').ToList();
-
-                foreach(string oneFile in filesInFolder)
+                string filepath = Path.Combine(pfcPath, fileInFolder);
+                try
                 {
-                    if(!actualFiles.Contains(Path.GetFileName(oneFile)))
+                    if (System.IO.File.Exists(filepath))
                     {
-                        string filepath = Path.Combine(pfcPath, oneFile);
-                        KillFile(filepath);                    
+                        System.IO.File.Delete(filepath);
+                        Log2File($"Deleted file: {filepath}");
                     }
                 }
-                //copio gli eventuali nuovi
-                foreach(string oneFile in actualFiles)
+                catch (Exception ex)
                 {
-                    if(!filesInFolder.Contains(oneFile))
-                    {
-                        string filepath = Path.Combine(pfcPath, oneFile);
-                        List<IFormFile> file2upload = new List<IFormFile>(){};
-                        //var one32go = new FormFile(filePath)
-                        //UploadFiles()      
-                    }                    
+                    Log2File($"Error deleting file {filepath}: {ex.Message}");
                 }
+            }
+        }
+        
+        // Upload new files
+        if (UploadedFiles != null && UploadedFiles.Count > 0)
+        {
+            foreach (var file in UploadedFiles)
+            {
+                if (file != null && file.Length > 0)
+                {
+                    // Create the file path
+                    string filePath = Path.Combine(pfcPath, file.FileName);
+                    
+                    try
+                    {
+                        // Save the file to disk
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
+                        
+                        Log2File($"Uploaded file: {filePath}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Log2File($"Error uploading file {file.FileName}: {ex.Message}");
+                    }
+                }
+            }
+        }
+        
+        // Update the list of files in the database
+        List<string> updatedFilesList = Directory.GetFiles(pfcPath)
+            .Select(f => Path.GetFileName(f))
+            .ToList();
+            
+        string updatedFilesString = string.Join(",", updatedFilesList);
+        
+        // Update the database with the new file list if necessary
+        if (pcf2update.PfcFiles != updatedFilesString)
+        {
+            pcf2update.PfcFiles = updatedFilesString;
+            dbAccessor.Updater<PfcModel>(config.PfcConnString, config.PfcTable, pcf2update, model.id);
+        }
+
 
                 return RedirectToAction("Index"); 
             }
@@ -695,6 +749,28 @@ namespace mes.Controllers
             return operators;
         }
 
+// Helper method to determine content type based on file extension
+private string GetContentType(string path)
+{
+    var extension = Path.GetExtension(path).ToLowerInvariant();
+    
+    return extension switch
+    {
+        ".txt" => "text/plain",
+        ".pdf" => "application/pdf",
+        ".doc" => "application/vnd.ms-word",
+        ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ".xls" => "application/vnd.ms-excel",
+        ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ".png" => "image/png",
+        ".jpg" => "image/jpeg",
+        ".jpeg" => "image/jpeg",
+        ".gif" => "image/gif",
+        _ => "application/octet-stream"
+    };
+}
+
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
@@ -734,6 +810,8 @@ namespace mes.Controllers
 
             return userData;
         }
+
+
 
         private void Log2File(string line2log)
         {

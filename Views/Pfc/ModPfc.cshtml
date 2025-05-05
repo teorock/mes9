@@ -238,10 +238,10 @@
         <div class="uploaded-files-list" id="uploadedFilesList">
             <!-- Existing files from ViewBag.pfcFiles will be added here via JavaScript -->
         </div>
-        <!-- Hidden container for file inputs -->
-        <div id="fileInputsContainer" style="display: none;"></div>
-        <!-- Hidden input for existing files -->
-        <input type="hidden" id="existingFilesInput" name="ExistingFiles" value="">
+        <!-- Hidden container for file inputs and existing files input -->
+        <div id="fileInputsContainer" style="display: none;">
+            <input type="hidden" id="existingFilesInput" name="ExistingFiles" value="">
+        </div>
     </div>
 </div>
 <!-- END File Upload Section -->
@@ -846,8 +846,16 @@ function updateFileInputs() {
 
 // Add or update the hidden input for existing files
 function updateExistingFilesInput() {
-    // Update the value of the existing hidden input
+    // Make sure the hidden input exists
+    if ($('#existingFilesInput').length === 0) {
+        $('<input type="hidden" id="existingFilesInput" name="ExistingFiles" value="">').appendTo('#fileInputsContainer');
+    }
+    
+    // Update the value of the existing hidden input with current existingFiles array
     $('#existingFilesInput').val(existingFiles.join(','));
+    
+    // Log for debugging
+    console.log("Updated ExistingFiles input with value: " + existingFiles.join(','));
 }
 
 // Handle file removal
@@ -902,10 +910,14 @@ $dropZone.on('click', function(e) {
 });
 
 // Make sure form submission includes the ExistingFiles field
-$('#worktableForm').on('submit', function() {
-    // Make sure inputs are updated one last time before submission
-    updateFileInputs();
+$('#worktableForm').on('submit', function(e) {
+    // Make sure ExistingFiles is updated before submission
     updateExistingFilesInput();
+    
+    // Debug logging
+    console.log("Form submitted with ExistingFiles: " + $('#existingFilesInput').val());
+    
+    // Continue with form submission
     return true;
 });
 
