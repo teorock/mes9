@@ -47,62 +47,68 @@
         .checkbox-dropdown .form-check-label { cursor: pointer; width: 100%; }
         .checkbox-dropdown .btn.is-invalid { border-color: var(--bs-danger); }
 
-/* File upload styles */
-.file-upload-container {
-    border: 2px dashed #ced4da;
-    border-radius: 5px;
-    padding: 20px;
-    text-align: center;
-    margin-bottom: 20px;
-    transition: all 0.3s ease;
-}
+        /* File upload styles */
+        .file-upload-container {
+            border: 2px dashed #ced4da;
+            border-radius: 5px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
 
-.file-upload-container:hover {
-    border-color: #6c757d;
-}
+        .file-upload-container:hover {
+            border-color: #6c757d;
+        }
 
-.file-upload-container.dragover {
-    background-color: #f8f9fa;
-    border-color: #28a745;
-}
+        .file-upload-container.dragover {
+            background-color: #f8f9fa;
+            border-color: #28a745;
+        }
 
-.uploaded-files-list {
-    margin-top: 15px;
-    max-height: 200px;
-    overflow-y: auto;
-}
+        .uploaded-files-list {
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
 
-.uploaded-file-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 12px;
-    margin-bottom: 5px;
-    background-color: #f8f9fa;
-    border-radius: 4px;
-}
+        .uploaded-file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
 
-.remove-file-btn {
-    color: #dc3545;
-    cursor: pointer;
-    padding: 0 5px;
-}
+        .remove-file-btn {
+            color: #dc3545;
+            cursor: pointer;
+            padding: 0 5px;
+        }
 
-.existing-file-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 12px;
-    margin-bottom: 5px;
-    background-color: #e9ecef;
-    border-radius: 4px;
-}
+        .existing-file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+        }
 
-.existing-file-name {
-    font-weight: 500;
-}
+        .existing-file-name {
+            font-weight: 500;
+        }
 
-
+        .existing-file-name a {
+            color: #0d6efd;
+            text-decoration: none;
+        }
+        .existing-file-name a:hover {
+            text-decoration: underline;
+        }
     </style>
 }
 
@@ -727,8 +733,13 @@ function displayExistingFiles() {
     
     // Add existing files
     existingFiles.forEach(function(fileName) {
+        // Create download URL with nCommessa as part of the path
+        var downloadUrl = '/Pfc/DownloadFile?nCommessa=@ViewBag.nCommessa&fileName=' + encodeURIComponent(fileName);
+        
         var fileItem = $('<div class="existing-file-item">' +
-                      '<div class="existing-file-name">' + fileName + '</div>' +
+                      '<div class="existing-file-name">' +
+                      '<a href="' + downloadUrl + '" download="' + fileName + '">' + fileName + '</a>' +
+                      '</div>' +
                       '<div>' +
                       '<span class="remove-file-btn" data-filename="' + fileName + '">×</span>' +
                       '</div>' +

@@ -683,6 +683,50 @@ namespace mes.Controllers
             }
         }
 
+public IActionResult DownloadFile(string nCommessa, string fileName)
+{
+    if (string.IsNullOrEmpty(nCommessa) || string.IsNullOrEmpty(fileName))
+    {
+        return NotFound();
+    }
+
+    // Sanitize the filename to prevent directory traversal
+    var sanitizedFileName = Path.GetFileName(fileName);
+    if (string.IsNullOrEmpty(sanitizedFileName))
+    {
+        return NotFound();
+    }
+
+    // Construct the full path
+    var fullPath = Path.Combine(
+        config.BaseUploadFolder,  // Your base upload folder from config
+        //"pfcUploadedFile",       // Fixed part of the path
+        $"{nCommessa}_{DateTime.Now.Year}",               // The commessa number
+        sanitizedFileName        // The actual file name
+    );
+
+    // Verify the file exists
+    if (!System.IO.File.Exists(fullPath))
+    {
+        return NotFound();
+    }
+
+    // Determine content type (you might want to expand this)
+    var contentType = "application/octet-stream";
+    var ext = Path.GetExtension(fullPath).ToLowerInvariant();
+    if (ext == ".pdf") contentType = "application/pdf";
+    else if (ext == ".jpg" || ext == ".jpeg") contentType = "image/jpeg";
+    else if (ext == ".png") contentType = "image/png";
+    else if (ext == ".doc") contentType = "application/msword";
+    else if (ext == ".docx") contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    else if (ext == ".xls") contentType = "application/vnd.ms-excel";
+    else if (ext == ".xlsx") contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+    // Return the file
+    var fileStream = System.IO.File.OpenRead(fullPath);
+    return File(fileStream, contentType, fileName);
+}
+
 
         public IActionResult LoadCsvToDatabase(string file2load, out string internalMessage)
         {
