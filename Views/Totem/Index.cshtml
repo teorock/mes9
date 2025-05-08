@@ -234,7 +234,7 @@
 </style>
 
 <div class="row">
-    <div class="col-md-9">
+    <div class="col-md-8">
         <div class="card" id="navigator-card">
             <div class="card-body">
                 <div class="week-navigator">
@@ -251,7 +251,12 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
+        <a class="btn btn-outline-primary btn-block" id="backtothefuture">
+            <img src="/images/ritorna_a_oggi_btn.png?v=1.0" alt="Image" style="max-width: 100%; height: auto; margin-right: 10px; border-radius: 5px;">
+        </a>
+    </div>    
+    <div class="col-md-2">
         <a class="btn btn-outline-primary btn-block" asp-controller="Totem" asp-action="Index" asp-route-startDate="@displayedWeek" asp-route-showActive="@showActiveButton" id="btnCompletate">@btnCaption</a>
     </div>
 </div>
@@ -519,6 +524,11 @@
         };
     }
     
+    //Back to the future
+        $('#backtothefuture').on('click', function() {
+             window.location.href = `/Totem/index?totemnumber=1&startDate=${"@ViewBag.backToTheFuture"}&showActive=1`;
+        });
+
     // Navigate to another week
     function navigateToWeek(date) {
         const boundaries = getWeekBoundaries(date);

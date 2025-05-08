@@ -108,6 +108,8 @@ namespace mes.Controllers
             ViewBag.scrollDuration = config.ScrollDuration;
             ViewBag.cardRemove = config.CardRemove;
 
+            ViewBag.backToTheFuture = DateTime.Now.ToString("yyyy-MM-dd");
+
             return View();
         }
 
