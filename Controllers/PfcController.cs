@@ -87,7 +87,7 @@ namespace mes.Controllers
             List<ClienteViewModel> clienti = dbAccessor.Queryer<ClienteViewModel>(config.ConnString2, config.CustomerTable)
                                                         .Where(e => e.Enabled =="1").ToList();
 
-            List<string> customers = clienti.Select(n => n.Nome).ToList();
+            List<string> customers = clienti.OrderBy(nome => nome.Nome).Select(n => n.Nome).ToList();
             ViewBag.Customers = customers;
 
 
@@ -181,8 +181,14 @@ namespace mes.Controllers
 
                 string jsonLavorazioni = JsonConvert.SerializeObject(inputModel.WorkPhases);
 
-                await UploadFiles(inputModel.UploadedFiles, $"{inputModel.WorkNumber.Replace('/','_')}");
-                string allFiles = String.Join(",", inputModel.UploadedFiles.Select(n => n.FileName));
+                //upload no file
+                string allFiles = "";
+
+                if(inputModel.UploadedFiles is not null)
+                {
+                    await UploadFiles(inputModel.UploadedFiles, $"{inputModel.WorkNumber.Replace('/','_')}");
+                    allFiles = String.Join(",", inputModel.UploadedFiles.Select(n => n.FileName));
+                }
 
                 PfcModel pcf2insert = new PfcModel() {
                     id=inputModel.id,
