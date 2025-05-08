@@ -242,15 +242,44 @@ namespace mes.Controllers
 
         private void UpdateTakenCsvOrders(string takenOrders, string pfcNumber, string daneaCustomer)
         {
-            //to do: 
-            //update Taken & PfcNumber
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<PfcCsvDaneaSourceID> allDaneaOrders = new List<PfcCsvDaneaSourceID>();
+
             allDaneaOrders = dbAccessor.Queryer<PfcCsvDaneaSourceID>(config.PfcConnString, config.CsvDaneaTable)
-                                        //.Where(t => t.Taken =="0")
                                         .Where(c => c.Cliente == daneaCustomer).ToList();
 
-            string[] takenCsvOrders = takenOrders.Split(',');
+            //to do: 
+                        //sganciare csv se deselezionati
+                        // 1 - quali csv erano associati a questo pfc
+                        // 2 - se zero esco
+                        // 3 - se di quelli già selezionati ne mancano, li deseleziono
+                        //procedo come al solito
+            List<string> takenCsvOrders = takenOrders.Split(',').ToList();
+
+            List<PfcCsvDaneaSourceID> relatedDaneaOrders = new List<PfcCsvDaneaSourceID>();
+            relatedDaneaOrders = dbAccessor.Queryer<PfcCsvDaneaSourceID>(config.PfcConnString, config.CsvDaneaTable)
+                                        .Where(t => t.Taken =="1")
+                                        .Where(p =>p.PfcNumber == pfcNumber).ToList();
+ 
+            if(relatedDaneaOrders.Count !=0)
+            {
+                foreach(var oneRelated in relatedDaneaOrders)
+                {
+                    if(!takenCsvOrders.Contains(oneRelated.NCommessa))
+                    {
+                        // lo deselezioni
+                        oneRelated.Taken = "0";
+                        oneRelated.PfcNumber = "---";
+                        int res = dbAccessor.Updater<PfcCsvDaneaSourceID>(config.PfcConnString, config.CsvDaneaTable, oneRelated, oneRelated.id);
+
+                    }
+                }
+            }
+
+            allDaneaOrders = dbAccessor.Queryer<PfcCsvDaneaSourceID>(config.PfcConnString, config.CsvDaneaTable)
+                                        .Where(c => c.Cliente == daneaCustomer).ToList();
+
+            
             foreach(string oneCvs in takenCsvOrders)
             {                    
                 PfcCsvDaneaSourceID takenId2update = allDaneaOrders.Where(n => n.NCommessa == oneCvs).FirstOrDefault();
@@ -372,36 +401,38 @@ namespace mes.Controllers
         [Authorize(Roles ="root, PfcAggiorna, PfcCrea")]
         public async Task<IActionResult> ModPfc(WorkorderViewModel model, string ExistingFiles, IFormFileCollection UploadedFiles)
         {
-    if (ModelState.IsValid)
-    {
-        //Ottengo l'utente connesso
-        UserData userData = GetUserData();
-        //--------------------------
-        string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
-        string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
-        Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
+            if (ModelState.IsValid)
+            {
+                //Ottengo l'utente connesso
+                UserData userData = GetUserData();
+                //--------------------------
+                string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
+                string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
+                Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
 
-        int completed = model.WorkPhases.Where(q => q.QualityCheck == "true").Count();
-        int toDo = model.WorkPhases.Count;
-        string allDone = "0";
-        if(completed == toDo) allDone = "1" ;
+                int completed = model.WorkPhases.Where(q => q.QualityCheck == "true").Count();
+                int toDo = model.WorkPhases.Count;
+                string allDone = "0";
+                if(completed == toDo) allDone = "1" ;
 
-        string jsonLavorazioni = JsonConvert.SerializeObject(model.WorkPhases);
+                string jsonLavorazioni = JsonConvert.SerializeObject(model.WorkPhases);
 
-        //devo fare il Join dei files esistenti e di quelli nuovi eventuali
-        //string filesCsv = String.Join(",", UploadedFiles.Select(f => f.FileName));
-        //string allFiles = ExistingFiles + filesCsv;
+                //devo fare il Join dei files esistenti e di quelli nuovi eventuali
+                //string filesCsv = String.Join(",", UploadedFiles.Select(f => f.FileName));
+                //string allFiles = ExistingFiles + filesCsv;
 
-        //if(ExistingFiles is null) ExistingFiles = "";
-        //var allFiles = String.Join(",",ExistingFiles.Split(',')
-        //          .Concat(UploadedFiles.Select(f => f.FileName))
-        //          .ToList());
+                //if(ExistingFiles is null) ExistingFiles = "";
+                //var allFiles = String.Join(",",ExistingFiles.Split(',')
+                //          .Concat(UploadedFiles.Select(f => f.FileName))
+                //          .ToList());
 
-var allFilesCsv = string.Join(",",
-    (ExistingFiles?.Split(',', StringSplitOptions.RemoveEmptyEntries) ?? Enumerable.Empty<string>())
-    .Concat(UploadedFiles?.Select(f => f.FileName) ?? Enumerable.Empty<string>())
-    .Where(x => !string.IsNullOrWhiteSpace(x))
-);
+        var allFilesCsv = string.Join(",",
+            (ExistingFiles?.Split(',', StringSplitOptions.RemoveEmptyEntries) ?? Enumerable.Empty<string>())
+            .Concat(UploadedFiles?.Select(f => f.FileName) ?? Enumerable.Empty<string>())
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+        );
+
+        //get csv previous state
 
 
         PfcModel pcf2update = new PfcModel() {
