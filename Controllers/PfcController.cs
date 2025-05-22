@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using mes.Models.ControllersConfigModels;
@@ -229,7 +230,9 @@ namespace mes.Controllers
                 {
                     if (file.Length > 0)
                     {
-                        string filePath = Path.Combine(uploadFolder,pfcFolder, file.FileName);
+                        string betterFileName = file.FileName.Replace(' ','_');
+                        //string filePath = Path.Combine(uploadFolder,pfcFolder, file.FileName);
+                        string filePath = Path.Combine(uploadFolder,pfcFolder, betterFileName);
                         if(!Directory.Exists(Path.GetDirectoryName(filePath))) Directory.CreateDirectory(Path.GetDirectoryName(filePath));
                         using (var stream = new FileStream(filePath, FileMode.Create))
                         {
@@ -661,6 +664,8 @@ namespace mes.Controllers
                 }
             }
 
+            //check completezza campi del csv che si vuole caricare
+
             try
             {
                 // Use the file upload service with specific settings for CSV files
@@ -675,7 +680,13 @@ namespace mes.Controllers
                     string additionaMessage ="";
                     LoadCsvToDatabase(result.FilePath, out additionaMessage);
 
-                    string successMessage = $"Caricato file: {Path.GetFileName(result.FilePath)} - {additionaMessage}";
+                    string successMessage = "";
+                    if(additionaMessage != "")
+                    {
+                        successMessage = additionaMessage;
+                    } else {
+                        successMessage = $"Caricato file: {Path.GetFileName(result.FilePath)} - {additionaMessage}";
+                    }
                     
                     if (isAjaxRequest)
                     {
@@ -737,48 +748,48 @@ namespace mes.Controllers
             }
         }
 
-public IActionResult DownloadFile(string nCommessa, string fileName)
-{
-    if (string.IsNullOrEmpty(nCommessa) || string.IsNullOrEmpty(fileName))
+    public IActionResult DownloadFile(string nCommessa, string fileName)
     {
-        return NotFound();
+        if (string.IsNullOrEmpty(nCommessa) || string.IsNullOrEmpty(fileName))
+        {
+            return NotFound();
+        }
+
+        // Sanitize the filename to prevent directory traversal
+        var sanitizedFileName = Path.GetFileName(fileName);
+        if (string.IsNullOrEmpty(sanitizedFileName))
+        {
+            return NotFound();
+        }
+
+        // Construct the full path
+        var fullPath = Path.Combine(
+            config.BaseUploadFolder,
+            $"{nCommessa}_{DateTime.Now.Year}",
+            sanitizedFileName
+        );
+
+        // Verify the file exists
+        if (!System.IO.File.Exists(fullPath))
+        {
+            return NotFound();
+        }
+
+        // Determine content type (you might want to expand this)
+        var contentType = "application/octet-stream";
+        var ext = Path.GetExtension(fullPath).ToLowerInvariant();
+        if (ext == ".pdf") contentType = "application/pdf";
+        else if (ext == ".jpg" || ext == ".jpeg") contentType = "image/jpeg";
+        else if (ext == ".png") contentType = "image/png";
+        else if (ext == ".doc") contentType = "application/msword";
+        else if (ext == ".docx") contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        else if (ext == ".xls") contentType = "application/vnd.ms-excel";
+        else if (ext == ".xlsx") contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+        // Return the file
+        var fileStream = System.IO.File.OpenRead(fullPath);
+        return File(fileStream, contentType, fileName);
     }
-
-    // Sanitize the filename to prevent directory traversal
-    var sanitizedFileName = Path.GetFileName(fileName);
-    if (string.IsNullOrEmpty(sanitizedFileName))
-    {
-        return NotFound();
-    }
-
-    // Construct the full path
-    var fullPath = Path.Combine(
-        config.BaseUploadFolder,
-        $"{nCommessa}_{DateTime.Now.Year}",
-        sanitizedFileName
-    );
-
-    // Verify the file exists
-    if (!System.IO.File.Exists(fullPath))
-    {
-        return NotFound();
-    }
-
-    // Determine content type (you might want to expand this)
-    var contentType = "application/octet-stream";
-    var ext = Path.GetExtension(fullPath).ToLowerInvariant();
-    if (ext == ".pdf") contentType = "application/pdf";
-    else if (ext == ".jpg" || ext == ".jpeg") contentType = "image/jpeg";
-    else if (ext == ".png") contentType = "image/png";
-    else if (ext == ".doc") contentType = "application/msword";
-    else if (ext == ".docx") contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-    else if (ext == ".xls") contentType = "application/vnd.ms-excel";
-    else if (ext == ".xlsx") contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-
-    // Return the file
-    var fileStream = System.IO.File.OpenRead(fullPath);
-    return File(fileStream, contentType, fileName);
-}
 
 public IActionResult ViewFile(string nCommessa, string fileName)
 {
@@ -823,6 +834,15 @@ public IActionResult ViewFile(string nCommessa, string fileName)
             PfcServices pfcServices = new PfcServices();
             List<PfcCsvDaneaSource> csvFile = pfcServices.LoadCsvDaneaToList(file2load, config.CsvFilter1, config.CsvFilter2);
             
+            // controllo se ci sono oggetti vuoti
+            GeneralPurpose genPurpose = new GeneralPurpose();
+            bool invalidList = genPurpose.HasEmptyOrNullStringProperty<PfcCsvDaneaSource>(csvFile);
+            if(invalidList)
+            {
+                internalMessage = "File .csv contiene campi vuoti - non caricato";
+                return RedirectToAction("CsvOrderUpload");
+            }
+
             //mette la lista su database
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
 
@@ -849,9 +869,9 @@ public IActionResult ViewFile(string nCommessa, string fileName)
                 internalMessage = $"caricati {newOnes.Count} nuovi record";
             }
 
-
             return RedirectToAction("CsvOrderUpload");
         }
+
 
         private List<string>GetCustomersList()
         {

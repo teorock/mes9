@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace mes.Models.Services.Infrastructures
@@ -268,6 +269,46 @@ namespace mes.Models.Services.Infrastructures
                 sw.WriteLine($"{DateTime.Now} -> {line2log}");
             }
         }  
+
+    public bool HasEmptyOrNullStringProperty<T>(List<T> objects)
+    {
+        if (objects == null)
+        {
+            Console.WriteLine("The input list of objects is null.");
+            return false; // Or throw an ArgumentNullException, depending on desired behavior
+        }
+
+        foreach (var obj in objects)
+        {
+            if (obj == null) // Check if an individual object in the list is null
+            {
+                Console.WriteLine("A null object was found within the list.");
+                return true; // A null object implicitly means "empty" from a certain perspective
+            }
+
+            // Get all public instance properties of the object's type
+            // This works for any type 'T' because Reflection operates on the runtime type.
+            PropertyInfo[] properties = obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            foreach (PropertyInfo prop in properties)
+            {
+                // Check if the property is a string type
+                if (prop.PropertyType == typeof(string))
+                {
+                    // Get the property value for the current object
+                    string value = (string)prop.GetValue(obj);
+
+                    // Use string.IsNullOrEmpty for robust check (covers null and "")
+                    if (string.IsNullOrEmpty(value))
+                    {
+                        Console.WriteLine($"Object of type '{obj.GetType().Name}' has an empty or null string property: '{prop.Name}' with value: '{value ?? "null"}'");
+                        return true; // Found one, no need to check further
+                    }
+                }
+            }
+        }
+        return false; // No empty or null string properties found
+    }        
 
     }
 }
