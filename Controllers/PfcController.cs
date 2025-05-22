@@ -190,7 +190,7 @@ namespace mes.Controllers
                 {
                     await UploadFiles(inputModel.UploadedFiles, $"{inputModel.WorkNumber.Replace('/', '_')}");
                     //allFiles = String.Join(",", inputModel.UploadedFiles.Select(n => n.FileName));
-                    allFiles = String.Join(",", inputModel.UploadedFiles.Select(n => n.FileName.Replace(' ','_')));
+                    allFiles = String.Join(",", inputModel.UploadedFiles.Select(n => n.FileName.Replace(' ','_').Replace('\'', '_')));
                 }
 
                 PfcModel pcf2insert = new PfcModel() {
@@ -232,7 +232,7 @@ namespace mes.Controllers
                 {
                     if (file.Length > 0)
                     {
-                        string betterFileName = file.FileName.Replace(' ','_');
+                        string betterFileName = file.FileName.Replace(' ', '_').Replace('\'', '_');
                         //string filePath = Path.Combine(uploadFolder,pfcFolder, file.FileName);
                         string filePath = Path.Combine(uploadFolder,pfcFolder, betterFileName);
                         if(!Directory.Exists(Path.GetDirectoryName(filePath))) Directory.CreateDirectory(Path.GetDirectoryName(filePath));
