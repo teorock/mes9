@@ -186,10 +186,11 @@ namespace mes.Controllers
                 //upload no file
                 string allFiles = "";
 
-                if(inputModel.UploadedFiles is not null)
+                if (inputModel.UploadedFiles is not null)
                 {
-                    await UploadFiles(inputModel.UploadedFiles, $"{inputModel.WorkNumber.Replace('/','_')}");
-                    allFiles = String.Join(",", inputModel.UploadedFiles.Select(n => n.FileName));
+                    await UploadFiles(inputModel.UploadedFiles, $"{inputModel.WorkNumber.Replace('/', '_')}");
+                    //allFiles = String.Join(",", inputModel.UploadedFiles.Select(n => n.FileName));
+                    allFiles = String.Join(",", inputModel.UploadedFiles.Select(n => n.FileName.Replace(' ','_')));
                 }
 
                 PfcModel pcf2insert = new PfcModel() {
