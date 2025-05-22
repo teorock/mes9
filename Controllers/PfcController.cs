@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -837,9 +838,16 @@ public IActionResult ViewFile(string nCommessa, string fileName)
             // controllo se ci sono oggetti vuoti
             GeneralPurpose genPurpose = new GeneralPurpose();
             bool invalidList = genPurpose.HasEmptyOrNullStringProperty<PfcCsvDaneaSource>(csvFile);
+            bool hasInvalidDate = HasInvalidDateFormats<PfcCsvDaneaSource>(csvFile);
             if(invalidList)
             {
                 internalMessage = "File .csv contiene campi vuoti - non caricato";
+                return RedirectToAction("CsvOrderUpload");
+            }
+
+            if(hasInvalidDate)
+            {
+                internalMessage = "File .csv contiene date in formati non corretti - non caricato";
                 return RedirectToAction("CsvOrderUpload");
             }
 
@@ -872,6 +880,55 @@ public IActionResult ViewFile(string nCommessa, string fileName)
             return RedirectToAction("CsvOrderUpload");
         }
 
+    private bool HasInvalidDateFormats<T>(List<T> dataList)
+    {
+        if (dataList == null)
+        {
+            // It's often better to throw an ArgumentNullException here if null lists are unexpected.
+            // For now, we'll return false, assuming an empty/null list means no invalid dates.
+            Console.WriteLine("The input list is null. No date formats to check.");
+            return false;
+        }
+
+        // Using .Any() to efficiently stop at the first invalid date found
+        bool hasInvalid = dataList.Any(obj =>
+        {
+            if (obj == null)
+            {
+                //Console.WriteLine("Found a null object in the list. This could indicate invalid data.");
+                return true; // A null object in the list is often considered "invalid" for validation purposes
+            }
+
+            DateTime dummyDate; // Used to capture the parsed date if successful
+
+            // Use reflection to get the values of "Data" and "DataConsegna"
+            // This makes the method truly generic even though it's looking for specific property *names*.
+            // If the properties don't exist on T, GetProperty will return null, and we'll skip the check.
+            PropertyInfo dataProp = typeof(T).GetProperty("Data", BindingFlags.Public | BindingFlags.Instance);
+            PropertyInfo dataConsegnaProp = typeof(T).GetProperty("DataConsegna", BindingFlags.Public | BindingFlags.Instance);
+
+            string dataValue = dataProp?.GetValue(obj) as string;
+            string dataConsegnaValue = dataConsegnaProp?.GetValue(obj) as string;
+
+            // Check 'Data' property
+            if (!string.IsNullOrEmpty(dataValue) && !DateTime.TryParse(dataValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out dummyDate))
+            {
+                //Console.WriteLine($"Invalid date format detected in 'Data' property: '{dataValue}' for object type '{typeof(T).Name}'.");
+                return true; // Invalid date found in 'Data'
+            }
+
+            // Check 'DataConsegna' property
+            if (!string.IsNullOrEmpty(dataConsegnaValue) && !DateTime.TryParse(dataConsegnaValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out dummyDate))
+            {
+                //Console.WriteLine($"Invalid date format detected in 'DataConsegna' property: '{dataConsegnaValue}' for object type '{typeof(T).Name}'.");
+                return true; // Invalid date found in 'DataConsegna'
+            }
+
+            return false; // No invalid date format for this specific object
+        });
+
+        return hasInvalid;
+    }
 
         private List<string>GetCustomersList()
         {
