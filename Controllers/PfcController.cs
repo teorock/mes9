@@ -433,7 +433,7 @@ namespace mes.Controllers
 
         var allFilesCsv = string.Join(",",
             (ExistingFiles?.Split(',', StringSplitOptions.RemoveEmptyEntries) ?? Enumerable.Empty<string>())
-            .Concat(UploadedFiles?.Select(f => f.FileName) ?? Enumerable.Empty<string>())
+            .Concat(UploadedFiles?.Select(f => f.FileName.Replace(' ','_').Replace('\'','_')) ?? Enumerable.Empty<string>())
             .Where(x => !string.IsNullOrWhiteSpace(x))
         );
 

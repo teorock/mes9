@@ -295,6 +295,30 @@
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
 
 <script>
+
+
+    // Helper function to sanitize filenames
+    function sanitizeFilename(filename) {
+        // Keep only letters, numbers, dots (for extensions), and replace everything else with '_'
+        // Also preserve the file extension
+        var ext = filename.substring(filename.lastIndexOf('.'));
+        var name = filename.substring(0, filename.lastIndexOf('.'));
+        
+        // Replace all non-alphanumeric characters with underscore
+        var sanitized = name.replace(/[^a-zA-Z0-9]/g, '_');
+        
+        // Remove consecutive underscores
+        sanitized = sanitized.replace(/_+/g, '_');
+        
+        // Remove leading/trailing underscores
+        sanitized = sanitized.replace(/^_+|_+$/g, '');
+        
+        // If name is empty after sanitization (e.g., original was all symbols), use 'file'
+        if (sanitized === '') sanitized = 'file';
+        
+        return sanitized + ext.toLowerCase();
+    }
+
     $(document).ready(function() {
         // Apply customer-required class initially if no customer is selected
         function checkCustomerSelection() {
@@ -513,30 +537,48 @@
                     continue;
                 }
                 
-                // Add file to array
-                selectedFiles.push(file);
+                // Sanitize the filename before adding to array
+                var sanitizedFile = new File([file], sanitizeFilename(file.name), {
+                    type: file.type,
+                    lastModified: file.lastModified
+                });
+                // Store original name for display purposes
+                sanitizedFile.originalName = file.name;
                 
-                // Add file to display list
-                addFileToList(file, selectedFiles.length - 1);
+                // Add sanitized file to array
+                selectedFiles.push(sanitizedFile);
             }
             
-            // Update hidden input for form submission
+            // Refresh the display list
+            $('#uploadedFilesList').empty();
+            selectedFiles.forEach(function(file, index) {
+                addFileToList(file, index);
+            });
+            
+            // Update hidden input
             updateFileInput();
         }
         
         // Add a file to the display list
-        function addFileToList(file, index) {
-            var fileSize = formatFileSize(file.size);
-            var fileItem = $('<div class="uploaded-file-item">' +
-                            '<div class="file-info">' +
-                            '<span class="file-name">' + file.name + '</span> ' +
-                            '<span class="file-size text-muted">(' + fileSize + ')</span>' +
-                            '</div>' +
-                            '<span class="remove-file-btn" data-index="' + index + '">×</span>' +
-                            '</div>');
-            
-            $('#uploadedFilesList').append(fileItem);
-        }
+function addFileToList(file, index) {
+    var fileSize = formatFileSize(file.size);
+    var displayText = file.name;
+    
+    // Show a note if the filename was changed
+    if (file.originalName && file.originalName !== file.name) {
+        displayText = file.name + ' (originale: ' + file.originalName + ')';
+    }
+    
+    var fileItem = $('<div class="uploaded-file-item">' +
+                    '<div class="file-info">' +
+                    '<span class="file-name">' + displayText + '</span> ' +
+                    '<span class="file-size text-muted">(' + fileSize + ')</span>' +
+                    '</div>' +
+                    '<span class="remove-file-btn" data-index="' + index + '">×</span>' +
+                    '</div>');
+    
+    $('#uploadedFilesList').append(fileItem);
+}
         
         // Format file size
         function formatFileSize(bytes) {
