@@ -837,19 +837,19 @@ public IActionResult ViewFile(string nCommessa, string fileName)
             
             // controllo se ci sono oggetti vuoti
             GeneralPurpose genPurpose = new GeneralPurpose();
-            bool invalidList = genPurpose.HasEmptyOrNullStringProperty<PfcCsvDaneaSource>(csvFile);
-            bool hasInvalidDate = HasInvalidDateFormats<PfcCsvDaneaSource>(csvFile);
-            if(invalidList)
-            {
-                internalMessage = "File .csv contiene campi vuoti - non caricato";
-                return RedirectToAction("CsvOrderUpload");
-            }
+            //bool invalidList = genPurpose.HasEmptyOrNullStringProperty<PfcCsvDaneaSource>(csvFile);
+            //bool hasInvalidDate = HasInvalidDateFormats<PfcCsvDaneaSource>(csvFile);
+            //if(invalidList)
+            //{
+            //    internalMessage = "File .csv contiene campi vuoti - non caricato";
+            //    return RedirectToAction("CsvOrderUpload");
+            //}
 
-            if(hasInvalidDate)
-            {
-                internalMessage = "File .csv contiene date in formati non corretti - non caricato";
-                return RedirectToAction("CsvOrderUpload");
-            }
+            //if(hasInvalidDate)
+            //{
+            //    internalMessage = "File .csv contiene date in formati non corretti - non caricato";
+            //    return RedirectToAction("CsvOrderUpload");
+            //}
 
             //mette la lista su database
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
