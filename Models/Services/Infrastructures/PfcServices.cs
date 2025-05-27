@@ -38,8 +38,5 @@ namespace mes.Models.Services.Infrastructures
 
             return result;
         }
-
     }
-
-
 }

@@ -48,14 +48,22 @@ namespace mes.Controllers
         }
 
         [Authorize(Roles ="root, PfcAggiorna, PfcCrea, PfcLeggi")]
-        public IActionResult Index()
+        public IActionResult Index(string filterCompleted)
         {
             UserData userData = GetUserData();
             //--------------------------
             string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
             string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
-            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");            
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
             //--------------------------
+            string removeCaption = "";
+            if (filterCompleted is null)
+            {
+                filterCompleted = "0";
+                removeCaption = "rimuovi completati";
+            }
+
+
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<PfcModel> allPfc = dbAccessor.Queryer<PfcModel>(config.PfcConnString, config.PfcTable);
 
@@ -64,7 +72,21 @@ namespace mes.Controllers
                 allPfc = allPfc.Where(c => c.Completed == "0").ToList();                
             }
 
+            if (filterCompleted == "1")
+            {
+                allPfc = allPfc.Where(c => c.Completed == "0").ToList();
+                filterCompleted = "0";
+                removeCaption = "mostra completati";
+            }
+            else
+            {
+                filterCompleted = "1";
+                removeCaption = "rimuovi completati";
+            }
+
             ViewBag.userRoles = userData.UserRoles;
+            ViewBag.filter = filterCompleted;
+            ViewBag.removeCaption = removeCaption;
 
             return View(allPfc);
         }

@@ -61,7 +61,17 @@
 <h2>gestione moduli pfc</h2>
 <br>
 <br>
-<h4>moduli presenti</h4>
+<div class="row">
+    <div class="col-md-3">
+    </div>
+    <div class="col-md-7">
+
+    </div>
+    <div class="col-md-2">
+        <a class="btn btn btn-outline-primary" asp-controller="Pfc" asp-action="Index" asp-route-filterCompleted="@ViewBag.filter">@ViewBag.removeCaption</a>
+    </div>
+</div>
+
 <hr>
 @using(Html.BeginForm("AggiornaCommesse", "PfcController", FormMethod.Post, new { name = "frmAggCommesse", id = "frmAggCommesse" }))
 {
