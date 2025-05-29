@@ -6,45 +6,52 @@
 @{
     string userRoles = ViewBag.userRoles;
     bool authorize = false;
-    if(userRoles.Contains("PfcAggiorna") || userRoles.Contains("PfcCrea") || userRoles.Contains("root")) authorize = true;
+    if (userRoles.Contains("PfcAggiorna") || userRoles.Contains("PfcCrea") || userRoles.Contains("root")) authorize = true;
 
     bool productionFilter = false;
-    if(userRoles.Contains("PfcAggiorna")) productionFilter = true;
+    if (userRoles.Contains("PfcAggiorna")) productionFilter = true;
 
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.0.8/css/dataTables.dataTables.min.css"/>
-<script src="https://cdn.tailwindcss.com"></script>
-
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 
 <style>
-    /* Your existing styles */
+    /* Unified styling for both views */
     table, th {
         font-size: 16px;
         text-align: center;
     }
+    
     input {
         font-size: 14px;
-        background-color: transparent; /* Use transparent instead of 'none' for background-color */
+        background-color: transparent;
         text-align: center;
     }
 
+    /* Reduced spacing between inputs */
     table#pfcTable.dataTable td {
         font-size: 14px;
         text-align: center;
-        padding: 12px 8px !important; 
+        padding: 6px 4px !important; /* Reduced from 12px 8px */
     }
 
+    /* Tighter input fields */
+    input.form-control {
+        padding: 2px 4px !important; /* Reduced padding */
+        height: 28px !important; /* Smaller height */
+        margin: -2px 0 !important; /* Compensate for spacing */
+    }
 
     input:hover {
         background-color: gold;
     }
+    
     input:focus {
         background-color: lightyellow;
     }
 
-    /* DataTables specific styling adjustments (copied from previous example for consistency) */
+    /* DataTables styling */
     .dataTables_wrapper .dataTables_filter input {
         border: 1px solid #d1d5db;
         border-radius: 8px;
@@ -53,24 +60,32 @@
         outline: none;
         transition: border-color 0.2s ease-in-out;
     }
+    
     .dataTables_wrapper .dataTables_filter input:focus {
         border-color: #3b82f6;
     }
+    
+    /* Fixed select arrow overlap */
     .dataTables_wrapper .dataTables_length select {
         border: 1px solid #d1d5db;
         border-radius: 4px;
         padding: 4px 8px;
+        padding-right: 30px !important; /* Added space for arrow */
         margin-right: 4px;
         outline: none;
         transition: border-color 0.2s ease-in-out;
+        background-position: calc(100% - 8px) center !important;
     }
+    
     .dataTables_wrapper .dataTables_length select:focus {
         border-color: #3b82f6;
     }
+    
     .dataTables_info, .dataTables_paginate {
         margin-top: 16px;
         color: #6b7280;
     }
+    
     .dataTables_paginate .paginate_button {
         background-color: #eff6ff;
         color: #3b82f6 !important;
@@ -81,18 +96,78 @@
         cursor: pointer;
         transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
     }
+    
     .dataTables_paginate .paginate_button:hover {
         background-color: #dbeafe;
         color: #2563eb !important;
     }
+    
     .dataTables_paginate .paginate_button.current {
         background-color: #3b82f6;
         color: #ffffff !important;
         border-color: #3b82f6;
     }
+    
     .dataTables_paginate .paginate_button.disabled {
         opacity: 0.5;
         cursor: not-allowed;
+    }
+
+    /* Form styling to match CsvOrderUpload */
+    form {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 15px;
+        padding: 20px;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        background-color: #f8f9fa;
+        justify-content: center;
+        margin-top: 15px;
+    }
+
+    .form-group {
+        margin-bottom: 0;
+        flex-grow: 1;
+        max-width: 450px;
+        text-align: left;
+    }
+
+    .form-group label {
+        margin-bottom: .3rem;
+        display: block;
+        font-weight: 500;
+    }
+
+    /* FIX FOR NAVBAR BUTTON - Add specificity */
+    .navbar .btn {
+        /* Reset button styles for navbar */
+        white-space: normal;
+        margin-bottom: 0;
+        height: auto;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: #fff !important; /* Ensure text stays white */
+        padding: 0.5rem 1rem;
+    }
+
+    /* Specific fix for logout button */
+    .navbar .nav-link.btn.btn-link {
+        display: inline;
+        padding: 0.5rem 1rem;
+        color: white !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    /* Page-specific buttons */
+    .pfc-content .btn {
+        white-space: nowrap;
+        margin-bottom: 0;
+        height: calc(1.5em + .75rem + 2px);
     }
 </style>
 
@@ -118,6 +193,7 @@
         </div>
     </div>
 </div>
+
 <h2>gestione moduli pfc</h2>
 <br>
 <br>
@@ -128,14 +204,15 @@
         @* DataTables will automatically add the search box here. *@
     </div>
     <div class="col-md-2">
-        <a class="btn btn btn-outline-primary" asp-controller="Pfc" asp-action="Index" asp-route-filterCompleted="@ViewBag.filter">@ViewBag.removeCaption</a>
+        <a class="btn btn-outline-primary" asp-controller="Pfc" asp-action="Index" asp-route-filterCompleted="@ViewBag.filter">@ViewBag.removeCaption</a>
     </div>
 </div>
-                <br>
+<br>
 <hr>
-@using(Html.BeginForm("AggiornaCommesse", "PfcController", FormMethod.Post, new { name = "frmAggCommesse", id = "frmAggCommesse" }))
+
+@using (Html.BeginForm("AggiornaCommesse", "PfcController", FormMethod.Post, new { name = "frmAggCommesse", id = "frmAggCommesse" }))
 {
-    <table id="pfcTable" class="min-w-full divide-y divide-gray-200">
+    <table id="pfcTable" class="table table-striped table-bordered table-hover" style="width:100%">
         <thead class="bg-gray-50">
             <tr>
                 <th>modulo numero</th>
@@ -144,55 +221,51 @@
                 <th>data consegna</th>
                 <th>avanzamento</th>
                 <th>completato</th>
-                <th>abilitato</th> @* ALWAYS render this TH for consistent column count *@
-                <th></th> @* For the ModPfc link (edit icon) *@
-                <th></th> @* For the hidden ID input *@
-                <th></th> @* For the hidden Enabled input (the second one) *@
+                @if (authorize && !productionFilter)
+                {
+                    <th>abilitato</th>
+                }
+                @if (authorize)
+                {
+                    <th>Modifica</th>
+                }
             </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
-            @for(int x = 0; x < Model.Count; x++)
+            @for (int x = 0; x < Model.Count; x++)
             {
                 <tr>
-                    @if(!authorize)
+                    <td data-search="@Model[x].NumeroCommessa"><input type="text" asp-for=@Model[x].NumeroCommessa class="form-control" value="@Model[x].NumeroCommessa" readonly /></td>
+                    <td data-search="@Model[x].Cliente"><input type="text" asp-for=@Model[x].Cliente class="form-control" value="@Model[x].Cliente" readonly /></td>
+                    <td data-search="@Model[x].RifEsterno"><input type="text" asp-for=@Model[x].RifEsterno class="form-control" value="@Model[x].RifEsterno" readonly /></td>
+                    <td data-search="@Model[x].DataConsegna"><input type="text" asp-for=@Model[x].DataConsegna class="form-control" value="@Model[x].DataConsegna" readonly /></td>
+                    <td data-search="@Model[x].Progress"><input readonly type="text" asp-for=@Model[x].Progress class="form-control" value="@Model[x].Progress" /></td>
+                    <td data-search="@Model[x].Completed"><input readonly type="text" asp-for=@Model[x].Completed class="form-control" value="@Model[x].Completed" /></td>
+                    @if (authorize && !productionFilter)
                     {
-                        <td data-search="@Model[x].NumeroCommessa"><input readonly type="text" asp-for=@Model[x].NumeroCommessa class="form-control" value="@Model[x].NumeroCommessa" /></td>
-                        <td data-search="@Model[x].Cliente"><input readonly type="text" asp-for=@Model[x].Cliente class="form-control" value="@Model[x].Cliente" /></td>
-                        <td data-search="@Model[x].RifEsterno"><input readonly type="text" asp-for=@Model[x].RifEsterno class="form-control" value="@Model[x].RifEsterno" /></td>
-                        <td data-search="@Model[x].DataConsegna"><input readonly type="text" asp-for=@Model[x].DataConsegna class="form-control" value="@Model[x].DataConsegna" /></td>
-                        <td data-search="@Model[x].Progress"><input readonly type="text" asp-for=@Model[x].Progress class="form-control" value="@Model[x].Progress" /></td>
-                        <td data-search="@Model[x].Completed"><input readonly type="text" asp-for=@Model[x].Completed class="form-control" value="@Model[x].Completed" /></td>
-                        <td></td> @* Placeholder for the 'abilitato' column when not authorized *@
-                        <td></td> @* Placeholder for the edit icon column when not authorized *@
-                        <td><input type="hidden" asp-for=@Model[x].id class="form-control" value="@Model[x].id" readonly /></td> @* Hidden ID input *@
-                        <td></td> @* Placeholder for the hidden Enabled input (the second one) *@
+                        <td data-search="@Model[x].Enabled"><input type="text" asp-for=@Model[x].Enabled class="form-control" value="@Model[x].Enabled" readonly /></td>
                     }
-                    else
+                    @if (authorize)
                     {
-                        <td data-search="@Model[x].NumeroCommessa"><input type="text" asp-for=@Model[x].NumeroCommessa class="form-control" value="@Model[x].NumeroCommessa" readonly /></td>
-                        <td data-search="@Model[x].Cliente"><input type="text" asp-for=@Model[x].Cliente class="form-control" value="@Model[x].Cliente" readonly /></td>
-                        <td data-search="@Model[x].RifEsterno"><input type="text" asp-for=@Model[x].RifEsterno class="form-control" value="@Model[x].RifEsterno" readonly /></td>
-                        <td data-search="@Model[x].DataConsegna"><input type="text" asp-for=@Model[x].DataConsegna class="form-control" value="@Model[x].DataConsegna" readonly /></td>
-                        <td data-search="@Model[x].Progress"><input readonly type="text" asp-for=@Model[x].Progress class="form-control" value="@Model[x].Progress" /></td>
-                        <td data-search="@Model[x].Completed"><input readonly type="text" asp-for=@Model[x].Completed class="form-control" value="@Model[x].Completed" /></td>
-                        @if(!productionFilter) { // If not in production filter, show the enabled field directly
-                            <td data-search="@Model[x].Enabled"><input type="text" asp-for=@Model[x].Enabled class="form-control" value="@Model[x].Enabled" readonly /></td>
-                        }
-                        else // If in production filter, render an empty td to maintain column count
-                        {
-                            <td></td>
-                        }
                         <td style="padding-left: 25px;"><a asp-controller="Pfc" asp-action="ModPfc" asp-route-inputId="@Model[x].id"><i class="material-icons text-warning">&#xE254;</i></a></td>
-                        <td><input type="hidden" asp-for=@Model[x].id class="form-control" value="@Model[x].id" /></td>
-                        <td><input type="hidden" asp-for=@Model[x].Enabled class="form-control" value="@Model[x].Enabled" readonly/></td>
                     }
                 </tr>
             }
         </tbody>
     </table>
+    
+    <!-- Hidden fields for form submission -->
+    <div style="display:none;">
+        @for (int x = 0; x < Model.Count; x++)
+        {
+            <input type="hidden" asp-for=@Model[x].id />
+            <input type="hidden" asp-for=@Model[x].Enabled />
+        }
+    </div>
+    
     <br>
     <br>
-    @if(authorize)
+    @if (authorize)
     {
         <div class="row">
             <div class="col-md-3 d-grid">
@@ -203,19 +276,35 @@
 }
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-<script type="text/javascript" src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
 <script>
-    $(document).ready(function() {
-        // Initialize DataTables on your table using its ID
+    $(document).ready(function () {
+        var columnDefs = [];
+        
+        @if (authorize && !productionFilter)
+        {
+            <text>
+            columnDefs.push(
+                { targets: [6], orderable: false, searchable: false } // Abilitato column
+            );
+            </text>
+        }
+        @if (authorize)
+        {
+            <text>
+            columnDefs.push(
+                { targets: [@(authorize && !productionFilter ? 7 : 6)], orderable: false, searchable: false } // Edit column
+            );
+            </text>
+        }
+
         $('#pfcTable').DataTable({
-            // You might want to disable sorting on the action/hidden columns.
-            // Adjust 'targets' based on the column index (0-indexed).
-            // If you have 10 columns, the last three (edit icon, hidden ID, hidden Enabled) are 7, 8, 9.
-            "columnDefs": [
-                { "orderable": false, "targets": [7, 8, 9] },
-                { "searchable": false, "targets": [7, 8, 9] } // Also explicitly disable searching on these columns
-            ]
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/it-IT.json'
+            },
+            columnDefs: columnDefs
         });
     });
 </script>
