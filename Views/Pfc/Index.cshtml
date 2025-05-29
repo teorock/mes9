@@ -14,160 +14,17 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<!-- link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" -->
 
 <style>
-    /* Unified styling for both views */
-    table, th {
-        font-size: 16px;
-        text-align: center;
-    }
-    
     input {
-        font-size: 14px;
-        background-color: transparent;
         text-align: center;
-    }
-
-    /* Reduced spacing between inputs */
-    table#pfcTable.dataTable td {
-        font-size: 14px;
-        text-align: center;
-        padding: 6px 4px !important; /* Reduced from 12px 8px */
-    }
-
-    /* Tighter input fields */
-    input.form-control {
-        padding: 2px 4px !important; /* Reduced padding */
-        height: 28px !important; /* Smaller height */
-        margin: -2px 0 !important; /* Compensate for spacing */
-    }
-
-    input:hover {
-        background-color: gold;
-    }
-    
-    input:focus {
-        background-color: lightyellow;
-    }
-
-    /* DataTables styling */
-    .dataTables_wrapper .dataTables_filter input {
-        border: 1px solid #d1d5db;
-        border-radius: 8px;
-        padding: 8px 12px;
-        margin-left: 4px;
-        outline: none;
-        transition: border-color 0.2s ease-in-out;
-    }
-    
-    .dataTables_wrapper .dataTables_filter input:focus {
-        border-color: #3b82f6;
-    }
-    
-    /* Fixed select arrow overlap */
-    .dataTables_wrapper .dataTables_length select {
-        border: 1px solid #d1d5db;
-        border-radius: 4px;
-        padding: 4px 8px;
-        padding-right: 30px !important; /* Added space for arrow */
-        margin-right: 4px;
-        outline: none;
-        transition: border-color 0.2s ease-in-out;
-        background-position: calc(100% - 8px) center !important;
-    }
-    
-    .dataTables_wrapper .dataTables_length select:focus {
-        border-color: #3b82f6;
-    }
-    
-    .dataTables_info, .dataTables_paginate {
-        margin-top: 16px;
-        color: #6b7280;
-    }
-    
-    .dataTables_paginate .paginate_button {
-        background-color: #eff6ff;
-        color: #3b82f6 !important;
-        border: 1px solid #bfdbfe;
-        border-radius: 4px;
-        padding: 4px 8px;
-        margin: 0 4px;
-        cursor: pointer;
-        transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-    }
-    
-    .dataTables_paginate .paginate_button:hover {
-        background-color: #dbeafe;
-        color: #2563eb !important;
-    }
-    
-    .dataTables_paginate .paginate_button.current {
-        background-color: #3b82f6;
-        color: #ffffff !important;
-        border-color: #3b82f6;
-    }
-    
-    .dataTables_paginate .paginate_button.disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    /* Form styling to match CsvOrderUpload */
-    form {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: flex-end;
-        gap: 15px;
-        padding: 20px;
-        border: 1px solid #dee2e6;
-        border-radius: 5px;
-        background-color: #f8f9fa;
-        justify-content: center;
-        margin-top: 15px;
-    }
-
-    .form-group {
-        margin-bottom: 0;
-        flex-grow: 1;
-        max-width: 450px;
-        text-align: left;
-    }
-
-    .form-group label {
-        margin-bottom: .3rem;
-        display: block;
-        font-weight: 500;
-    }
-
-    /* FIX FOR NAVBAR BUTTON - Add specificity */
-    .navbar .btn {
-        /* Reset button styles for navbar */
-        white-space: normal;
-        margin-bottom: 0;
-        height: auto;
-        background: transparent !important;
         border: none !important;
-        box-shadow: none !important;
-        color: #fff !important; /* Ensure text stays white */
-        padding: 0.5rem 1rem;
-    }
-
-    /* Specific fix for logout button */
-    .navbar .nav-link.btn.btn-link {
-        display: inline;
-        padding: 0.5rem 1rem;
-        color: white !important;
         background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
     }
 
-    /* Page-specific buttons */
-    .pfc-content .btn {
-        white-space: nowrap;
-        margin-bottom: 0;
-        height: calc(1.5em + .75rem + 2px);
+    input[type="search"] {
+        border: 1px solid #d1d5db !important;
     }
 </style>
 
