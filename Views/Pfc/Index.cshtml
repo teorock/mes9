@@ -12,6 +12,13 @@
     if(userRoles.Contains("PfcAggiorna")) productionFilter = true;
 }
 
+@section Scripts {
+
+    @* --- DataTables JS (make sure jQuery is loaded before this) --- *@
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    }
+
 <script>
     function conferma() {
             $("#frmAggCommesse").submit();
