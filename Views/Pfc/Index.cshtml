@@ -17,6 +17,65 @@
 <!-- link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" -->
 
 <style>
+    /* Remove the problematic overrides and use proper DataTables styling */
+    table.dataTable thead th {
+        position: relative;
+        padding-right: 30px !important;
+    }
+
+    /* Style for sortable columns (shows both arrows) */
+    table.dataTable thead th.sorting:before,
+    table.dataTable thead th.sorting:after {
+        position: absolute;
+        right: 0.5em;
+        line-height: 1;
+        opacity: 0.5;
+        font-size: 9px;
+    }
+
+    table.dataTable thead th.sorting:before {
+        content: "▲";
+        bottom: 50%;
+        margin-bottom: 1px;
+    }
+
+    table.dataTable thead th.sorting:after {
+        content: "▼";
+        top: 50%;
+        margin-top: 1px;
+    }
+
+    /* Style for ascending sort (show only up arrow) */
+    table.dataTable thead th.sorting_asc:before {
+        content: "▲";
+        opacity: 1;
+        bottom: 50%;
+        font-size: 10px;
+        margin-bottom: 1px;
+        position: absolute;
+        right: 0.5em;
+    }
+
+    table.dataTable thead th.sorting_asc:after {
+        display: none;
+    }
+
+    /* Style for descending sort (show only down arrow) */
+    table.dataTable thead th.sorting_desc:before {
+        display: none;
+    }
+
+    table.dataTable thead th.sorting_desc:after {
+        content: "▼";
+        opacity: 1;
+        top: 50%;
+        font-size: 10px;
+        margin-top: 1px;
+        position: absolute;
+        right: 0.5em;
+    }
+
+    /* Keep your other styles */
     input {
         text-align: center;
         border: none !important;
@@ -26,6 +85,11 @@
     input[type="search"] {
         border: 1px solid #d1d5db !important;
     }
+
+    th {
+        text-align: center;
+    }
+
 </style>
 
 <script>
@@ -88,27 +152,45 @@
                 }
             </tr>
         </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-            @for (int x = 0; x < Model.Count; x++)
-            {
-                <tr>
-                    <td data-search="@Model[x].NumeroCommessa"><input type="text" asp-for=@Model[x].NumeroCommessa class="form-control" value="@Model[x].NumeroCommessa" readonly /></td>
-                    <td data-search="@Model[x].Cliente"><input type="text" asp-for=@Model[x].Cliente class="form-control" value="@Model[x].Cliente" readonly /></td>
-                    <td data-search="@Model[x].RifEsterno"><input type="text" asp-for=@Model[x].RifEsterno class="form-control" value="@Model[x].RifEsterno" readonly /></td>
-                    <td data-search="@Model[x].DataConsegna"><input type="text" asp-for=@Model[x].DataConsegna class="form-control" value="@Model[x].DataConsegna" readonly /></td>
-                    <td data-search="@Model[x].Progress"><input readonly type="text" asp-for=@Model[x].Progress class="form-control" value="@Model[x].Progress" /></td>
-                    <td data-search="@Model[x].Completed"><input readonly type="text" asp-for=@Model[x].Completed class="form-control" value="@Model[x].Completed" /></td>
-                    @if (authorize && !productionFilter)
-                    {
-                        <td data-search="@Model[x].Enabled"><input type="text" asp-for=@Model[x].Enabled class="form-control" value="@Model[x].Enabled" readonly /></td>
-                    }
-                    @if (authorize)
-                    {
-                        <td style="padding-left: 25px;"><a asp-controller="Pfc" asp-action="ModPfc" asp-route-inputId="@Model[x].id"><i class="material-icons text-warning">&#xE254;</i></a></td>
-                    }
-                </tr>
-            }
-        </tbody>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @for (int x = 0; x < Model.Count; x++)
+                {
+                    <tr>
+                        <td data-search="@Model[x].NumeroCommessa" data-order="@Model[x].NumeroCommessa">
+                            <input type="text" asp-for=@Model[x].NumeroCommessa class="form-control" value="@Model[x].NumeroCommessa" readonly />
+                        </td>
+                        <td data-search="@Model[x].Cliente" data-order="@Model[x].Cliente">
+                            <input type="text" asp-for=@Model[x].Cliente class="form-control" value="@Model[x].Cliente" readonly />
+                        </td>
+                        <td data-search="@Model[x].RifEsterno" data-order="@Model[x].RifEsterno">
+                            <input type="text" asp-for=@Model[x].RifEsterno class="form-control" value="@Model[x].RifEsterno" readonly />
+                        </td>
+                        <td data-search="@Model[x].DataConsegna" data-order="@Model[x].DataConsegna">
+                            <input type="text" asp-for=@Model[x].DataConsegna class="form-control" value="@Model[x].DataConsegna" readonly />
+                        </td>
+                        <td data-search="@Model[x].Progress" data-order="@Model[x].Progress">
+                            <input readonly type="text" asp-for=@Model[x].Progress class="form-control" value="@Model[x].Progress" />
+                        </td>
+                        <td data-search="@Model[x].Completed" data-order="@Model[x].Completed">
+                            <input readonly type="text" asp-for=@Model[x].Completed class="form-control" value="@Model[x].Completed" />
+                        </td>
+                        @if (authorize && !productionFilter)
+                        {
+                            <td data-search="@Model[x].Enabled" data-order="@Model[x].Enabled">
+                                <input type="text" asp-for=@Model[x].Enabled class="form-control" value="@Model[x].Enabled" readonly />
+                            </td>
+                        }
+                        @if (authorize)
+                        {
+                            <td style="padding-left: 25px;">
+                                <a asp-controller="Pfc" asp-action="ModPfc" asp-route-inputId="@Model[x].id">
+                                    <i class="material-icons text-warning">&#xE254;</i>
+                                </a>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
     </table>
     
     <!-- Hidden fields for form submission -->
@@ -161,7 +243,8 @@
             language: {
                 url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/it-IT.json'
             },
-            columnDefs: columnDefs
+            columnDefs: columnDefs,
+            order: [[0, 'asc']] // Set initial sort order
         });
     });
 </script>
