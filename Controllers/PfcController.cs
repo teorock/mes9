@@ -83,18 +83,6 @@ namespace mes.Controllers
                 removeCaption = "rimuovi completati";
             }
 
-            if (filterCompleted == "1")
-            {
-                allPfc = allPfc.Where(c => c.Completed == "0").ToList();
-                filterCompleted = "0";
-                removeCaption = "mostra completati";
-            }
-            else
-            {
-                filterCompleted = "1";
-                removeCaption = "rimuovi completati";
-            }
-
             ViewBag.userRoles = userData.UserRoles;
             ViewBag.filter = filterCompleted;
             ViewBag.removeCaption = removeCaption;
@@ -630,7 +618,6 @@ namespace mes.Controllers
             string actionName = this.ControllerContext.RouteData.Values["action"].ToString();
             Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
             
-
             
             if(showTaken is null | showTaken =="0") {
                 showTaken = "0";
@@ -700,9 +687,6 @@ namespace mes.Controllers
                     return View(model);
                 }
             }
-
-
-
 
             try
             {

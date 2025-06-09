@@ -267,13 +267,19 @@ namespace mes.Models.Services.Infrastructures
             }
         }
 
-        public bool HasEmptyOrNullStringProperty<T>(List<T> objects)
+        public bool CheckCsvHeader(string file2load, string header2check)
         {
-            if (objects == null)
+            string fileHeader = "";
+            if (File.Exists(file2load))
             {
-                Console.WriteLine("The input list of objects is null.");
-                return false; // Or throw an ArgumentNullException, depending on desired behavior
+                fileHeader = File.ReadAllLines(file2load)[0];
             }
+
+            if (fileHeader == header2check) return true;
+
+            return false;
+        }
+
         public bool HasEmptyOrNullStringProperty<T>(List<T> objects)
         {
             if (objects == null)
@@ -290,9 +296,6 @@ namespace mes.Models.Services.Infrastructures
                     return true; // A null object implicitly means "empty" from a certain perspective
                 }
 
-                // Get all public instance properties of the object's type
-                // This works for any type 'T' because Reflection operates on the runtime type.
-                PropertyInfo[] properties = obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
                 // Get all public instance properties of the object's type
                 // This works for any type 'T' because Reflection operates on the runtime type.
                 PropertyInfo[] properties = obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
