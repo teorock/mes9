@@ -719,9 +719,16 @@ namespace mes.Controllers
 
         private void Log2File(string line2log)
         {
-            using(StreamWriter sw = new StreamWriter(config.IntranetLog, true))
+            try
             {
-                sw.WriteLine($"{DateTime.Now} -> {line2log}");
+                using (StreamWriter sw = new StreamWriter(config.IntranetLog, true))
+                {
+                    sw.WriteLine($"{DateTime.Now} -> {line2log}");
+                }
+            }
+            catch (Exception ex)
+            {
+                
             }
         }             
     }

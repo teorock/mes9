@@ -86,7 +86,6 @@ namespace mes.Models.Services.Infrastructures
 
             result = (arrotondato)? $"{ore}h{minutes} {comment}":$"{ore}h{minutes}";
 
-
             return result;
         }
 
@@ -111,8 +110,6 @@ namespace mes.Models.Services.Infrastructures
             {
                 result = DateTime.Parse(input)               ;
             }
-            
-
             return result;
         }
 
@@ -270,45 +267,45 @@ namespace mes.Models.Services.Infrastructures
             }
         }  
 
-    public bool HasEmptyOrNullStringProperty<T>(List<T> objects)
-    {
-        if (objects == null)
+        public bool HasEmptyOrNullStringProperty<T>(List<T> objects)
         {
-            Console.WriteLine("The input list of objects is null.");
-            return false; // Or throw an ArgumentNullException, depending on desired behavior
-        }
-
-        foreach (var obj in objects)
-        {
-            if (obj == null) // Check if an individual object in the list is null
+            if (objects == null)
             {
-                Console.WriteLine("A null object was found within the list.");
-                return true; // A null object implicitly means "empty" from a certain perspective
+                Console.WriteLine("The input list of objects is null.");
+                return false; // Or throw an ArgumentNullException, depending on desired behavior
             }
 
-            // Get all public instance properties of the object's type
-            // This works for any type 'T' because Reflection operates on the runtime type.
-            PropertyInfo[] properties = obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
-            foreach (PropertyInfo prop in properties)
+            foreach (var obj in objects)
             {
-                // Check if the property is a string type
-                if (prop.PropertyType == typeof(string))
+                if (obj == null) // Check if an individual object in the list is null
                 {
-                    // Get the property value for the current object
-                    string value = (string)prop.GetValue(obj);
+                    Console.WriteLine("A null object was found within the list.");
+                    return true; // A null object implicitly means "empty" from a certain perspective
+                }
 
-                    // Use string.IsNullOrEmpty for robust check (covers null and "")
-                    if (string.IsNullOrEmpty(value))
+                // Get all public instance properties of the object's type
+                // This works for any type 'T' because Reflection operates on the runtime type.
+                PropertyInfo[] properties = obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+                foreach (PropertyInfo prop in properties)
+                {
+                    // Check if the property is a string type
+                    if (prop.PropertyType == typeof(string))
                     {
-                        Console.WriteLine($"Object of type '{obj.GetType().Name}' has an empty or null string property: '{prop.Name}' with value: '{value ?? "null"}'");
-                        return true; // Found one, no need to check further
+                        // Get the property value for the current object
+                        string value = (string)prop.GetValue(obj);
+
+                        // Use string.IsNullOrEmpty for robust check (covers null and "")
+                        if (string.IsNullOrEmpty(value))
+                        {
+                            Console.WriteLine($"Object of type '{obj.GetType().Name}' has an empty or null string property: '{prop.Name}' with value: '{value ?? "null"}'");
+                            return true; // Found one, no need to check further
+                        }
                     }
                 }
             }
-        }
-        return false; // No empty or null string properties found
-    }        
+            return false; // No empty or null string properties found
+        }        
 
     }
 }

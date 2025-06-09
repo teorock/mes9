@@ -688,40 +688,51 @@ namespace mes.Controllers
                 }
             }
 
-            //check completezza campi del csv che si vuole caricare
+
 
             try
             {
                 // Use the file upload service with specific settings for CSV files
                 var result = await _fileUploadService.UploadFileAsync(model.FileToUpload);
 
+                //check completezza campi del csv che si vuole caricare
+                //carica in c:\temp\uploads
+
                 if (result.Success)
                 {
+                    //----------------
+                    // inserisco controllo file
+                    // ------------------
+                    string filename2check = result.FilePath;
+
                     // Log the successful upload
                     Log2File($"{userData.UserEmail}-->{controllerName},{actionName} - CSV file uploaded: {result.FilePath}");
                     _logger.LogInformation($"CSV uploaded successfully by {userData.UserEmail}: {Path.GetFileName(result.FilePath)}");
-                    
-                    string additionaMessage ="";
+
+                    string additionaMessage = "";
                     LoadCsvToDatabase(result.FilePath, out additionaMessage);
 
                     string successMessage = "";
-                    if(additionaMessage != "")
+                    if (additionaMessage != "")
                     {
                         successMessage = additionaMessage;
-                    } else {
+                    }
+                    else
+                    {
                         successMessage = $"Caricato file: {Path.GetFileName(result.FilePath)} - {additionaMessage}";
                     }
-                    
+
                     if (isAjaxRequest)
                     {
-                        return Json(new { 
-                            success = true, 
+                        return Json(new
+                        {
+                            success = true,
                             message = successMessage,
                             filePath = result.FilePath,
                             fileName = Path.GetFileName(result.FilePath)
                         });
                     }
-                    
+
                     // Provide feedback to the user
                     ViewBag.Message = successMessage;
                     //passo io il nome del file
@@ -729,8 +740,8 @@ namespace mes.Controllers
 
                     DatabaseAccessor dbAccessor = new DatabaseAccessor();
                     List<PfcCsvDaneaSource> actuals = dbAccessor.Queryer<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable)
-                                                                .Where(t => t.Taken =="0").ToList();
-                    ViewBag.actualCsvDanea = actuals;                        
+                                                                .Where(t => t.Taken == "0").ToList();
+                    ViewBag.actualCsvDanea = actuals;
 
                     return View(new FileUploadViewModel
                     {
@@ -744,12 +755,12 @@ namespace mes.Controllers
                     // Log the error
                     Log2File($"{userData.UserEmail}-->{controllerName},{actionName} - Upload failed: {result.ErrorMessage}");
                     _logger.LogError($"CSV upload failed for user {userData.UserEmail}: {result.ErrorMessage}");
-                    
+
                     if (isAjaxRequest)
                     {
                         return Json(new { success = false, message = result.ErrorMessage });
                     }
-                    
+
                     // Provide error feedback to the user
                     ViewBag.Message = result.ErrorMessage;
                     return View(model);
@@ -761,12 +772,12 @@ namespace mes.Controllers
                 string errorMessage = $"An error occurred during file upload: {ex.Message}";
                 Log2File($"{userData.UserEmail}-->{controllerName},{actionName} - Exception: {ex.Message}");
                 _logger.LogError(ex, $"Exception during CSV upload by {userData.UserEmail}");
-                
+
                 if (isAjaxRequest)
                 {
                     return Json(new { success = false, message = errorMessage });
                 }
-                
+
                 ViewBag.Message = errorMessage;
                 return View(model);
             }
