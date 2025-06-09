@@ -10,11 +10,11 @@ namespace mes.Models.Services.Infrastructures
 {
     public class GeneralPurpose
     {
-        public void WriteList2Disk(List<string>inputList, string outputPath)
+        public void WriteList2Disk(List<string> inputList, string outputPath)
         {
-            using(StreamWriter sw = new StreamWriter(outputPath))
+            using (StreamWriter sw = new StreamWriter(outputPath))
             {
-                foreach(string oneLine in inputList)
+                foreach (string oneLine in inputList)
                 {
                     sw.WriteLine(oneLine);
                 }
@@ -22,7 +22,7 @@ namespace mes.Models.Services.Infrastructures
         }
         public void WriteFile2Disk(string inputString, string outputPath)
         {
-            using(StreamWriter sw = new StreamWriter(outputPath))
+            using (StreamWriter sw = new StreamWriter(outputPath))
             {
                 sw.WriteLine(inputString);
             }
@@ -30,7 +30,7 @@ namespace mes.Models.Services.Infrastructures
 
         public void BackupCalendarFile(string destFile)
         {
-            if(!File.Exists(destFile)) return;
+            if (!File.Exists(destFile)) return;
             string bckName = Path.Combine(
                                         Path.GetDirectoryName(destFile),
                                         DateTime.Now.ToString("dd_MM_yyyy_HH_mm_ss") + Path.GetFileName(destFile));
@@ -40,13 +40,13 @@ namespace mes.Models.Services.Infrastructures
         public string PermissionTimeSpan(string startTime, string endTime, string tipologia)
         {
             //if tipologia= ferie, non calcola le ore
-            string result="";
-            string minutes="";
-            string comment="";
+            string result = "";
+            string minutes = "";
+            string comment = "";
 
-            if(tipologia=="ferie")
+            if (tipologia == "ferie")
             {
-                startTime +="T08:00";
+                startTime += "T08:00";
                 endTime += "T17:30";
             }
 
@@ -55,32 +55,32 @@ namespace mes.Models.Services.Infrastructures
 
             TimeSpan duration = endDatetime.Subtract(startDatetime);
 
-            decimal giorni = Math.Round(Convert.ToDecimal(duration.TotalDays), 0);            
+            decimal giorni = Math.Round(Convert.ToDecimal(duration.TotalDays), 0);
 
-            if(tipologia=="ferie" | tipologia=="malattia")
-                return $"{giorni+1}g";
-            
+            if (tipologia == "ferie" | tipologia == "malattia")
+                return $"{giorni + 1}g";
+
             decimal ore = Math.Round(Convert.ToDecimal(duration.TotalHours), 0);
             bool arrotondato = false;
-            if(duration.Minutes > 0 & duration.Minutes <=29)
+            if (duration.Minutes > 0 & duration.Minutes <= 29)
             {
                 minutes = "30";
                 arrotondato = true;
             }
-            if(duration.Minutes > 31 & duration.Minutes <= 59)
+            if (duration.Minutes > 31 & duration.Minutes <= 59)
             {
                 minutes = "";
-                ore +=1;
+                ore += 1;
                 arrotondato = true;
-            }            
-            if(duration.Minutes == 30) minutes="30";
+            }
+            if (duration.Minutes == 30) minutes = "30";
             //pausa pranzo
-            if ((startDatetime.Hour < 12 & endDatetime.Hour >12)|
-                    (startDatetime.Hour <13 & endDatetime.Hour>13))
-                    {
-                        ore -= 1;
-                        comment +="-1h pranzo";
-                    }
+            if ((startDatetime.Hour < 12 & endDatetime.Hour > 12) |
+                    (startDatetime.Hour < 13 & endDatetime.Hour > 13))
+            {
+                ore -= 1;
+                comment += "-1h pranzo";
+            }
 
             comment = $"[{duration.Hours}h{duration.Minutes}]";
 
@@ -93,38 +93,38 @@ namespace mes.Models.Services.Infrastructures
         {
             //funzione deprecata
             //non più necessaria in quanto è stato effettuato il debug
-            
+
             DateTime result = DateTime.Now;
 
-            if(!input.Contains('T'))
+            if (!input.Contains('T'))
             {
-                int year = Convert.ToInt16(input.Substring(6,4));
-                int month = Convert.ToInt16(input.Substring(3,2));
-                int day = Convert.ToInt16(input.Substring(0,2));
-                int hour = Convert.ToInt16(input.Substring(11,2));
-                int minute = Convert.ToInt16(input.Substring(14,2));
+                int year = Convert.ToInt16(input.Substring(6, 4));
+                int month = Convert.ToInt16(input.Substring(3, 2));
+                int day = Convert.ToInt16(input.Substring(0, 2));
+                int hour = Convert.ToInt16(input.Substring(11, 2));
+                int minute = Convert.ToInt16(input.Substring(14, 2));
 
-                result = new DateTime(year,month,day,hour, minute, 0);
+                result = new DateTime(year, month, day, hour, minute, 0);
             }
-            if(input.Contains('T'))
+            if (input.Contains('T'))
             {
-                result = DateTime.Parse(input)               ;
+                result = DateTime.Parse(input);
             }
             return result;
         }
 
         public DateTime PermessiDate2Calendar(string inputString)
         {
-            int year = Convert.ToInt32(inputString.Substring(0,4));
-            int month = Convert.ToInt32(inputString.Substring(5,2));
-            int day = Convert.ToInt32(inputString.Substring(8,2));
-            int hour = Convert.ToInt32(inputString.Substring(11,2));
-            int minute = Convert.ToInt32(inputString.Substring(14,2));
-            
-            return new DateTime(year,month,day,hour,minute,0);
+            int year = Convert.ToInt32(inputString.Substring(0, 4));
+            int month = Convert.ToInt32(inputString.Substring(5, 2));
+            int day = Convert.ToInt32(inputString.Substring(8, 2));
+            int hour = Convert.ToInt32(inputString.Substring(11, 2));
+            int minute = Convert.ToInt32(inputString.Substring(14, 2));
+
+            return new DateTime(year, month, day, hour, minute, 0);
         }
 
-        public DateTime String2DateConverter (string input)
+        public DateTime String2DateConverter(string input)
         {
             DateTime result = DateTime.Parse(input);
 
@@ -132,7 +132,7 @@ namespace mes.Models.Services.Infrastructures
 
             return result;
         }
-        
+
         public T DenullifyObj<T>(T obj)
         {
             var properties = typeof(T).GetProperties();
@@ -144,7 +144,7 @@ namespace mes.Models.Services.Infrastructures
                 var test = property.GetValue(obj);
                 if (property.GetValue(obj) == null)
                 {
-                    if(property.PropertyType==typeof(string)) property.SetValue(result, "---");
+                    if (property.PropertyType == typeof(string)) property.SetValue(result, "---");
                 }
                 else
                 {
@@ -153,7 +153,7 @@ namespace mes.Models.Services.Infrastructures
             }
 
             return (T)result;
-        }        
+        }
 
         public string ImplicitPwd(string inputString)
         {
@@ -222,9 +222,9 @@ namespace mes.Models.Services.Infrastructures
                 foreach (var prop in info)
                 {
                     line += prop.GetValue(obj, null) + "; ";
-                }                    
-                line = line.Replace(',','.').Substring(0, line.Length - 2);
-                result.Add(line); 
+                }
+                line = line.Replace(',', '.').Substring(0, line.Length - 2);
+                result.Add(line);
             }
 
             return result;
@@ -238,7 +238,7 @@ namespace mes.Models.Services.Infrastructures
                 csvContent.AppendLine(item);
             }
 
-            return csvContent.ToString(); 
+            return csvContent.ToString();
         }
 
         public DateTime GetWeeksMonday(int addDays)
@@ -248,10 +248,10 @@ namespace mes.Models.Services.Infrastructures
             return firstDayOfThisWeek.AddDays(addDays);
         }
 
-        public List<DateTime> GetWeekDaysInterval (DateTime startDate, int startDay, int endDay)
+        public List<DateTime> GetWeekDaysInterval(DateTime startDate, int startDay, int endDay)
         {
             List<DateTime> result = new List<DateTime>();
-            for(int day=startDay; day<endDay; day++)
+            for (int day = startDay; day < endDay; day++)
             {
                 result.Add(GetWeeksMonday(day));
             }
@@ -261,12 +261,19 @@ namespace mes.Models.Services.Infrastructures
 
         public void Log2File(string line2log, string filePath)
         {
-            using(StreamWriter sw = new StreamWriter(filePath, true))
+            using (StreamWriter sw = new StreamWriter(filePath, true))
             {
                 sw.WriteLine($"{DateTime.Now} -> {line2log}");
             }
-        }  
+        }
 
+        public bool HasEmptyOrNullStringProperty<T>(List<T> objects)
+        {
+            if (objects == null)
+            {
+                Console.WriteLine("The input list of objects is null.");
+                return false; // Or throw an ArgumentNullException, depending on desired behavior
+            }
         public bool HasEmptyOrNullStringProperty<T>(List<T> objects)
         {
             if (objects == null)
@@ -283,6 +290,9 @@ namespace mes.Models.Services.Infrastructures
                     return true; // A null object implicitly means "empty" from a certain perspective
                 }
 
+                // Get all public instance properties of the object's type
+                // This works for any type 'T' because Reflection operates on the runtime type.
+                PropertyInfo[] properties = obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
                 // Get all public instance properties of the object's type
                 // This works for any type 'T' because Reflection operates on the runtime type.
                 PropertyInfo[] properties = obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);

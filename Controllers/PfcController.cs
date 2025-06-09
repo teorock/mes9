@@ -63,7 +63,6 @@ namespace mes.Controllers
                 removeCaption = "rimuovi completati";
             }
 
-
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<PfcModel> allPfc = dbAccessor.Queryer<PfcModel>(config.PfcConnString, config.PfcTable);
 
@@ -84,7 +83,21 @@ namespace mes.Controllers
                 removeCaption = "rimuovi completati";
             }
 
+            if (filterCompleted == "1")
+            {
+                allPfc = allPfc.Where(c => c.Completed == "0").ToList();
+                filterCompleted = "0";
+                removeCaption = "mostra completati";
+            }
+            else
+            {
+                filterCompleted = "1";
+                removeCaption = "rimuovi completati";
+            }
+
             ViewBag.userRoles = userData.UserRoles;
+            ViewBag.filter = filterCompleted;
+            ViewBag.removeCaption = removeCaption;
             ViewBag.filter = filterCompleted;
             ViewBag.removeCaption = removeCaption;
 
@@ -690,6 +703,7 @@ namespace mes.Controllers
 
 
 
+
             try
             {
                 // Use the file upload service with specific settings for CSV files
@@ -710,14 +724,16 @@ namespace mes.Controllers
                     _logger.LogInformation($"CSV uploaded successfully by {userData.UserEmail}: {Path.GetFileName(result.FilePath)}");
 
                     string additionaMessage = "";
+
                     LoadCsvToDatabase(result.FilePath, out additionaMessage);
 
                     string successMessage = "";
+
                     if (additionaMessage != "")
                     {
                         successMessage = additionaMessage;
                     }
-                    else
+                    else                    
                     {
                         successMessage = $"Caricato file: {Path.GetFileName(result.FilePath)} - {additionaMessage}";
                     }
@@ -743,6 +759,7 @@ namespace mes.Controllers
                                                                 .Where(t => t.Taken == "0").ToList();
                     ViewBag.actualCsvDanea = actuals;
 
+
                     return View(new FileUploadViewModel
                     {
                         FormTitle = "CSV Order Upload",
@@ -756,10 +773,12 @@ namespace mes.Controllers
                     Log2File($"{userData.UserEmail}-->{controllerName},{actionName} - Upload failed: {result.ErrorMessage}");
                     _logger.LogError($"CSV upload failed for user {userData.UserEmail}: {result.ErrorMessage}");
 
+
                     if (isAjaxRequest)
                     {
                         return Json(new { success = false, message = result.ErrorMessage });
                     }
+
 
                     // Provide error feedback to the user
                     ViewBag.Message = result.ErrorMessage;
@@ -773,10 +792,12 @@ namespace mes.Controllers
                 Log2File($"{userData.UserEmail}-->{controllerName},{actionName} - Exception: {ex.Message}");
                 _logger.LogError(ex, $"Exception during CSV upload by {userData.UserEmail}");
 
+
                 if (isAjaxRequest)
                 {
                     return Json(new { success = false, message = errorMessage });
                 }
+
 
                 ViewBag.Message = errorMessage;
                 return View(model);
@@ -867,23 +888,47 @@ public IActionResult ViewFile(string nCommessa, string fileName)
         {
             //carica file raw in lista oggetti
             PfcServices pfcServices = new PfcServices();
+            //verifica se il tipo di file è corretto
+            //prende la prima riga e controlla
+            GeneralPurpose genP = new GeneralPurpose();
+            bool headerOk = genP.CheckCsvHeader(file2load, config.CsvOrdiniClienteCheck);
+            if (!headerOk)
+            {
+                internalMessage = $"Il file .csv non è del tipo adatto. L'header deve essere: {config.CsvOrdiniClienteCheck}";
+                return RedirectToAction("CsvOrderUpload");
+            }
+
+
             List<PfcCsvDaneaSource> csvFile = pfcServices.LoadCsvDaneaToList(file2load, config.CsvFilter1, config.CsvFilter2);
             
             // controllo se ci sono oggetti vuoti
             GeneralPurpose genPurpose = new GeneralPurpose();
-            //bool invalidList = genPurpose.HasEmptyOrNullStringProperty<PfcCsvDaneaSource>(csvFile);
-            //bool hasInvalidDate = HasInvalidDateFormats<PfcCsvDaneaSource>(csvFile);
-            //if(invalidList)
-            //{
-            //    internalMessage = "File .csv contiene campi vuoti - non caricato";
-            //    return RedirectToAction("CsvOrderUpload");
-            //}
+            //ometto il campo commento e mappo su un DTO senza commento
+            List<PfcCsvDaneaDTO> csvDTO = csvFile.Select(source => new PfcCsvDaneaDTO
+            {
+                Data = source.Data,
+                NCommessa = source.NCommessa,
+                Cliente = source.Cliente,
+                Stato = source.Stato,
+                DataConsegna = source.DataConsegna,
+                Taken = source.Taken,
+                PfcNumber = source.PfcNumber                
 
-            //if(hasInvalidDate)
-            //{
-            //    internalMessage = "File .csv contiene date in formati non corretti - non caricato";
-            //    return RedirectToAction("CsvOrderUpload");
-            //}
+            }).ToList();
+
+            bool invalidList = genPurpose.HasEmptyOrNullStringProperty<PfcCsvDaneaDTO>(csvDTO);            
+            if(invalidList)
+            {
+                internalMessage = "File .csv contiene campi vuoti - non caricato";
+                return RedirectToAction("CsvOrderUpload");
+            }
+
+            bool hasInvalidDate = HasInvalidDateFormats<PfcCsvDaneaDTO>(csvDTO);
+            if(hasInvalidDate)
+            {
+                internalMessage = "File .csv contiene date in formati non corretti - non caricato";
+                return RedirectToAction("CsvOrderUpload");
+            }
 
             //mette la lista su database
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
@@ -918,19 +963,15 @@ public IActionResult ViewFile(string nCommessa, string fileName)
     {
         if (dataList == null)
         {
-            // It's often better to throw an ArgumentNullException here if null lists are unexpected.
-            // For now, we'll return false, assuming an empty/null list means no invalid dates.
             Console.WriteLine("The input list is null. No date formats to check.");
             return false;
         }
 
-        // Using .Any() to efficiently stop at the first invalid date found
         bool hasInvalid = dataList.Any(obj =>
         {
             if (obj == null)
             {
-                //Console.WriteLine("Found a null object in the list. This could indicate invalid data.");
-                return true; // A null object in the list is often considered "invalid" for validation purposes
+                return true;
             }
 
             DateTime dummyDate; // Used to capture the parsed date if successful
@@ -939,7 +980,7 @@ public IActionResult ViewFile(string nCommessa, string fileName)
             // This makes the method truly generic even though it's looking for specific property *names*.
             // If the properties don't exist on T, GetProperty will return null, and we'll skip the check.
             PropertyInfo dataProp = typeof(T).GetProperty("Data", BindingFlags.Public | BindingFlags.Instance);
-            PropertyInfo dataConsegnaProp = typeof(T).GetProperty("DataConsegna", BindingFlags.Public | BindingFlags.Instance);
+            PropertyInfo dataConsegnaProp = typeof(T).GetProperty("Concl. prevista", BindingFlags.Public | BindingFlags.Instance);
 
             string dataValue = dataProp?.GetValue(obj) as string;
             string dataConsegnaValue = dataConsegnaProp?.GetValue(obj) as string;
@@ -954,7 +995,6 @@ public IActionResult ViewFile(string nCommessa, string fileName)
             // Check 'DataConsegna' property
             if (!string.IsNullOrEmpty(dataConsegnaValue) && !DateTime.TryParse(dataConsegnaValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out dummyDate))
             {
-                //Console.WriteLine($"Invalid date format detected in 'DataConsegna' property: '{dataConsegnaValue}' for object type '{typeof(T).Name}'.");
                 return true; // Invalid date found in 'DataConsegna'
             }
 
@@ -1054,8 +1094,6 @@ private string GetContentType(string path)
 
             return userData;
         }
-
-
 
         private void Log2File(string line2log)
         {

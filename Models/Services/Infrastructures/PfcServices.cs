@@ -30,7 +30,9 @@ namespace mes.Models.Services.Infrastructures
                             Cliente = parts[3],
                             Stato = parts[4],
                             DataConsegna = parts[5],
-                            Commento = parts[6]
+                            Commento = parts[6],
+                            PfcNumber = "1",
+                            Taken = "0"
                         };
                         result.Add(oneCsv);
                     }
