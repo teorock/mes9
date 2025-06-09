@@ -48,14 +48,22 @@ namespace mes.Controllers
         }
 
         [Authorize(Roles ="root, PfcAggiorna, PfcCrea, PfcLeggi")]
-        public IActionResult Index()
+        public IActionResult Index(string filterCompleted)
         {
             UserData userData = GetUserData();
             //--------------------------
             string controllerName = this.ControllerContext.RouteData.Values["controller"].ToString();
             string actionName = this.ControllerContext.RouteData.Values["action"].ToString();                    
-            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");            
+            Log2File($"{userData.UserEmail}-->{controllerName},{actionName}");
             //--------------------------
+            string removeCaption = "";
+            if (filterCompleted is null)
+            {
+                filterCompleted = "0";
+                removeCaption = "rimuovi completati";
+            }
+
+
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<PfcModel> allPfc = dbAccessor.Queryer<PfcModel>(config.PfcConnString, config.PfcTable);
 
@@ -64,7 +72,21 @@ namespace mes.Controllers
                 allPfc = allPfc.Where(c => c.Completed == "0").ToList();                
             }
 
+            if (filterCompleted == "1")
+            {
+                allPfc = allPfc.Where(c => c.Completed == "0").ToList();
+                filterCompleted = "0";
+                removeCaption = "mostra completati";
+            }
+            else
+            {
+                filterCompleted = "1";
+                removeCaption = "rimuovi completati";
+            }
+
             ViewBag.userRoles = userData.UserRoles;
+            ViewBag.filter = filterCompleted;
+            ViewBag.removeCaption = removeCaption;
 
             return View(allPfc);
         }
@@ -186,10 +208,11 @@ namespace mes.Controllers
                 //upload no file
                 string allFiles = "";
 
-                if(inputModel.UploadedFiles is not null)
+                if (inputModel.UploadedFiles is not null)
                 {
-                    await UploadFiles(inputModel.UploadedFiles, $"{inputModel.WorkNumber.Replace('/','_')}");
-                    allFiles = String.Join(",", inputModel.UploadedFiles.Select(n => n.FileName));
+                    await UploadFiles(inputModel.UploadedFiles, $"{inputModel.WorkNumber.Replace('/', '_')}");
+                    //allFiles = String.Join(",", inputModel.UploadedFiles.Select(n => n.FileName));
+                    allFiles = String.Join(",", inputModel.UploadedFiles.Select(n => n.FileName.Replace(' ','_').Replace('\'', '_')));
                 }
 
                 PfcModel pcf2insert = new PfcModel() {
@@ -231,7 +254,7 @@ namespace mes.Controllers
                 {
                     if (file.Length > 0)
                     {
-                        string betterFileName = file.FileName.Replace(' ','_');
+                        string betterFileName = file.FileName.Replace(' ', '_').Replace('\'', '_');
                         //string filePath = Path.Combine(uploadFolder,pfcFolder, file.FileName);
                         string filePath = Path.Combine(uploadFolder,pfcFolder, betterFileName);
                         if(!Directory.Exists(Path.GetDirectoryName(filePath))) Directory.CreateDirectory(Path.GetDirectoryName(filePath));
@@ -432,7 +455,7 @@ namespace mes.Controllers
 
         var allFilesCsv = string.Join(",",
             (ExistingFiles?.Split(',', StringSplitOptions.RemoveEmptyEntries) ?? Enumerable.Empty<string>())
-            .Concat(UploadedFiles?.Select(f => f.FileName) ?? Enumerable.Empty<string>())
+            .Concat(UploadedFiles?.Select(f => f.FileName.Replace(' ','_').Replace('\'','_')) ?? Enumerable.Empty<string>())
             .Where(x => !string.IsNullOrWhiteSpace(x))
         );
 
@@ -665,40 +688,55 @@ namespace mes.Controllers
                 }
             }
 
-            //check completezza campi del csv che si vuole caricare
+
 
             try
             {
                 // Use the file upload service with specific settings for CSV files
                 var result = await _fileUploadService.UploadFileAsync(model.FileToUpload);
 
+                //check completezza campi del csv che si vuole caricare
+                //carica in c:\temp\uploads
+
                 if (result.Success)
                 {
+                    //=======================================
+                    // inserisco controllo file                    
+                    // il controllo si trova in:
+                    //     LoadCsvToDatabase 
+                    //                      bool invalidList = genPurpose.HasEmptyOrNullStringProperty<PfcCsvDaneaSource>(csvFile);
+                    //                      bool hasInvalidDate = HasInvalidDateFormats<PfcCsvDaneaSource>(csvFile);
+
+                    //=======================================
+
                     // Log the successful upload
                     Log2File($"{userData.UserEmail}-->{controllerName},{actionName} - CSV file uploaded: {result.FilePath}");
                     _logger.LogInformation($"CSV uploaded successfully by {userData.UserEmail}: {Path.GetFileName(result.FilePath)}");
-                    
-                    string additionaMessage ="";
+
+                    string additionaMessage = "";
                     LoadCsvToDatabase(result.FilePath, out additionaMessage);
 
                     string successMessage = "";
-                    if(additionaMessage != "")
+                    if (additionaMessage != "")
                     {
                         successMessage = additionaMessage;
-                    } else {
+                    }
+                    else
+                    {
                         successMessage = $"Caricato file: {Path.GetFileName(result.FilePath)} - {additionaMessage}";
                     }
-                    
+
                     if (isAjaxRequest)
                     {
-                        return Json(new { 
-                            success = true, 
+                        return Json(new
+                        {
+                            success = true,
                             message = successMessage,
                             filePath = result.FilePath,
                             fileName = Path.GetFileName(result.FilePath)
                         });
                     }
-                    
+
                     // Provide feedback to the user
                     ViewBag.Message = successMessage;
                     //passo io il nome del file
@@ -706,8 +744,8 @@ namespace mes.Controllers
 
                     DatabaseAccessor dbAccessor = new DatabaseAccessor();
                     List<PfcCsvDaneaSource> actuals = dbAccessor.Queryer<PfcCsvDaneaSource>(config.PfcConnString, config.CsvDaneaTable)
-                                                                .Where(t => t.Taken =="0").ToList();
-                    ViewBag.actualCsvDanea = actuals;                        
+                                                                .Where(t => t.Taken == "0").ToList();
+                    ViewBag.actualCsvDanea = actuals;
 
                     return View(new FileUploadViewModel
                     {
@@ -721,12 +759,12 @@ namespace mes.Controllers
                     // Log the error
                     Log2File($"{userData.UserEmail}-->{controllerName},{actionName} - Upload failed: {result.ErrorMessage}");
                     _logger.LogError($"CSV upload failed for user {userData.UserEmail}: {result.ErrorMessage}");
-                    
+
                     if (isAjaxRequest)
                     {
                         return Json(new { success = false, message = result.ErrorMessage });
                     }
-                    
+
                     // Provide error feedback to the user
                     ViewBag.Message = result.ErrorMessage;
                     return View(model);
@@ -738,12 +776,12 @@ namespace mes.Controllers
                 string errorMessage = $"An error occurred during file upload: {ex.Message}";
                 Log2File($"{userData.UserEmail}-->{controllerName},{actionName} - Exception: {ex.Message}");
                 _logger.LogError(ex, $"Exception during CSV upload by {userData.UserEmail}");
-                
+
                 if (isAjaxRequest)
                 {
                     return Json(new { success = false, message = errorMessage });
                 }
-                
+
                 ViewBag.Message = errorMessage;
                 return View(model);
             }
@@ -833,23 +871,47 @@ public IActionResult ViewFile(string nCommessa, string fileName)
         {
             //carica file raw in lista oggetti
             PfcServices pfcServices = new PfcServices();
+            //verifica se il tipo di file è corretto
+            //prende la prima riga e controlla
+            GeneralPurpose genP = new GeneralPurpose();
+            bool headerOk = genP.CheckCsvHeader(file2load, config.CsvOrdiniClienteCheck);
+            if (!headerOk)
+            {
+                internalMessage = $"Il file .csv non è del tipo adatto. L'header deve essere: {config.CsvOrdiniClienteCheck}";
+                return RedirectToAction("CsvOrderUpload");
+            }
+
+
             List<PfcCsvDaneaSource> csvFile = pfcServices.LoadCsvDaneaToList(file2load, config.CsvFilter1, config.CsvFilter2);
             
             // controllo se ci sono oggetti vuoti
             GeneralPurpose genPurpose = new GeneralPurpose();
-            //bool invalidList = genPurpose.HasEmptyOrNullStringProperty<PfcCsvDaneaSource>(csvFile);
-            //bool hasInvalidDate = HasInvalidDateFormats<PfcCsvDaneaSource>(csvFile);
-            //if(invalidList)
-            //{
-            //    internalMessage = "File .csv contiene campi vuoti - non caricato";
-            //    return RedirectToAction("CsvOrderUpload");
-            //}
+            //ometto il campo commento e mappo su un DTO senza commento
+            List<PfcCsvDaneaDTO> csvDTO = csvFile.Select(source => new PfcCsvDaneaDTO
+            {
+                Data = source.Data,
+                NCommessa = source.NCommessa,
+                Cliente = source.Cliente,
+                Stato = source.Stato,
+                DataConsegna = source.DataConsegna,
+                Taken = source.Taken,
+                PfcNumber = source.PfcNumber                
 
-            //if(hasInvalidDate)
-            //{
-            //    internalMessage = "File .csv contiene date in formati non corretti - non caricato";
-            //    return RedirectToAction("CsvOrderUpload");
-            //}
+            }).ToList();
+
+            bool invalidList = genPurpose.HasEmptyOrNullStringProperty<PfcCsvDaneaDTO>(csvDTO);            
+            if(invalidList)
+            {
+                internalMessage = "File .csv contiene campi vuoti - non caricato";
+                return RedirectToAction("CsvOrderUpload");
+            }
+
+            bool hasInvalidDate = HasInvalidDateFormats<PfcCsvDaneaDTO>(csvDTO);
+            if(hasInvalidDate)
+            {
+                internalMessage = "File .csv contiene date in formati non corretti - non caricato";
+                return RedirectToAction("CsvOrderUpload");
+            }
 
             //mette la lista su database
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
@@ -884,19 +946,15 @@ public IActionResult ViewFile(string nCommessa, string fileName)
     {
         if (dataList == null)
         {
-            // It's often better to throw an ArgumentNullException here if null lists are unexpected.
-            // For now, we'll return false, assuming an empty/null list means no invalid dates.
             Console.WriteLine("The input list is null. No date formats to check.");
             return false;
         }
 
-        // Using .Any() to efficiently stop at the first invalid date found
         bool hasInvalid = dataList.Any(obj =>
         {
             if (obj == null)
             {
-                //Console.WriteLine("Found a null object in the list. This could indicate invalid data.");
-                return true; // A null object in the list is often considered "invalid" for validation purposes
+                return true;
             }
 
             DateTime dummyDate; // Used to capture the parsed date if successful
@@ -905,7 +963,7 @@ public IActionResult ViewFile(string nCommessa, string fileName)
             // This makes the method truly generic even though it's looking for specific property *names*.
             // If the properties don't exist on T, GetProperty will return null, and we'll skip the check.
             PropertyInfo dataProp = typeof(T).GetProperty("Data", BindingFlags.Public | BindingFlags.Instance);
-            PropertyInfo dataConsegnaProp = typeof(T).GetProperty("DataConsegna", BindingFlags.Public | BindingFlags.Instance);
+            PropertyInfo dataConsegnaProp = typeof(T).GetProperty("Concl. prevista", BindingFlags.Public | BindingFlags.Instance);
 
             string dataValue = dataProp?.GetValue(obj) as string;
             string dataConsegnaValue = dataConsegnaProp?.GetValue(obj) as string;
