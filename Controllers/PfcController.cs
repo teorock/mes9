@@ -900,22 +900,28 @@ public IActionResult ViewFile(string nCommessa, string fileName)
 
             }).ToList();
 
-            bool invalidList = genPurpose.HasEmptyOrNullStringProperty<PfcCsvDaneaDTO>(csvDTO);            
-            if(invalidList)
+            if (config.CsvCheckEmptyFields)
             {
-                internalMessage = "File .csv contiene campi vuoti - non caricato";
-                return RedirectToAction("CsvOrderUpload");
+                bool invalidList = genPurpose.HasEmptyOrNullStringProperty<PfcCsvDaneaDTO>(csvDTO);
+                if (invalidList)
+                {
+                    internalMessage = "File .csv contiene campi vuoti - non caricato";
+                    return RedirectToAction("CsvOrderUpload");
+                }
             }
 
-            bool hasInvalidDate = HasInvalidDateFormats<PfcCsvDaneaDTO>(csvDTO);
-            if(hasInvalidDate)
-            {
-                internalMessage = "File .csv contiene date in formati non corretti - non caricato";
-                return RedirectToAction("CsvOrderUpload");
-            }
+            if (config.CsvCheckValidDate)
+                {
+                    bool hasInvalidDate = HasInvalidDateFormats<PfcCsvDaneaDTO>(csvDTO);
+                    if (hasInvalidDate)
+                    {
+                        internalMessage = "File .csv contiene date in formati non corretti - non caricato";
+                        return RedirectToAction("CsvOrderUpload");
+                    }
+                }
 
             //mette la lista su database
-            DatabaseAccessor dbAccessor = new DatabaseAccessor();
+                DatabaseAccessor dbAccessor = new DatabaseAccessor();
 
             //verifica se i record sono già presenti
             //prelevo tutti

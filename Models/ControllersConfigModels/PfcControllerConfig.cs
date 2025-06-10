@@ -19,5 +19,7 @@ namespace mes.Models.ControllersConfigModels
         public string CsvFilter2 { get; set; }
         public string BaseUploadFolder { get; set; }
         public string CsvOrdiniClienteCheck { get; set; }
+        public bool CsvCheckValidDate { get; set; }
+        public bool CsvCheckEmptyFields { get; set; }
     }
 }
