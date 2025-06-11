@@ -121,9 +121,15 @@
 <div class="row">
     <div class="col-md-3">
     </div>
-    <div class="col-md-7">
+    <div class="col-md-4">
         @* DataTables will automatically add the search box here. *@
     </div>
+    @if (authorize)
+    {
+        <!-- div class="col-md-3 d-grid">
+            <a class="btn btn-outline-success btn-block" asp-controller="Pfc" asp-action="InsertPfc">inserisci modulo</a>
+        </div -->
+    }    
     <div class="col-md-2">
         <a class="btn btn-outline-primary" asp-controller="Pfc" asp-action="Index" asp-route-filterCompleted="@ViewBag.filter">@ViewBag.removeCaption</a>
     </div>

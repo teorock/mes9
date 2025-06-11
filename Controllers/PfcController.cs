@@ -872,6 +872,7 @@ public IActionResult ViewFile(string nCommessa, string fileName)
         {
             //carica file raw in lista oggetti
             PfcServices pfcServices = new PfcServices();
+
             //verifica se il tipo di file è corretto
             //prende la prima riga e controlla
             GeneralPurpose genP = new GeneralPurpose();
@@ -911,14 +912,15 @@ public IActionResult ViewFile(string nCommessa, string fileName)
             }
 
             if (config.CsvCheckValidDate)
+            {
+                bool hasInvalidDate = HasPfcCsvDaneaInvalidDate(csvDTO);
+                //bool hasInvalidDate = HasInvalidDateFormats<PfcCsvDaneaDTO>(csvDTO);
+                if (hasInvalidDate)
                 {
-                    bool hasInvalidDate = HasInvalidDateFormats<PfcCsvDaneaDTO>(csvDTO);
-                    if (hasInvalidDate)
-                    {
-                        internalMessage = "File .csv contiene date in formati non corretti - non caricato";
-                        return RedirectToAction("CsvOrderUpload");
-                    }
+                    internalMessage = "File .csv contiene date in formati non corretti - non caricato";
+                    return RedirectToAction("CsvOrderUpload");
                 }
+            }
 
             //mette la lista su database
                 DatabaseAccessor dbAccessor = new DatabaseAccessor();
@@ -949,57 +951,69 @@ public IActionResult ViewFile(string nCommessa, string fileName)
             return RedirectToAction("CsvOrderUpload");
         }
 
-    private bool HasInvalidDateFormats<T>(List<T> dataList)
-    {
-        if (dataList == null)
+        private bool HasInvalidDateFormats<T>(List<T> dataList)
         {
-            Console.WriteLine("The input list is null. No date formats to check.");
-            return false;
+            if (dataList == null)
+            {
+                Console.WriteLine("The input list is null. No date formats to check.");
+                return false;
+            }
+
+            bool hasInvalid = dataList.Any(obj =>
+            {
+                if (obj == null)
+                {
+                    return true;
+                }
+
+                DateTime dummyDate; // Used to capture the parsed date if successful
+
+                // Use reflection to get the values of "Data" and "DataConsegna"
+                // This makes the method truly generic even though it's looking for specific property *names*.
+                // If the properties don't exist on T, GetProperty will return null, and we'll skip the check.
+                PropertyInfo dataProp = typeof(T).GetProperty("Data", BindingFlags.Public | BindingFlags.Instance);
+                PropertyInfo dataConsegnaProp = typeof(T).GetProperty("Concl. prevista", BindingFlags.Public | BindingFlags.Instance);
+
+                string dataValue = dataProp?.GetValue(obj) as string;
+                string dataConsegnaValue = dataConsegnaProp?.GetValue(obj) as string;
+
+                // Check 'Data' property
+                if (!string.IsNullOrEmpty(dataValue) && !DateTime.TryParse(dataValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out dummyDate))
+                {
+                    //Console.WriteLine($"Invalid date format detected in 'Data' property: '{dataValue}' for object type '{typeof(T).Name}'.");
+                    return true; // Invalid date found in 'Data'
+                }
+
+                // Check 'DataConsegna' property
+                if (!string.IsNullOrEmpty(dataConsegnaValue) && !DateTime.TryParse(dataConsegnaValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out dummyDate))
+                {
+                    return true; // Invalid date found in 'DataConsegna'
+                }
+
+                return false; // No invalid date format for this specific object
+            });
+
+            return hasInvalid;
         }
 
-        bool hasInvalid = dataList.Any(obj =>
+        private bool HasPfcCsvDaneaInvalidDate(List<PfcCsvDaneaDTO> inputList)
         {
-            if (obj == null)
-            {
-                return true;
-            }
+            List<string> dates = inputList.Select(d => d.Data).ToList();
+            List<string> deliveries = inputList.Select(d => d.DataConsegna).ToList();
 
-            DateTime dummyDate; // Used to capture the parsed date if successful
+            bool allValidDates = dates.All(dateString =>  DateTime.TryParseExact(dateString, "dd/MM/yyyy", null, DateTimeStyles.None, out _));
 
-            // Use reflection to get the values of "Data" and "DataConsegna"
-            // This makes the method truly generic even though it's looking for specific property *names*.
-            // If the properties don't exist on T, GetProperty will return null, and we'll skip the check.
-            PropertyInfo dataProp = typeof(T).GetProperty("Data", BindingFlags.Public | BindingFlags.Instance);
-            PropertyInfo dataConsegnaProp = typeof(T).GetProperty("Concl. prevista", BindingFlags.Public | BindingFlags.Instance);
+            bool allValidDeliveryDates = deliveries.All(dateString =>  DateTime.TryParseExact(dateString, "dd/MM/yyyy", null, DateTimeStyles.None, out _));
 
-            string dataValue = dataProp?.GetValue(obj) as string;
-            string dataConsegnaValue = dataConsegnaProp?.GetValue(obj) as string;
+            return allValidDates & allValidDeliveryDates;
+        }
 
-            // Check 'Data' property
-            if (!string.IsNullOrEmpty(dataValue) && !DateTime.TryParse(dataValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out dummyDate))
-            {
-                //Console.WriteLine($"Invalid date format detected in 'Data' property: '{dataValue}' for object type '{typeof(T).Name}'.");
-                return true; // Invalid date found in 'Data'
-            }
-
-            // Check 'DataConsegna' property
-            if (!string.IsNullOrEmpty(dataConsegnaValue) && !DateTime.TryParse(dataConsegnaValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out dummyDate))
-            {
-                return true; // Invalid date found in 'DataConsegna'
-            }
-
-            return false; // No invalid date format for this specific object
-        });
-
-        return hasInvalid;
-    }
-
-        private List<string>GetCustomersList()
+        private List<string> GetCustomersList()
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<string> clienti = dbAccessor.Queryer<ClienteViewModel>(config.ConnString2, config.CustomerTable)
-                                                        .Where(e => e.Enabled =="1")
-                                                        .Select(c =>c.Nome).ToList();
+                                                        .Where(e => e.Enabled == "1")
+                                                        .Select(c => c.Nome).ToList();
             return clienti;
         }
 
