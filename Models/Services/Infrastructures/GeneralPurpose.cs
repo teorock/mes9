@@ -44,11 +44,11 @@ namespace mes.Models.Services.Infrastructures
             string minutes = "";
             string comment = "";
 
-            if (tipologia == "ferie")
-            {
-                startTime += "T08:00";
-                endTime += "T17:30";
-            }
+            //if (tipologia == "ferie")
+            //
+            //   startTime += "T08:00";
+            //   endTime += "T17:30";
+            //
 
             DateTime endDatetime = String2DateTime(endTime);
             DateTime startDatetime = String2DateTime(startTime);
