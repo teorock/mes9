@@ -126,9 +126,9 @@
     </div>
     @if (authorize)
     {
-        <!-- div class="col-md-3 d-grid">
+        <div class="col-md-3 d-grid">
             <a class="btn btn-outline-success btn-block" asp-controller="Pfc" asp-action="InsertPfc">inserisci modulo</a>
-        </div -->
+        </div>
     }    
     <div class="col-md-2">
         <a class="btn btn-outline-primary" asp-controller="Pfc" asp-action="Index" asp-route-filterCompleted="@ViewBag.filter">@ViewBag.removeCaption</a>
