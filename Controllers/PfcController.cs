@@ -913,9 +913,9 @@ public IActionResult ViewFile(string nCommessa, string fileName)
 
             if (config.CsvCheckValidDate)
             {
-                bool hasInvalidDate = HasPfcCsvDaneaInvalidDate(csvDTO);
+                bool hasValidDate = HasPfcCsvDaneaInvalidDate(csvDTO);
                 //bool hasInvalidDate = HasInvalidDateFormats<PfcCsvDaneaDTO>(csvDTO);
-                if (hasInvalidDate)
+                if (!hasValidDate)
                 {
                     internalMessage = "File .csv contiene date in formati non corretti - non caricato";
                     return RedirectToAction("CsvOrderUpload");
