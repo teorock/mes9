@@ -14,6 +14,8 @@ using Microsoft.AspNetCore.Http.Features;
 using mes.Models.InfrastructureModels;
 using System.Data.Common;
 using Microsoft.AspNetCore.Builder.Extensions;
+using System.Reflection.PortableExecutable;
+using NuGet.Common;
 
 namespace mes.Controllers
 {
@@ -150,23 +152,42 @@ namespace mes.Controllers
         {
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             GeneralPurpose genPurpose = new GeneralPurpose();
-            
-            //date a caso per sviluppo
-
-            //startDate = genPurpose.GetWeeksMonday(0).ToString("dd/MM/yyyy");
-            //endDate = genPurpose.GetWeeksMonday(5).ToString("dd/MM/yyyy");
-
-            DateTime start = Convert.ToDateTime(startDate);
-            DateTime end = Convert.ToDateTime(endDate);
 
             string filter = $"MachineName=\'{machineName}\'";
             List<MachineStatusPicker> allMachineStatus = dbAccessor.QueryerFilter<MachineStatusPicker>(config.LastPeriodConnString,"MachineStatus", filter);
 
+            // 25 sett 2025: il bug non si presenta se la macchina è spenta ma se la macchina non è stata accesa per un po' di tempo
+            // quindi statDate e endDate passate qui dalla View potrebbero non incontrare alcun dato anche per molto tempo
+            //devo quindi introdurre una verifica alla data dell'ultimo record disponibile
+
+            //DEVO CONTROLLARE QUALI SONO GLI ULTIMI DATI DISPONIBILI PER QUESTA MACCHINA
+            MachineStatusPicker thisMachineLastRecord = allMachineStatus.Where(n => n.MachineName == machineName).Last();
+
+            DateTime lastRecordDate = Convert.ToDateTime(thisMachineLastRecord.Date);
+            // devo ricalcolare qual'è il lunedì e il venerdì di quella data
+            DateTime lastStart = genPurpose.GetDateMonday(lastRecordDate, 0);
+            DateTime lastEnd = lastStart.AddDays(5);
+
+            //-------------
+
+            //poi decido quali date passare alle query
+            //modifico le date del Lunedì e Venerdì di questa settimana con quell dell'ultimo Luned' e Venerdì in cui la macchina è stata accesa
+
+            //DateTime start = Convert.ToDateTime(startDate);
+            DateTime start = lastStart;
+            //DateTime end = Convert.ToDateTime(endDate);
+            DateTime end = lastEnd;
+
             var debug = allMachineStatus.Last();
 
             List<MachineStatusPicker> oneMachineStatus = allMachineStatus.Where(d => Convert.ToDateTime(d.Date) >= start.Date & Convert.ToDateTime(d.Date) <= end.Date).ToList();
-           
-            MachineStatusPicker last = oneMachineStatus.Last();
+            // bug se macchina spenta?-----------------------
+
+            MachineStatusPicker last = new MachineStatusPicker();
+            if (oneMachineStatus.Count != 0)
+            {
+                last = oneMachineStatus.Last();
+            } 
           
             List<string> allMachines = dbAccessor.Queryer<MacchineListModel>(config.LastPeriodConnString,"Macchine").Select(n => n.MachineName).ToList();
 

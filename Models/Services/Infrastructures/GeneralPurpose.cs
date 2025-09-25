@@ -248,6 +248,14 @@ namespace mes.Models.Services.Infrastructures
             return firstDayOfThisWeek.AddDays(addDays);
         }
 
+        public DateTime GetDateMonday(DateTime inputDate, int addDays)
+        {
+            int daysFromMonday = ((int)inputDate.DayOfWeek - 1 + 7) % 7;
+            DateTime tempDate =  inputDate.AddDays(-daysFromMonday + addDays);
+
+            return tempDate;
+        }
+
         public List<DateTime> GetWeekDaysInterval(DateTime startDate, int startDay, int endDay)
         {
             List<DateTime> result = new List<DateTime>();
