@@ -140,8 +140,8 @@ namespace mes.Controllers
             ViewBag.wlProgress = wlProgress;
 
             //--------------
-            ViewBag.startDate = genPurpose.GetWeeksMonday(0).ToString("dd/MM/yyyy");
-            ViewBag.endDate = genPurpose.GetWeeksMonday(5).ToString("dd/MM/yyyy");
+            //ViewBag.startDate = genPurpose.GetWeeksMonday(0).ToString("dd/MM/yyyy");
+            //ViewBag.endDate = genPurpose.GetWeeksMonday(5).ToString("dd/MM/yyyy");
 
             return View("ProductionStatus", lastMachinesStatus); 
         }
@@ -156,39 +156,38 @@ namespace mes.Controllers
             string filter = $"MachineName=\'{machineName}\'";
             List<MachineStatusPicker> allMachineStatus = dbAccessor.QueryerFilter<MachineStatusPicker>(config.LastPeriodConnString,"MachineStatus", filter);
 
-            // 25 sett 2025: il bug non si presenta se la macchina è spenta ma se la macchina non è stata accesa per un po' di tempo
-            // quindi statDate e endDate passate qui dalla View potrebbero non incontrare alcun dato anche per molto tempo
-            //devo quindi introdurre una verifica alla data dell'ultimo record disponibile
+            //gestione intervalli di date
+            // se startDate e endDate sono == null allora questa richiesta proviene da /mes/ProductionStatus
+            // in questo caso li setto al lune/ven dell'ultimo dato letto
+            // calcolo anche il primo giorno di dati disponibili e passo primo+ultimo giorno alla View come limiti dei calendari
+            // altrimenti processo la richiesta normalmente
+            MachineStatusPicker thisMachineLastRecord = allMachineStatus.Last();
+            MachineStatusPicker thisMachineFirstRecord = allMachineStatus.First();
 
-            //DEVO CONTROLLARE QUALI SONO GLI ULTIMI DATI DISPONIBILI PER QUESTA MACCHINA
-            MachineStatusPicker thisMachineLastRecord = allMachineStatus.Where(n => n.MachineName == machineName).Last();
+            DateTime start = DateTime.Now;
+            DateTime end = DateTime.Now;
 
-            DateTime lastRecordDate = Convert.ToDateTime(thisMachineLastRecord.Date);
-            // devo ricalcolare qual'è il lunedì e il venerdì di quella data
-            DateTime lastStart = genPurpose.GetDateMonday(lastRecordDate, 0);
-            DateTime lastEnd = lastStart.AddDays(5);
+            if (startDate is null & endDate is null)
+            {
 
-            //-------------
-
-            //poi decido quali date passare alle query
-            //modifico le date del Lunedì e Venerdì di questa settimana con quell dell'ultimo Luned' e Venerdì in cui la macchina è stata accesa
-
-            //DateTime start = Convert.ToDateTime(startDate);
-            DateTime start = lastStart;
-            //DateTime end = Convert.ToDateTime(endDate);
-            DateTime end = lastEnd;
+                DateTime lastRecordDate = Convert.ToDateTime(thisMachineLastRecord.Date);
+                // devo ricalcolare qual'è il lunedì e il venerdì di quella data
+                start = genPurpose.GetDateMonday(lastRecordDate, 0);
+                end = start.AddDays(5);
+            }
+            else
+            {
+                start = Convert.ToDateTime(startDate);
+                end = Convert.ToDateTime(endDate);
+            }
 
             var debug = allMachineStatus.Last();
 
             List<MachineStatusPicker> oneMachineStatus = allMachineStatus.Where(d => Convert.ToDateTime(d.Date) >= start.Date & Convert.ToDateTime(d.Date) <= end.Date).ToList();
-            // bug se macchina spenta?-----------------------
 
             MachineStatusPicker last = new MachineStatusPicker();
-            if (oneMachineStatus.Count != 0)
-            {
-                last = oneMachineStatus.Last();
-            } 
-          
+            last = oneMachineStatus.Last();
+
             List<string> allMachines = dbAccessor.Queryer<MacchineListModel>(config.LastPeriodConnString,"Macchine").Select(n => n.MachineName).ToList();
 
             ViewBag.avanzamento = CalcolaAvanzamento(last.Counter, last.Quantity);
@@ -223,7 +222,11 @@ namespace mes.Controllers
             ViewBag.oneWeekStatus = oneWeekStatus;
             //preleva una lista degli ultimi 5 movimenti di MachineMovements
             ViewBag.oneWeekProgs = GetLastWeekProgs(last.MachineName, 7);
-                                    
+
+            //setto i limiti dei calendari
+            ViewBag.maxDate = Convert.ToDateTime(thisMachineLastRecord.Date).ToString("yyyy-MM-dd");
+            ViewBag.minDate = Convert.ToDateTime(thisMachineFirstRecord.Date).ToString("yyyy-MM-dd");
+
             return View("GetMachineHistory", last);
         }
 
@@ -283,11 +286,10 @@ namespace mes.Controllers
         {            
             List<KeyValuePair<string,string>> result = new List<KeyValuePair<string, string>>();
 
-            //TO DO: passare allMachineMovements direttamente
-
             DatabaseAccessor dbAccessor = new DatabaseAccessor();
             List<MachineMovementsPicker> allMachineMovements = dbAccessor.Queryer<MachineMovementsPicker>(config.ConnectionString, "MachineMovements")
                                                                 .Where(x=> x.MachineName == machineName).ToList();
+            
             if(allMachineMovements.Count == 0) return result;
 
             int start = allMachineMovements.Count-1;
@@ -314,37 +316,6 @@ namespace mes.Controllers
             allDates.Reverse();
             return allDates;
         }
-
-        //public List<DateTime> GetDaysInBetween(DateTime startDate, DateTime endDate)
-        //{
-        //    List<DateTime> allDates = new List<DateTime>();
-        //    DateTime currentDate = startDate.Date;  
-//
-        //    while (currentDate <= endDate.Date) 
-        //    {
-        //        allDates.Add(currentDate);
-        //        currentDate = currentDate.AddDays(1);
-        //    }
-//
-        //    if (allDates.Count < 7)
-        //    {
-        //        currentDate = endDate.Date.AddDays(1); 
-//
-        //        while (allDates.Count < 7)
-        //        {
-        //            allDates.Add(currentDate);
-        //            currentDate = currentDate.AddDays(1);
-        //        }
-        //    }
-//
-        //    if(allDates.Count > 7)
-        //    {
-        //        allDates = allDates.Take(7).ToList();
-        //    }
-//
-        //    allDates.Reverse();
-        //    return allDates;
-        //}
 
         private List<MachineStatustPickerWeek> WeekPeeker(List<MachineStatusPicker> oneMachineStatus, DateTime startDate, DateTime endDate)
         {
