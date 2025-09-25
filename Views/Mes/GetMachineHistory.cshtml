@@ -136,13 +136,13 @@
                     <div class="col-sm-2">
                         <div class="form-group">
                             <label for="startDate">Data inizio:</label>
-                            <input type="date" class="form-control" id="startDate" name="startDate" value="@ViewBag.calendarStartDate" min = "@ViewBag.minDate"/>
+                            <input type="date" class="form-control" id="startDate" name="startDate" value="@ViewBag.calendarStartDate" min = "@ViewBag.minDate" max = "@ViewBag.maxDate"/>
                         </div>
                     </div>
                     <div class="col-sm-2">
                         <div class="form-group">
                             <label for="endDate">Data fine:</label>
-                            <input type="date" class="form-control" id="endDate" name="endDate" value="@ViewBag.calendarEndDate" max = "@ViewBag.maxDate"/>
+                            <input type="date" class="form-control" id="endDate" name="endDate" value="@ViewBag.calendarEndDate" min = "@ViewBag.minDate" max = "@ViewBag.maxDate"/>
                         </div>
                     </div>
                     <div class="col-sm-2">
